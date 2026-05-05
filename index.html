@@ -236,10 +236,62 @@
       .stat-grid { grid-template-columns: repeat(2,1fr); }
       .donut-wrap { flex-direction:column; align-items:flex-start; }
     }
+  
+    .gm-toolbar {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr .8fr .8fr auto;
+      gap: 10px;
+      margin: 0 0 12px;
+      align-items: center;
+    }
+    .gm-toolbar input, .gm-toolbar select {
+      background: #0f1f30;
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 7px;
+      padding: 10px 12px;
+      min-height: 39px;
+    }
+    .gm-pill-row { display:flex; gap:8px; flex-wrap:wrap; margin: 10px 0 0; }
+    .gm-pill { border:1px solid var(--line); background:rgba(255,255,255,.05); color:#dce7f2; border-radius:999px; padding:7px 10px; font-size:12px; }
+    .gm-pill.hot { background: rgba(255,197,66,.13); color: var(--yellow); border-color: rgba(255,197,66,.35); }
+    .gm-pill.good { background: rgba(94,219,83,.12); color: var(--green); border-color: rgba(94,219,83,.35); }
+    .gm-pill.bad { background: rgba(255,77,79,.12); color: var(--red); border-color: rgba(255,77,79,.35); }
+    .player-row { transition: .18s ease; cursor:pointer; }
+    .player-row:hover { background: rgba(20,121,255,.12); transform: translateX(3px); }
+    .drag-handle { color:#7e91a8; margin-right:6px; cursor:grab; }
+    .comparison-tray {
+      position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%);
+      width: min(980px, calc(100vw - 32px)); background: linear-gradient(145deg,#0b1724,#15283a);
+      border:1px solid var(--line); border-radius: 14px; box-shadow: 0 24px 70px rgba(0,0,0,.45);
+      z-index: 12; padding: 12px; display:none;
+    }
+    .comparison-tray.open { display:block; animation: rise .25s ease both; }
+    @keyframes rise { from { opacity:0; transform: translate(-50%, 18px); } to { opacity:1; transform: translate(-50%, 0); } }
+    @keyframes pulseWarn { 0%,100% { box-shadow: 0 0 0 rgba(255,197,66,0); } 50% { box-shadow: 0 0 24px rgba(255,197,66,.25); } }
+    .pulse-warn { animation: pulseWarn 1.4s ease infinite; }
+    .scenario-card { border:1px solid var(--line); background: rgba(255,255,255,.04); border-radius:10px; padding:10px; display:grid; grid-template-columns: 1fr auto; gap:8px; align-items:center; }
+    .scenario-card strong { display:block; }
+    .scenario-card span { color:var(--muted); font-size:12px; }
+    .trade-builder { display:grid; grid-template-columns: 1fr auto 1fr; gap:12px; align-items:start; }
+    .trade-box { border:1px solid var(--line); border-radius:9px; padding:10px; min-height:120px; background:rgba(255,255,255,.035); }
+    .trade-box h4 { margin:0 0 8px; font-size:12px; text-transform:uppercase; color:#b8c7d7; }
+    .trade-chip { display:flex; justify-content:space-between; gap:8px; align-items:center; padding:7px 8px; border:1px solid var(--line); border-radius:7px; margin-bottom:6px; font-size:12px; background:rgba(0,0,0,.15); }
+    .gm-modal-wide { width: min(940px, calc(100vw - 36px)); }
+    .toast { position:fixed; right:18px; bottom:18px; background:#0f1f30; color:#fff; border:1px solid var(--line); border-radius:10px; padding:12px 14px; box-shadow:var(--shadow); z-index:30; opacity:0; transform:translateY(12px); transition:.22s ease; }
+    .toast.show { opacity:1; transform:translateY(0); }
+    .meter { height:8px; border-radius:999px; background:#293746; overflow:hidden; margin-top:6px; }
+    .meter span { display:block; height:100%; background:var(--green); transition: width .35s ease; }
+    .meter.danger span { background:var(--red); }
+    .meter.warn span { background:var(--yellow); }
+    .editable-cell { border-bottom:1px dashed rgba(255,255,255,.35); }
+    @media (max-width: 900px) { .gm-toolbar, .trade-builder { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
   <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+  <div class="toast" id="toast">Saved</div>
+  <section class="comparison-tray" id="comparisonTray"></section>
   <aside class="drawer" id="drawer">
     <button class="close" onclick="closeDrawer()">×</button>
     <h3 class="modal-title" id="drawerTitle">Add Salary</h3>
@@ -282,7 +334,14 @@
       </div>
     </section>
 
-    <h2 class="dashboard-title">Salary Cap Tracking – Dashboard Ideas</h2>
+    <h2 class="dashboard-title">Salary Cap Tracking – GM Command Center</h2>
+    <div class="gm-toolbar">
+      <input id="gmSearch" placeholder="Search player, position, salary..." oninput="renderDashboard()" />
+      <select id="gmSort" onchange="renderDashboard()"><option value="salaryDesc">Sort: Highest Salary</option><option value="salaryAsc">Sort: Lowest Salary</option><option value="name">Sort: Name</option><option value="capPct">Sort: Cap %</option><option value="expiring">Sort: Expiring Soon</option></select>
+      <select id="gmFilter" onchange="renderDashboard()"><option value="all">All Players</option><option value="F">Forwards</option><option value="D">Defenders</option><option value="G">Guards</option><option value="expiring">Expiring 2025</option><option value="guaranteed">Guaranteed</option></select>
+      <select id="gmScenario" onchange="applyScenario(this.value)"><option value="base">Base Scenario</option><option value="aggressive">Aggressive Add</option><option value="conservative">Conservative</option><option value="rebuild">Rebuild Mode</option></select>
+      <button class="btn" onclick="openGMTools()">GM Tools</button>
+    </div>
     <section class="dashboard">
       <aside class="sidebar">
         <div class="brand"><div class="shield">HQ</div><span>TEAM HQ</span></div>
@@ -305,6 +364,10 @@
   </main>
 
   <script>
+    let compareIds = [];
+    let currentScenario = 'base';
+    let draggedPlayerId = null;
+
     const defaultPlayers = [
       { id: 1, name: 'Alex Johnson', pos: 'F', position: 'Forward', age: 26, height: '6\'2"', weight: '205 lbs', exp: '4 yrs', salary: 85000, salaryType: 'Annual', start: '2024-07-01', end: '2025-06-30', guaranteed: true, notes: 'Base salary for 2024-25 season.', y2: 87000, y3: 0 },
       { id: 2, name: 'Mason Smith', pos: 'D', position: 'Defender', age: 24, height: '6\'0"', weight: '198 lbs', exp: '2 yrs', salary: 6500000, salaryType: 'Annual', start: '2024-07-01', end: '2027-06-30', guaranteed: true, notes: 'Multi-year active contract.', y2: 6750000, y3: 7000000 },
@@ -377,6 +440,25 @@
       </div></div>`);
     }
 
+    function filteredPlayers() {
+      const q = (document.getElementById('gmSearch')?.value || '').toLowerCase();
+      const filter = document.getElementById('gmFilter')?.value || 'all';
+      const sort = document.getElementById('gmSort')?.value || 'salaryDesc';
+      let rows = [...state.players].filter(p => {
+        const matchesQ = [p.name, p.pos, p.position, p.salary, p.notes].join(' ').toLowerCase().includes(q);
+        const matchesFilter = filter === 'all' || p.pos === filter || (filter === 'expiring' && (p.end || '').startsWith('2025')) || (filter === 'guaranteed' && p.guaranteed);
+        return matchesQ && matchesFilter;
+      });
+      rows.sort((a,b) => {
+        if (sort === 'salaryAsc') return Number(a.salary||0) - Number(b.salary||0);
+        if (sort === 'name') return a.name.localeCompare(b.name);
+        if (sort === 'capPct') return Number(b.salary||0) - Number(a.salary||0);
+        if (sort === 'expiring') return String(a.end||'9999').localeCompare(String(b.end||'9999'));
+        return Number(b.salary||0) - Number(a.salary||0);
+      });
+      return rows;
+    }
+
     function renderDashboard() {
       const active = activeTotal();
       const total = totalCommitted();
@@ -384,10 +466,13 @@
       const usedPct = pct(active, state.salaryCap);
       const totalPct = pct(total, state.salaryCap);
       const spacePct = pct(space, state.salaryCap);
+      const risk = total > state.upperLimit ? 'bad' : total > state.salaryCap * .88 ? 'hot' : 'good';
+      document.getElementById('capOverview').className = 'dash-card wide ' + (risk === 'hot' ? 'pulse-warn' : '');
       document.getElementById('capOverview').innerHTML = `
         <h3>Salary Cap Overview <span class="position">ⓘ</span><br><span class="position">2024 - 2025 League Year</span></h3>
         <div class="stat-grid"><div class="stat"><div class="big">${fmt(state.salaryCap)}</div><div class="small">Salary Cap</div></div><div class="stat"><div class="big">${fmt(active)}</div><div class="small">Total Committed</div></div><div class="stat"><div class="big green">${fmt(space)}</div><div class="small">Cap Space</div></div><div class="stat"><div class="big">${usedPct.toFixed(1)}%</div><div class="small">Cap Used</div></div></div>
-        <div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:${Math.max(0, Math.min(100, totalPct))}%"></div></div><div class="tick" style="left:${Math.min(100, pct(state.salaryCap, state.upperLimit))}%"></div><div class="tick upper" style="left:100%"></div><div class="axis"><span>$0</span><span>${fmt(state.salaryCap)}<br>Salary Cap</span><span>${fmt(state.upperLimit)}<br>Upper Limit</span></div></div>`;
+        <div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:${Math.max(0, Math.min(100, totalPct))}%"></div></div><div class="tick" style="left:${Math.min(100, pct(state.salaryCap, state.upperLimit))}%"></div><div class="tick upper" style="left:100%"></div><div class="axis"><span>$0</span><span>${fmt(state.salaryCap)}<br>Salary Cap</span><span>${fmt(state.upperLimit)}<br>Upper Limit</span></div></div>
+        <div class="gm-pill-row"><button class="gm-pill ${risk}" onclick="openGMTools()">GM Risk: ${risk === 'bad' ? 'Over Limit' : risk === 'hot' ? 'Tight Cap' : 'Healthy'}</button><button class="gm-pill" onclick="exportCSV()">Export CSV</button><button class="gm-pill" onclick="snapshotScenario()">Save Snapshot</button><button class="gm-pill" onclick="simulateSigning()">Quick Signing Simulator</button></div>`;
 
       document.getElementById('capBreakdown').innerHTML = `
         <h3>Cap Space Breakdown</h3><div class="donut-wrap"><div class="donut" style="background:conic-gradient(var(--green) 0 ${Math.max(0,spacePct)}%, var(--blue) ${Math.max(0,spacePct)}% ${Math.max(0,spacePct)+pct(active,state.salaryCap)}%, var(--orange) ${Math.max(0,spacePct)+pct(active,state.salaryCap)}% ${Math.max(0,spacePct)+pct(active,state.salaryCap)+pct(state.retainedSalary,state.salaryCap)}%, #8b99a8 0 100%)"><div class="donut-center">${shortFmt(space)}<span>Cap Space</span></div></div><div class="legend">
@@ -403,8 +488,8 @@
 
       document.getElementById('playerBreakdown').innerHTML = `
         <h3>Player Salary Breakdown <span class="position">ⓘ</span></h3><table><thead><tr><th>Player</th><th>Pos</th><th class="num">2024-25 Salary</th><th class="num">2025-26 Salary</th><th class="num">2026-27 Salary</th><th class="num">Total Guaranteed</th><th class="num">Cap %</th></tr></thead><tbody>
-        ${state.players.map(p => `<tr onclick="openDrawer(${p.id})"><td><span class="mini-avatar" style="display:inline-block;width:22px;height:22px;vertical-align:middle;margin-right:8px"></span>${p.name}</td><td>${p.pos}</td><td class="num">${fmt(p.salary)}</td><td class="num">${p.y2 ? fmt(p.y2) : '-'}</td><td class="num">${p.y3 ? fmt(p.y3) : '-'}</td><td class="num">${fmt(Number(p.salary||0)+Number(p.y2||0)+Number(p.y3||0))}</td><td class="num">${pct(p.salary,state.salaryCap).toFixed(2)}%</td></tr>`).join('')}
-        </tbody></table><button class="link" onclick="openDrawer(state.selectedId)">View Full Salary Table / Edit Any Row</button>`;
+        ${filteredPlayers().map(p => `<tr class="player-row" draggable="true" ondragstart="draggedPlayerId=${p.id}" ondragover="event.preventDefault()" ondrop="dropPlayer(${p.id})" onclick="selectRow(event, ${p.id})"><td><span class="drag-handle">☰</span><input type="checkbox" onclick="event.stopPropagation(); toggleCompare(${p.id})" ${compareIds.includes(p.id) ? 'checked' : ''}> <span class="mini-avatar" style="display:inline-block;width:22px;height:22px;vertical-align:middle;margin-right:8px"></span>${p.name}</td><td>${p.pos}</td><td class="num editable-cell" ondblclick="inlineEditSalary(event, ${p.id}, 'salary')">${fmt(p.salary)}</td><td class="num editable-cell" ondblclick="inlineEditSalary(event, ${p.id}, 'y2')">${p.y2 ? fmt(p.y2) : '-'}</td><td class="num editable-cell" ondblclick="inlineEditSalary(event, ${p.id}, 'y3')">${p.y3 ? fmt(p.y3) : '-'}</td><td class="num">${fmt(Number(p.salary||0)+Number(p.y2||0)+Number(p.y3||0))}</td><td class="num">${pct(p.salary,state.salaryCap).toFixed(2)}%</td></tr>`).join('')}
+        </tbody></table><button class="link" onclick="openDrawer(state.selectedId)">Click a row to edit • Double-click salary cells for quick override • Drag rows to prioritize</button>`;
 
       document.getElementById('commitments').innerHTML = `
         <h3>Salary Commitments</h3><div class="commit-row"><span>Active Contracts</span><span>${fmt(active)} &nbsp; ${pct(active,state.salaryCap).toFixed(1)}%</span></div><div class="commit-row"><span>Retained Salary</span><span>${fmt(state.retainedSalary)} &nbsp; ${pct(state.retainedSalary,state.salaryCap).toFixed(1)}%</span></div><div class="commit-row"><span>Dead Money</span><span>${fmt(state.deadMoney)} &nbsp; ${pct(state.deadMoney,state.salaryCap).toFixed(1)}%</span></div><div class="commit-row total"><span>Total Committed</span><span>${fmt(total)} &nbsp; ${pct(total,state.salaryCap).toFixed(1)}%</span></div><div class="commit-row green"><span>Cap Space</span><span>${fmt(space)} &nbsp; ${spacePct.toFixed(1)}%</span></div><p class="position" style="font-size:11px;margin-top:28px">* Upper Limit: ${fmt(state.upperLimit)}</p>
@@ -446,6 +531,109 @@
       sel.onchange = () => loadPlayerIntoForm(Number(sel.value));
     }
 
+    function selectRow(event, id) {
+      if (event.target.tagName === 'INPUT') return;
+      state.selectedId = id;
+      renderFlowCards();
+      openDrawer(id);
+    }
+
+    function toggleCompare(id) {
+      if (compareIds.includes(id)) compareIds = compareIds.filter(x => x !== id);
+      else compareIds.push(id);
+      renderComparisonTray();
+      renderDashboard();
+    }
+
+    function renderComparisonTray() {
+      const tray = document.getElementById('comparisonTray');
+      if (!compareIds.length) { tray.classList.remove('open'); return; }
+      const players = state.players.filter(p => compareIds.includes(p.id));
+      const total = players.reduce((s,p)=>s+Number(p.salary||0),0);
+      tray.innerHTML = `<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:10px"><strong>GM Compare Board</strong><button class="btn ghost small" onclick="compareIds=[];renderComparisonTray();renderDashboard()">Clear</button></div><div class="trade-builder"><div class="trade-box"><h4>Selected Players</h4>${players.map(p=>`<div class="trade-chip"><span>${p.name}</span><b>${fmt(p.salary)}</b></div>`).join('')}</div><div style="display:grid;place-items:center;font-weight:900">↔</div><div class="trade-box"><h4>Impact</h4><div class="commit-row"><span>Combined Salary</span><b>${fmt(total)}</b></div><div class="commit-row"><span>Cap %</span><b>${pct(total,state.salaryCap).toFixed(2)}%</b></div><button class="btn small" onclick="waiveCompared()">Waive / Remove Selected</button></div></div>`;
+      tray.classList.add('open');
+    }
+
+    function waiveCompared() {
+      if (!confirm('Set selected players current salary to $0?')) return;
+      state.players.forEach(p => { if (compareIds.includes(p.id)) p.salary = 0; });
+      compareIds = []; saveState(); render(); renderComparisonTray(); toast('Selected players removed from current cap.');
+    }
+
+    function inlineEditSalary(event, id, key) {
+      event.stopPropagation();
+      const p = state.players.find(x => x.id === id);
+      const next = prompt(`Override ${p.name} ${key} salary`, p[key] || 0);
+      if (next === null) return;
+      p[key] = Number(next || 0);
+      saveState(); render(); toast('Salary overridden.');
+    }
+
+    function dropPlayer(targetId) {
+      if (!draggedPlayerId || draggedPlayerId === targetId) return;
+      const from = state.players.findIndex(p => p.id === draggedPlayerId);
+      const to = state.players.findIndex(p => p.id === targetId);
+      const [moved] = state.players.splice(from, 1);
+      state.players.splice(to, 0, moved);
+      draggedPlayerId = null; saveState(); render(); toast('Priority order updated.');
+    }
+
+    function openGMTools() {
+      const add = prompt('Quick GM move: enter signing amount to preview or add to selected player. Example: 2500000', '2500000');
+      if (add === null) return;
+      const amount = Number(add || 0);
+      const p = selectedPlayer();
+      const projected = totalCommitted() + amount;
+      const ok = confirm(`${p.name} + ${fmt(amount)}
+Projected committed: ${fmt(projected)}
+Projected cap space: ${fmt(state.salaryCap - projected)}
+
+Apply this to selected player?`);
+      if (ok) { p.salary = Number(p.salary || 0) + amount; saveState(); render(); toast('GM move applied.'); }
+    }
+
+    function simulateSigning() {
+      const amount = Number(prompt('Signing amount to simulate', '1000000') || 0);
+      if (!amount) return;
+      const projectedSpace = capSpace() - amount;
+      alert(`Simulation only:
+New signing: ${fmt(amount)}
+Remaining cap space: ${fmt(projectedSpace)}
+Upper limit room: ${fmt(state.upperLimit - totalCommitted() - amount)}`);
+    }
+
+    function snapshotScenario() {
+      const name = prompt('Snapshot name', 'GM Snapshot');
+      if (!name) return;
+      localStorage.setItem('salaryCapSnapshot_' + name, JSON.stringify(state));
+      toast('Snapshot saved.');
+    }
+
+    function applyScenario(value) {
+      currentScenario = value;
+      if (value === 'base') { state.players = JSON.parse(JSON.stringify(defaultPlayers)); }
+      if (value === 'aggressive') { state.players.forEach(p => { if (p.id === 1) p.salary += 5000000; if (p.id === 5) p.salary += 2500000; }); }
+      if (value === 'conservative') { state.players.forEach(p => p.salary = Math.round(Number(p.salary||0) * .92)); }
+      if (value === 'rebuild') { state.players.forEach(p => { if (p.salary > 5000000) p.salary = Math.round(p.salary * .55); }); }
+      saveState(); render(); toast('Scenario applied.');
+    }
+
+    function exportCSV() {
+      const header = ['Player','Position','2024 Salary','2025 Salary','2026 Salary','Guaranteed','End Date','Notes'];
+      const rows = state.players.map(p => [p.name,p.pos,p.salary,p.y2,p.y3,p.guaranteed,p.end,p.notes]);
+      const csv = [header, ...rows].map(r => r.map(v => `"${String(v ?? '').replaceAll('"','""')}"`).join(',')).join('
+');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'salary-cap-dashboard.csv'; a.click(); URL.revokeObjectURL(url);
+      toast('CSV exported.');
+    }
+
+    function toast(message) {
+      const t = document.getElementById('toast'); t.textContent = message; t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'), 1800);
+    }
+
     function openDrawer(id) {
       state.selectedId = id || state.selectedId;
       saveState();
@@ -475,7 +663,7 @@
       p.guaranteed = document.getElementById('guaranteed').checked;
       p.notes = document.getElementById('notes').value;
       state.selectedId = p.id;
-      saveState(); render(); closeDrawer();
+      saveState(); render(); closeDrawer(); toast('Player salary saved.');
     }
     function clearSalary() {
       const p = state.players.find(x => x.id === Number(document.getElementById('playerSelect').value)); if (!p) return;
