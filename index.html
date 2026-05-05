@@ -1,769 +1,499 @@
-import React, { useMemo, useState } from "react";
-import {
-  Search,
-  Bell,
-  Star,
-  Filter,
-  Download,
-  Eye,
-  Plus,
-  ChevronDown,
-  Users,
-  Trophy,
-  GraduationCap,
-  ClipboardList,
-  Calendar,
-  BarChart3,
-  MessageSquare,
-  Settings,
-  Home,
-  Bookmark,
-  Phone,
-  Link as LinkIcon,
-  X,
-  LayoutGrid,
-  RefreshCw,
-  SlidersHorizontal,
-  ExternalLink,
-  Check,
-} from "lucide-react";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salary Cap Dashboard App</title>
+  <style>
+    :root {
+      --bg: #07111d;
+      --panel: #101e2c;
+      --panel-2: #132638;
+      --card: #162a3c;
+      --line: rgba(255,255,255,.10);
+      --text: #f4f7fb;
+      --muted: #9aaabd;
+      --blue: #1479ff;
+      --blue-2: #0e5ed6;
+      --green: #5edb53;
+      --yellow: #ffc542;
+      --orange: #ff9f43;
+      --red: #ff4d4f;
+      --shadow: 0 18px 40px rgba(0,0,0,.35);
+      --radius: 12px;
+    }
 
-const PLAYERS = [
-  {
-    id: 1,
-    name: "Maddie Lawrence",
-    school: "Purdue University",
-    conference: "Big Ten",
-    previousConferenceTier: "Power 5",
-    pos: "OH",
-    height: "6'2\"",
-    classYear: "RS Junior",
-    eligibility: 2,
-    transferType: "Undergrad",
-    entered: "2026-05-12",
-    hometown: "Naperville, IL",
-    highSchool: "Naperville North HS",
-    stats: { kills: 4.15, hitting: 0.287, digs: 2.45, assists: 0.32, aces: 0.32, blocks: 0.41, receptions: 0.932 },
-    tags: ["Terminal OH", "Power 5", "Immediate Impact"],
-    match: 94,
-    starred: true,
-    board: true,
-    watch: true,
-    film: true,
-    bio: true,
-    instagram: true,
-    notes: [
-      "Great right-side range in transition. High contact point and can terminate from zone 4 or 2.",
-      "Needs to improve serve consistency but projects as immediate high-volume scorer.",
-    ],
-  },
-  {
-    id: 2,
-    name: "Avery Neale",
-    school: "Kansas State",
-    conference: "Big 12",
-    previousConferenceTier: "Power 5",
-    pos: "MB",
-    height: "6'4\"",
-    classYear: "Junior",
-    eligibility: 2,
-    transferType: "Undergrad",
-    entered: "2026-05-12",
-    hometown: "Wichita, KS",
-    highSchool: "Bishop Carroll",
-    stats: { kills: 2.98, hitting: 0.342, digs: 0.62, assists: 0.11, aces: 0.12, blocks: 1.12, receptions: 0 },
-    tags: ["Fast Middle", "Big Block", "Power 5"],
-    match: 89,
-    starred: false,
-    board: true,
-    watch: false,
-    film: true,
-    bio: true,
-    instagram: false,
-    notes: ["Runs well in front of the setter.", "Could raise your blocking floor quickly."],
-  },
-  {
-    id: 3,
-    name: "Emma Wadsworth",
-    school: "BYU",
-    conference: "Big 12",
-    previousConferenceTier: "Power 5",
-    pos: "S",
-    height: "5'11\"",
-    classYear: "Sophomore",
-    eligibility: 3,
-    transferType: "Undergrad",
-    entered: "2026-05-11",
-    hometown: "Provo, UT",
-    highSchool: "Timpview HS",
-    stats: { kills: 0.71, hitting: 0.201, digs: 2.21, assists: 10.21, aces: 0.45, blocks: 0.18, receptions: 0 },
-    tags: ["Tempo Setter", "Leader", "3 Years Left"],
-    match: 86,
-    starred: false,
-    board: false,
-    watch: true,
-    film: true,
-    bio: true,
-    instagram: true,
-    notes: ["Distributes fast and clean.", "Good feel for middle connection."],
-  },
-  {
-    id: 4,
-    name: "Kayla Ortiz",
-    school: "San Diego State",
-    conference: "Mountain West",
-    previousConferenceTier: "Mid-Major",
-    pos: "DS/L",
-    height: "5'6\"",
-    classYear: "Junior",
-    eligibility: 2,
-    transferType: "Undergrad",
-    entered: "2026-05-10",
-    hometown: "Temecula, CA",
-    highSchool: "Great Oak HS",
-    stats: { kills: 0.09, hitting: 0.018, digs: 4.92, assists: 0.45, aces: 0.31, blocks: 0.0, receptions: 0.952 },
-    tags: ["Elite Passer", "Defensive Range", "West Coast"],
-    match: 84,
-    starred: true,
-    board: false,
-    watch: true,
-    film: true,
-    bio: true,
-    instagram: true,
-    notes: ["High-end ball control.", "Very good platform and pursuit."],
-  },
-  {
-    id: 5,
-    name: "Sophie Gregoire",
-    school: "Wisconsin",
-    conference: "Big Ten",
-    previousConferenceTier: "Power 5",
-    pos: "OH",
-    height: "6'1\"",
-    classYear: "RS Junior",
-    eligibility: 2,
-    transferType: "Undergrad",
-    entered: "2026-05-10",
-    hometown: "Madison, WI",
-    highSchool: "Madison West",
-    stats: { kills: 3.78, hitting: 0.265, digs: 2.31, assists: 0.32, aces: 0.27, blocks: 0.37, receptions: 0.901 },
-    tags: ["Six Rotation", "Big Ten", "Proven"],
-    match: 82,
-    starred: false,
-    board: false,
-    watch: false,
-    film: true,
-    bio: true,
-    instagram: false,
-    notes: ["Good balance of offense and first-contact value."],
-  },
-  {
-    id: 6,
-    name: "Jadyn Livings",
-    school: "UCLA",
-    conference: "Big Ten",
-    previousConferenceTier: "Power 5",
-    pos: "MB",
-    height: "6'3\"",
-    classYear: "Junior",
-    eligibility: 2,
-    transferType: "Undergrad",
-    entered: "2026-05-09",
-    hometown: "Long Beach, CA",
-    highSchool: "Los Alamitos",
-    stats: { kills: 2.91, hitting: 0.331, digs: 0.85, assists: 0.24, aces: 0.12, blocks: 0.98, receptions: 0 },
-    tags: ["Long Middle", "Pac-12/Big Ten Experience"],
-    match: 79,
-    starred: false,
-    board: false,
-    watch: false,
-    film: true,
-    bio: true,
-    instagram: true,
-    notes: ["Length matters. Can still grow offensively."],
-  },
-  {
-    id: 7,
-    name: "Hannah Allick",
-    school: "Florida",
-    conference: "SEC",
-    previousConferenceTier: "Power 5",
-    pos: "S",
-    height: "6'0\"",
-    classYear: "Sophomore",
-    eligibility: 3,
-    transferType: "Undergrad",
-    entered: "2026-05-09",
-    hometown: "Tampa, FL",
-    highSchool: "Plant HS",
-    stats: { kills: 0.54, hitting: 0.184, digs: 2.17, assists: 9.88, aces: 0.22, blocks: 0.19, receptions: 0 },
-    tags: ["Setter", "Young", "3 Years Left"],
-    match: 76,
-    starred: false,
-    board: true,
-    watch: false,
-    film: true,
-    bio: true,
-    instagram: false,
-    notes: ["Runs a steady offense and defends enough."],
-  },
-  {
-    id: 8,
-    name: "Chloe Chicoine",
-    school: "Colorado",
-    conference: "Big 12",
-    previousConferenceTier: "Power 5",
-    pos: "OH",
-    height: "6'2\"",
-    classYear: "Junior",
-    eligibility: 2,
-    transferType: "Undergrad",
-    entered: "2026-05-08",
-    hometown: "Louisville, KY",
-    highSchool: "Mercy Academy",
-    stats: { kills: 3.44, hitting: 0.241, digs: 2.02, assists: 0.28, aces: 0.24, blocks: 0.29, receptions: 0.887 },
-    tags: ["High Volume", "Big Arm"],
-    match: 71,
-    starred: false,
-    board: false,
-    watch: true,
-    film: true,
-    bio: true,
-    instagram: true,
-    notes: ["Can take a lot of swings. Efficiency needs context."],
-  },
-];
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f7fb;
+      color: var(--text);
+      min-height: 100vh;
+    }
 
-const POSITIONS = ["All Positions", "OH", "MB", "S", "RS", "DS/L"];
-const HEIGHTS = ["All Heights", "Under 5'10\"", "5'10\"-6'0\"", "6'1\"+"];
-const ELIGIBILITY = ["All Eligibility", "1 year", "2 years", "3 years+"];
-const YEARS = ["All Years", "Sophomore", "Junior", "RS Junior"];
-const LEVELS = ["All Levels", "Power 5", "Mid-Major"];
-const TABS = ["Recently Entered Players", "Top Matches", "My Board"];
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
 
-const posColor = {
-  OH: "bg-blue-600 text-white",
-  MB: "bg-violet-600 text-white",
-  S: "bg-emerald-600 text-white",
-  RS: "bg-rose-600 text-white",
-  "DS/L": "bg-sky-600 text-white",
-};
+    .page {
+      padding: 18px 22px 28px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
 
-function cn(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
+    .title {
+      color: #111b4f;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: .02em;
+      text-transform: uppercase;
+      margin: 0 0 18px;
+    }
 
-function getHeightBucket(height) {
-  const match = height.match(/(\d+)'(\d+)/);
-  if (!match) return "All Heights";
-  const inches = Number(match[1]) * 12 + Number(match[2]);
-  if (inches < 70) return "Under 5'10\"";
-  if (inches <= 72) return `5'10"-6'0"`;
-  return `6'1"+`;
-}
+    .flow-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+      gap: 28px;
+      margin-bottom: 12px;
+    }
 
-function primaryMetric(player) {
-  if (player.pos === "S") return { label: "A/S", value: player.stats.assists.toFixed(2) };
-  if (player.pos === "MB") return { label: "B/S", value: player.stats.blocks.toFixed(2) };
-  if (player.pos === "DS/L") return { label: "R%", value: player.stats.receptions.toFixed(3) };
-  return { label: "K/S", value: player.stats.kills.toFixed(2) };
-}
+    .flow-step-header {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      color: #06102a;
+      margin-bottom: 10px;
+      min-height: 52px;
+    }
+    .bubble {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: grid; place-items: center;
+      background: #6256e8; color: white; font-weight: 800;
+      box-shadow: 0 8px 15px rgba(98,86,232,.25);
+    }
+    .flow-step-header h3 { margin: 0 0 2px; font-size: 14px; }
+    .flow-step-header p { margin: 0; font-size: 12px; color: #1f2d45; }
 
-function App() {
-  const [players, setPlayers] = useState(PLAYERS);
-  const [query, setQuery] = useState("");
-  const [position, setPosition] = useState("All Positions");
-  const [height, setHeight] = useState("All Heights");
-  const [eligibility, setEligibility] = useState("All Eligibility");
-  const [year, setYear] = useState("All Years");
-  const [level, setLevel] = useState("All Levels");
-  const [tab, setTab] = useState("Recently Entered Players");
-  const [selectedId, setSelectedId] = useState(1);
-  const [compact, setCompact] = useState(false);
-  const [showOnlyBoard, setShowOnlyBoard] = useState(false);
+    .phone-card {
+      min-height: 392px;
+      background: linear-gradient(145deg, #0b1724, #16283a);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 7px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      position: relative;
+    }
+    .phone-card.pad { padding: 18px; }
+    .topbar { height: 42px; display: flex; align-items: center; gap: 10px; padding: 0 18px; color: #d9e4ef; }
+    .back { font-size: 22px; color: #d9e4ef; }
+    .close { position: absolute; right: 18px; top: 18px; color: #9db0c4; font-size: 18px; border: 0; background: transparent; }
+    .profile { padding: 0 18px 16px; display: grid; grid-template-columns: 68px 1fr; gap: 14px; align-items: center; }
+    .avatar {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: radial-gradient(circle at 45% 32%, #f8d0a4 0 21%, #9b5c35 22% 35%, #1d2733 36% 100%);
+      border: 3px solid rgba(255,255,255,.08);
+      overflow: hidden;
+      position: relative;
+    }
+    .avatar::before { content:""; position:absolute; left:20px; top:16px; width:24px; height:28px; border-radius:50%; background:#d79761; }
+    .avatar::after { content:""; position:absolute; left:18px; top:43px; width:30px; height:22px; border-radius:14px 14px 0 0; background:#223449; }
+    .jersey { color:#d9e4ef; font-size: 13px; }
+    .player-name { margin: 2px 0 2px; font-size: 20px; font-weight: 800; }
+    .position { color: var(--muted); font-size: 13px; }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); padding: 4px 18px 20px; text-align: center; gap: 6px; }
+    .metric .label { color: var(--muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+    .metric .value { font-weight: 800; margin-top: 4px; }
+    .tabs { display: grid; grid-template-columns: repeat(4,1fr); border-top: 1px solid var(--line); padding: 0 18px; }
+    .tab { padding: 14px 0 12px; color: #c9d5e2; font-size: 13px; text-align:center; border-bottom: 2px solid transparent; }
+    .tab.active { color: #38a9ff; border-bottom-color: #1479ff; }
+    .empty { display: grid; place-items: center; text-align: center; min-height: 180px; color: #dce6f1; padding: 20px; }
+    .empty-icon { width: 36px; height: 44px; border: 2px solid #91a5ba; border-radius: 2px; margin: 0 auto 12px; position: relative; }
+    .empty-icon::after { content:""; position:absolute; top:9px; left:8px; right:8px; height:2px; background:#91a5ba; box-shadow: 0 8px 0 #91a5ba; }
+    .empty h4 { margin: 0 0 4px; }
+    .empty p { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+    .btn {
+      border: 0; border-radius: 4px; padding: 10px 16px; background: var(--blue); color: white; font-weight: 800;
+      box-shadow: 0 8px 18px rgba(20,121,255,.24);
+    }
+    .btn.secondary { background: transparent; border: 1px solid rgba(255,255,255,.16); color: #e6eef7; box-shadow:none; }
+    .btn.danger { background: var(--red); }
+    .btn.small { padding: 7px 10px; font-size: 12px; }
+    .btn.ghost { background: rgba(255,255,255,.06); box-shadow: none; border: 1px solid var(--line); }
 
-  const filtered = useMemo(() => {
-    let list = [...players].filter((p) => {
-      const q = query.toLowerCase();
-      const queryMatch =
-        !q ||
-        p.name.toLowerCase().includes(q) ||
-        p.school.toLowerCase().includes(q) ||
-        p.conference.toLowerCase().includes(q) ||
-        p.pos.toLowerCase().includes(q) ||
-        p.tags.join(" ").toLowerCase().includes(q);
+    .modal-title { margin: 0 0 18px; font-size: 16px; }
+    .form-row { display: grid; grid-template-columns: 86px 1fr; align-items: center; gap: 14px; margin-bottom: 12px; }
+    .form-row label { color: #d9e3ee; font-size: 12px; }
+    .field, .select, textarea {
+      width: 100%; background: rgba(5,12,20,.35); border: 1px solid rgba(255,255,255,.15); color: var(--text); border-radius: 4px; min-height: 34px; padding: 8px 10px;
+    }
+    .money { display: grid; grid-template-columns: 42px 1fr; }
+    .money span { display:grid; place-items:center; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.15); border-right:0; border-radius: 4px 0 0 4px; }
+    .money input { border-radius: 0 4px 4px 0; }
+    textarea { min-height: 58px; resize: vertical; }
+    .checkline { display: flex; align-items: center; gap: 10px; color: #d9e3ee; font-size: 12px; margin: 12px 0 16px 100px; }
+    .actions { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
 
-      const positionMatch = position === "All Positions" || p.pos === position;
-      const heightMatch = height === "All Heights" || getHeightBucket(p.height) === height;
-      const eligibilityMatch =
-        eligibility === "All Eligibility" ||
-        (eligibility === "1 year" && p.eligibility === 1) ||
-        (eligibility === "2 years" && p.eligibility === 2) ||
-        (eligibility === "3 years+" && p.eligibility >= 3);
-      const yearMatch = year === "All Years" || p.classYear === year;
-      const levelMatch = level === "All Levels" || p.previousConferenceTier === level;
-      const boardMatch = !showOnlyBoard || p.board;
-      return queryMatch && positionMatch && heightMatch && eligibilityMatch && yearMatch && levelMatch && boardMatch;
-    });
+    .review-box { border: 1px solid var(--line); border-radius: 4px; padding: 12px; margin-bottom: 10px; }
+    .review-label { color: #9aaabd; font-size: 11px; text-transform: uppercase; letter-spacing:.05em; margin-bottom: 8px; }
+    .review-player { display:flex; gap:12px; align-items:center; }
+    .mini-avatar { width: 42px; height: 42px; border-radius:50%; background: radial-gradient(circle, #d79761 0 36%, #1e3042 37% 100%); }
+    .review-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 12px; }
+    .review-grid .k { color: #b8c7d7; }
+    .review-grid .v { color: white; text-align:left; }
 
-    if (tab === "Top Matches") list.sort((a, b) => b.match - a.match);
-    if (tab === "My Board") list = list.filter((p) => p.board);
-    if (tab === "Recently Entered Players") list.sort((a, b) => (a.entered < b.entered ? 1 : -1));
+    .contract-area { padding: 18px; }
+    .salary-title-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    .salary-title-row h4 { margin:0; font-size:13px; font-weight:700; }
+    .salary-detail { display:grid; grid-template-columns: 1fr 1fr; gap: 9px 22px; font-size:13px; }
+    .salary-detail .k { color:#b6c5d5; }
+    .salary-detail .v { text-align:right; color:#fff; }
 
-    return list;
-  }, [players, query, position, height, eligibility, year, level, tab, showOnlyBoard]);
+    .dashboard-title { margin: 14px 0 6px 2px; color:#111b4f; font-size: 20px; font-weight:900; text-transform:uppercase; }
+    .dashboard {
+      background: #06111d;
+      border-radius: 8px;
+      min-height: 500px;
+      display:grid;
+      grid-template-columns: 150px 1fr;
+      border: 1px solid rgba(0,0,0,.25);
+      box-shadow: 0 10px 35px rgba(0,0,0,.20);
+      overflow:hidden;
+    }
+    .sidebar { background: linear-gradient(180deg,#091726,#07111d); padding: 16px 10px; border-right: 1px solid var(--line); }
+    .brand { display:flex; align-items:center; gap:10px; font-size:13px; font-weight:900; padding: 0 8px 20px; }
+    .shield { width:24px; height:28px; border:2px solid #d7e3ef; border-radius:10px 10px 12px 12px; display:grid; place-items:center; font-size:11px; }
+    .nav-item { display:flex; align-items:center; gap:10px; color:#d9e4ef; font-size:13px; padding: 10px 10px; border-radius:5px; margin-bottom:5px; }
+    .nav-item.active { background: var(--blue-2); }
+    .nav-item.dim { background: rgba(255,255,255,.05); }
+    .dash-main { padding: 12px; display:grid; grid-template-columns: 1.55fr 1fr 1.2fr; gap: 12px; }
+    .dash-card { background: linear-gradient(160deg, #132638, #0f1f30); border:1px solid var(--line); border-radius:5px; padding: 16px; overflow:hidden; }
+    .dash-card h3 { margin:0 0 12px; font-size:13px; text-transform:uppercase; letter-spacing:.02em; }
+    .wide { grid-column: span 2; }
+    .stat-grid { display:grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 22px; }
+    .stat { border-right: 1px solid var(--line); min-height:56px; }
+    .stat:last-child { border-right:0; }
+    .stat .big { font-size: 22px; font-weight:900; margin-bottom:2px; }
+    .stat .green { color: var(--green); }
+    .stat .small { font-size:11px; color:var(--muted); }
+    .bar-wrap { position: relative; padding: 8px 0 25px; }
+    .bar { height:18px; background:#344252; border-radius:3px; overflow:hidden; }
+    .bar-fill { height:100%; background: var(--green); width: 50%; }
+    .tick { position:absolute; top:0; width:2px; height:36px; border-left: 2px dashed rgba(255,255,255,.6); }
+    .tick.upper { border-left-color: var(--red); }
+    .axis { display:flex; justify-content:space-between; color:#cdd8e4; font-size:12px; margin-top:8px; }
+    .donut-wrap { display:flex; align-items:center; gap:16px; }
+    .donut { width:150px; height:150px; border-radius:50%; background: conic-gradient(var(--green) 0 24.8%, var(--blue) 24.8% 99%, var(--orange) 99% 100%); position:relative; flex:0 0 auto; }
+    .donut::after { content:""; position:absolute; inset:36px; background:#142638; border-radius:50%; }
+    .donut-center { position:absolute; inset:0; display:grid; place-items:center; z-index:1; text-align:center; font-weight:900; }
+    .donut-center span { display:block; color:#b8c7d7; font-weight:500; font-size:11px; }
+    .legend { flex:1; font-size:12px; }
+    .legend-row { display:grid; grid-template-columns: 14px 1fr auto; gap:8px; align-items:center; margin: 12px 0; color:#dce7f2; }
+    .swatch { width:12px; height:12px; border-radius:3px; }
+    .chart { height:150px; position:relative; border-left:1px solid rgba(255,255,255,.18); border-bottom:1px solid rgba(255,255,255,.18); margin: 8px 6px 0 30px; }
+    .line { position:absolute; height:2px; transform-origin:left center; background: var(--blue); }
+    .line.greenline { background: var(--green); border-top:2px dashed var(--green); height:0; }
+    .point { position:absolute; width:8px; height:8px; border-radius:50%; background:var(--blue); transform:translate(-50%,-50%); }
+    .point.g { background:var(--green); }
+    .chart-label { position:absolute; color:#dce7f2; font-size:11px; font-weight:800; transform:translate(-50%,-130%); }
+    .xlab { position:absolute; bottom:-22px; color:#c4d1df; font-size:10px; transform:translateX(-50%); }
+    table { width:100%; border-collapse:collapse; font-size:12px; }
+    th, td { padding: 8px 5px; border-bottom:1px solid rgba(255,255,255,.08); text-align:left; }
+    th { color:#b6c5d5; font-size:10px; font-weight:700; text-transform:uppercase; }
+    td.num { text-align:right; }
+    .link { color:#2e9dff; text-align:center; font-size:12px; margin-top:14px; background:none; border:0; display:block; width:100%; }
+    .commit-row { display:flex; justify-content:space-between; border-bottom:1px solid var(--line); padding: 9px 0; font-size:13px; }
+    .commit-row.total { font-weight:900; }
+    .commit-row.green { color: var(--green); font-weight:900; }
+    .alert { display:grid; grid-template-columns:36px 1fr; gap:10px; align-items:center; border:1px solid var(--line); border-radius:5px; padding:11px; margin-bottom:10px; }
+    .alert-icon { width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-weight:900; background:#218bff; }
+    .alert-icon.warn { background:var(--yellow); color:#102033; }
+    .alert h4 { margin:0 0 3px; color:#fff; font-size:13px; }
+    .alert.warn h4 { color:var(--yellow); }
+    .alert p { margin:0; color:#b9c7d6; font-size:12px; }
 
-  const selected = filtered.find((p) => p.id === selectedId) || filtered[0] || null;
+    .drawer {
+      position: fixed; right: 18px; top: 18px; width: 430px; max-width: calc(100vw - 36px);
+      background: linear-gradient(145deg, #0b1724, #16283a); border:1px solid var(--line); border-radius:10px;
+      box-shadow: 0 30px 80px rgba(0,0,0,.55); z-index:20; padding:18px; display:none;
+    }
+    .drawer.open { display:block; }
+    .overlay { position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:15; display:none; }
+    .overlay.open { display:block; }
+    .management { margin-top: 12px; display:flex; gap:10px; flex-wrap:wrap; }
 
-  const metrics = useMemo(() => ({
-    total: players.length,
-    women: players.length,
-    grad: players.filter((p) => p.transferType === "Grad").length,
-    power5: players.filter((p) => p.previousConferenceTier === "Power 5").length,
-    watch: players.filter((p) => p.watch).length,
-  }), [players]);
+    @media (max-width: 1180px) {
+      .flow-grid { grid-template-columns: repeat(2,1fr); }
+      .dash-main { grid-template-columns: 1fr; }
+      .wide { grid-column: span 1; }
+      .dashboard { grid-template-columns: 1fr; }
+      .sidebar { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+      .brand { padding:0 8px; }
+    }
+    @media (max-width: 640px) {
+      .page { padding: 12px; }
+      .flow-grid { grid-template-columns: 1fr; }
+      .stat-grid { grid-template-columns: repeat(2,1fr); }
+      .donut-wrap { flex-direction:column; align-items:flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+  <aside class="drawer" id="drawer">
+    <button class="close" onclick="closeDrawer()">×</button>
+    <h3 class="modal-title" id="drawerTitle">Add Salary</h3>
+    <div class="form-row"><label>Player</label><select class="select" id="playerSelect"></select></div>
+    <div class="form-row"><label>Salary Type</label><select class="select" id="salaryType"><option>Annual</option><option>Monthly</option><option>Bonus</option><option>Scholarship</option><option>NIL</option></select></div>
+    <div class="form-row"><label>Amount</label><div class="money"><span>$</span><input class="field" id="salaryAmount" type="number" min="0" step="1000"></div></div>
+    <div class="form-row"><label>Start Date</label><input class="field" id="startDate" type="date"></div>
+    <div class="form-row"><label>End Date</label><input class="field" id="endDate" type="date"></div>
+    <div class="checkline" style="margin-left:100px"><input id="guaranteed" type="checkbox" checked><label for="guaranteed">Fully Guaranteed</label></div>
+    <div class="form-row"><label>Notes</label><textarea id="notes" placeholder="Base salary for 2024-25 season."></textarea></div>
+    <div class="actions">
+      <button class="btn secondary" onclick="closeDrawer()">Cancel</button>
+      <button class="btn" onclick="saveSalary()">Save / Override</button>
+    </div>
+    <div class="management">
+      <button class="btn ghost small" onclick="clearSalary()">Clear Selected Player Salary</button>
+      <button class="btn danger small" onclick="resetApp()">Reset Demo Data</button>
+    </div>
+  </aside>
 
-  function updatePlayer(id, changes) {
-    setPlayers((prev) => prev.map((p) => (p.id === id ? { ...p, ...changes } : p)));
-  }
+  <main class="page">
+    <h1 class="title">Adding Salary For A Player – Ideas & Flow</h1>
 
-  return (
-    <div className="min-h-screen bg-[#eef2f7] text-slate-900">
-      <div className="flex min-h-screen">
-        <aside className="hidden w-[260px] flex-col bg-[linear-gradient(180deg,#06162f_0%,#09224a_100%)] text-white xl:flex">
-          <div className="border-b border-white/10 px-5 py-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-full border border-white/20 bg-white/10 text-lg font-bold">N</div>
-              <div>
-                <div className="text-[28px] font-black leading-none tracking-tight">VOLLEYBALL</div>
-                <div className="text-lg font-bold text-red-400">TRANSFER PORTAL</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="px-4 py-5">
-            <NavButton icon={LayoutGrid} label="Dashboard" active />
-            <NavButton icon={Users} label="Player Board" />
-            <NavButton icon={Star} label="Watch List" badge="24" />
-            <NavButton icon={ClipboardList} label="Notes" />
-            <NavButton icon={RefreshCw} label="Comparison" />
-            <NavButton icon={Filter} label="Team Needs" />
-            <NavButton icon={Phone} label="Recruiting Pipeline" />
-            <NavButton icon={Calendar} label="Calendar" />
-            <NavButton icon={BarChart3} label="Reports" />
-          </div>
-
-          <div className="px-4 pb-4">
-            <div className="mb-3 flex items-center justify-between text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">
-              <span>Quick Filters</span>
-              <button className="normal-case tracking-normal text-slate-400">Clear All</button>
-            </div>
-            <div className="space-y-3">
-              <SideSelect label="Position" value={position} onChange={setPosition} options={POSITIONS} dark />
-              <SideSelect label="Height" value={height} onChange={setHeight} options={HEIGHTS} dark />
-              <SideSelect label="Class / Eligibility" value={eligibility} onChange={setEligibility} options={ELIGIBILITY} dark />
-              <SideSelect label="Year in School" value={year} onChange={setYear} options={YEARS} dark />
-              <SideSelect label="Conference Level" value={level} onChange={setLevel} options={LEVELS} dark />
-            </div>
-          </div>
-
-          <div className="mt-auto p-4">
-            <div className="rounded-2xl border border-white/15 bg-white/5 p-4 text-sm text-slate-200">
-              <div className="font-semibold text-white">Need Help?</div>
-              <div className="mt-1 text-slate-300">Support center for portal imports, board sharing, and saved filters.</div>
-            </div>
-          </div>
-        </aside>
-
-        <main className="flex-1">
-          <header className="border-b border-slate-200 bg-white px-5 py-4 shadow-sm">
-            <div className="flex flex-col gap-4 2xl:flex-row 2xl:items-center 2xl:justify-between">
-              <div className="flex items-center gap-4">
-                <div className="relative w-full max-w-[470px]">
-                  <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                  <input
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search players, schools, positions..."
-                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-3 pl-11 pr-4 text-sm outline-none ring-0 placeholder:text-slate-400 focus:border-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 self-end 2xl:self-auto">
-                <button className="relative rounded-2xl border border-slate-200 bg-white p-3 text-slate-600">
-                  <Bell size={18} />
-                  <span className="absolute right-2 top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">1</span>
-                </button>
-                <div className="hidden items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-2 md:flex">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-xl">🐾</div>
-                  <div>
-                    <div className="text-sm font-bold">FRESNO STATE</div>
-                    <div className="text-xs text-slate-500">VOLLEYBALL</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">OC</div>
-                  <div className="hidden sm:block">
-                    <div className="text-sm font-semibold">Coach Catalan</div>
-                  </div>
-                  <ChevronDown size={16} className="text-slate-400" />
-                </div>
-              </div>
-            </div>
-          </header>
-
-          <div className="grid gap-5 p-5 2xl:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="space-y-5">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                <TopCard icon={Users} label="Total Players" value={metrics.total} sub="+183 in last 7 days" />
-                <TopCard icon={Trophy} label="Women's Volleyball" value={metrics.women} sub="+142 in last 7 days" />
-                <TopCard icon={GraduationCap} label="Graduate Transfers" value={metrics.grad} sub={`${Math.round((metrics.grad / metrics.total) * 100)}% of all players`} />
-                <TopCard icon={BarChart3} label="Power 5 Players" value={metrics.power5} sub={`${Math.round((metrics.power5 / metrics.total) * 100)}% of all players`} />
-                <TopCard icon={Star} label="In Your Watch List" value={metrics.watch} sub="+6 new matches" />
-              </div>
-
-              <section className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <h2 className="text-[34px] font-black leading-tight">Dashboard</h2>
-                    <p className="text-sm text-slate-500">Overview of the transfer portal, rebuilt for coaches.</p>
-                  </div>
-                  <button className="rounded-xl p-2 text-slate-400 hover:bg-slate-100">
-                    <X size={18} />
-                  </button>
-                </div>
-
-                <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
-                  <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex flex-wrap gap-2">
-                      {TABS.map((item) => (
-                        <button
-                          key={item}
-                          onClick={() => setTab(item)}
-                          className={cn(
-                            "rounded-xl px-4 py-2 text-sm font-semibold transition",
-                            tab === item ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:bg-white/70"
-                          )}
-                        >
-                          {item}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <button className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700">
-                        <Plus size={15} /> Add to Board
-                      </button>
-                      <button className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700">
-                        <Download size={15} /> Export
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="mb-4 flex flex-wrap items-center gap-2">
-                    <button
-                      onClick={() => setShowOnlyBoard((v) => !v)}
-                      className={cn(
-                        "rounded-full px-3 py-1.5 text-xs font-semibold",
-                        showOnlyBoard ? "bg-slate-900 text-white" : "bg-white text-slate-600 border border-slate-200"
-                      )}
-                    >
-                      Only My Board
-                    </button>
-                    <button
-                      onClick={() => setCompact((v) => !v)}
-                      className={cn(
-                        "rounded-full px-3 py-1.5 text-xs font-semibold",
-                        compact ? "bg-blue-600 text-white" : "bg-white text-slate-600 border border-slate-200"
-                      )}
-                    >
-                      {compact ? "Compact On" : "Compact Off"}
-                    </button>
-                    <Chip label={`${filtered.length} results`} subtle />
-                    {position !== "All Positions" && <Chip label={position} />}
-                    {level !== "All Levels" && <Chip label={level} />}
-                  </div>
-
-                  <div className="overflow-hidden rounded-[22px] border border-slate-200 bg-white">
-                    <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 text-sm">
-                      <div className="flex items-center gap-4 text-slate-500">
-                        <button className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-slate-700">
-                          <SlidersHorizontal size={15} /> Columns
-                        </button>
-                        <button className="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2 text-slate-700">
-                          Display {compact ? "Compact" : "Full"}
-                        </button>
-                      </div>
-                      <div className="text-slate-500">{tab}</div>
-                    </div>
-
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full text-sm">
-                        <thead className="bg-slate-50 text-slate-500">
-                          <tr className="text-left">
-                            <th className="px-4 py-3 font-medium"></th>
-                            <th className="px-4 py-3 font-medium">Name</th>
-                            <th className="px-4 py-3 font-medium">Pos</th>
-                            <th className="px-4 py-3 font-medium">Ht</th>
-                            <th className="px-4 py-3 font-medium">Class</th>
-                            <th className="px-4 py-3 font-medium">School (From)</th>
-                            <th className="px-4 py-3 font-medium">Conf</th>
-                            <th className="px-4 py-3 font-medium">K/S</th>
-                            <th className="px-4 py-3 font-medium">H%</th>
-                            <th className="px-4 py-3 font-medium">D/S</th>
-                            <th className="px-4 py-3 font-medium">A/S</th>
-                            <th className="px-4 py-3 font-medium">Entry Date</th>
-                            <th className="px-4 py-3 font-medium">Match</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {filtered.map((player) => {
-                            const active = selected?.id === player.id;
-                            return (
-                              <tr
-                                key={player.id}
-                                onClick={() => setSelectedId(player.id)}
-                                className={cn(
-                                  "cursor-pointer border-t border-slate-100 transition hover:bg-slate-50",
-                                  active && "bg-blue-50"
-                                )}
-                              >
-                                <td className={cn("px-4", compact ? "py-3" : "py-4")}>
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        updatePlayer(player.id, { starred: !player.starred });
-                                      }}
-                                      className="rounded-md p-1 hover:bg-white"
-                                    >
-                                      <Star size={16} className={player.starred ? "fill-amber-400 text-amber-400" : "text-slate-300"} />
-                                    </button>
-                                    <input type="checkbox" checked={player.board} readOnly className="h-4 w-4 rounded border-slate-300" />
-                                  </div>
-                                </td>
-                                <td className={cn("px-4", compact ? "py-3" : "py-4")}>
-                                  <div className="font-semibold text-slate-800">{player.name}</div>
-                                </td>
-                                <td className={cn("px-4", compact ? "py-3" : "py-4")}>
-                                  <span className={cn("inline-flex rounded-md px-2 py-1 text-[11px] font-bold", posColor[player.pos] || "bg-slate-600 text-white")}>
-                                    {player.pos}
-                                  </span>
-                                </td>
-                                <td className={cn("px-4", compact ? "py-3" : "py-4")}>{player.height}</td>
-                                <td className={cn("px-4", compact ? "py-3" : "py-4")}>{player.classYear}</td>
-                                <td className={cn("px-4", compact ? "py-3" : "py-4")}>
-                                  <div>{player.school}</div>
-                                </td>
-                                <td className={cn("px-4 text-blue-600", compact ? "py-3" : "py-4")}>{player.conference}</td>
-                                <td className={cn("px-4", compact ? "py-3" : "py-4")}>{player.stats.kills.toFixed(2)}</td>
-                                <td className={cn("px-4", compact ? "py-3" : "py-4")}>{player.stats.hitting.toFixed(3)}</td>
-                                <td className={cn("px-4", compact ? "py-3" : "py-4")}>{player.stats.digs.toFixed(2)}</td>
-                                <td className={cn("px-4", compact ? "py-3" : "py-4")}>{player.stats.assists.toFixed(2)}</td>
-                                <td className={cn("px-4 text-slate-500", compact ? "py-3" : "py-4")}>{player.entered}</td>
-                                <td className={cn("px-4", compact ? "py-3" : "py-4")}>
-                                  <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                                    {player.match}%
-                                  </span>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </div>
-
-            <aside className="space-y-5">
-              {selected && (
-                <>
-                  <section className="overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-sm">
-                    <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-                      <div className="text-sm font-semibold text-slate-500">Player Profile</div>
-                      <button className="rounded-xl p-2 text-slate-400 hover:bg-slate-100"><X size={18} /></button>
-                    </div>
-                    <div className="p-5">
-                      <div className="mb-4 flex items-start gap-4">
-                        <div className="flex h-28 w-24 items-center justify-center rounded-2xl bg-slate-100 text-4xl">🏐</div>
-                        <div className="min-w-0 flex-1">
-                          <div className="mb-2 flex items-center gap-2">
-                            <span className={cn("inline-flex rounded-md px-2 py-1 text-[11px] font-bold", posColor[selected.pos] || "bg-slate-700 text-white")}>{selected.pos}</span>
-                            {selected.starred && <Star size={14} className="fill-amber-400 text-amber-400" />}
-                          </div>
-                          <h3 className="text-[30px] font-black leading-tight">{selected.name}</h3>
-                          <div className="mt-1 text-sm text-slate-500">{selected.school}</div>
-                          <div className="mt-3 text-sm text-slate-600">
-                            {selected.height} • {selected.classYear} • {selected.eligibility} Yrs Elig.
-                          </div>
-                          <div className="mt-2 text-sm text-slate-500">Graduated High School: 2021</div>
-                        </div>
-                      </div>
-
-                      <div className="mb-4 flex gap-2">
-                        <button
-                          onClick={() => updatePlayer(selected.id, { board: !selected.board })}
-                          className="flex-1 rounded-xl bg-[#071d43] px-4 py-3 text-sm font-semibold text-white"
-                        >
-                          {selected.board ? "Added to Board" : "+ Add to Board"}
-                        </button>
-                        <button className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-700">View Full Profile</button>
-                      </div>
-
-                      <div className="mb-4 grid grid-cols-4 gap-2">
-                        <MetricTile label="KILLS/SET" value={selected.stats.kills.toFixed(2)} />
-                        <MetricTile label="HITTING %" value={selected.stats.hitting.toFixed(3)} />
-                        <MetricTile label="DIGS/SET" value={selected.stats.digs.toFixed(2)} />
-                        <MetricTile label="ACES/SET" value={selected.stats.aces.toFixed(2)} />
-                      </div>
-
-                      <div className="space-y-2 border-t border-slate-200 pt-4 text-sm">
-                        <Info label="Hometown" value={selected.hometown} />
-                        <Info label="High School" value={selected.highSchool} />
-                        <Info label="Previous School" value={selected.school} />
-                        <Info label="Conference" value={selected.conference} />
-                        <Info label="NCAA ID" value={`20${selected.id}1234567`} />
-                      </div>
-                    </div>
-                  </section>
-
-                  <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-                    <div className="mb-4 text-sm font-semibold text-slate-500">Links</div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <ActionLink enabled={selected.film} label="Hudl" />
-                      <ActionLink enabled={selected.bio} label="Player Bio" />
-                      <ActionLink enabled={selected.instagram} label="Instagram" />
-                    </div>
-                  </section>
-
-                  <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div className="text-sm font-semibold text-slate-500">Notes</div>
-                      <button className="text-sm font-semibold text-blue-600">Add Note</button>
-                    </div>
-                    <div className="space-y-3">
-                      {selected.notes.map((note, idx) => (
-                        <div key={idx} className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-                          <div className="mb-2 text-xs font-semibold text-slate-500">5/12/25 by Coach Staff</div>
-                          {note}
-                        </div>
-                      ))}
-                    </div>
-                  </section>
-                </>
-              )}
-            </aside>
-          </div>
-        </main>
+    <section class="flow-grid">
+      <div>
+        <div class="flow-step-header"><div class="bubble">1</div><div><h3>Open Player Profile</h3><p>Go to any player's profile.</p></div></div>
+        <div class="phone-card" id="cardEmpty"></div>
       </div>
-    </div>
-  );
-}
-
-function NavButton({ icon: Icon, label, active = false, badge }) {
-  return (
-    <button
-      className={cn(
-        "mb-2 flex w-full items-center justify-between rounded-xl px-4 py-3 text-left text-sm font-semibold transition",
-        active ? "bg-blue-700 text-white" : "text-slate-100 hover:bg-white/10"
-      )}
-    >
-      <span className="flex items-center gap-3">
-        <Icon size={17} />
-        {label}
-      </span>
-      {badge ? <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">{badge}</span> : null}
-    </button>
-  );
-}
-
-function SideSelect({ label, value, onChange, options, dark = false }) {
-  return (
-    <label className="block">
-      <div className={cn("mb-1 text-xs font-medium", dark ? "text-slate-300" : "text-slate-500")}>{label}</div>
-      <div className="relative">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className={cn(
-            "w-full appearance-none rounded-xl border px-3 py-3 pr-10 text-sm outline-none",
-            dark
-              ? "border-white/10 bg-white/5 text-white"
-              : "border-slate-200 bg-white text-slate-900"
-          )}
-        >
-          {options.map((option) => (
-            <option key={option} value={option} className="text-slate-900">
-              {option}
-            </option>
-          ))}
-        </select>
-        <ChevronDown size={16} className={cn("pointer-events-none absolute right-3 top-1/2 -translate-y-1/2", dark ? "text-slate-400" : "text-slate-400")} />
+      <div>
+        <div class="flow-step-header"><div class="bubble">2</div><div><h3>Add Salary Details</h3><p>Enter salary, type, and contract info.</p></div></div>
+        <div class="phone-card pad" id="cardForm"></div>
       </div>
-    </label>
-  );
-}
-
-function TopCard({ icon: Icon, label, value, sub }) {
-  return (
-    <div className="rounded-[24px] border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <div className="text-sm font-semibold text-slate-500">{label}</div>
-          <div className="mt-2 text-4xl font-black tracking-tight">{value}</div>
-          <div className="mt-1 text-sm text-emerald-600">{sub}</div>
-        </div>
-        <div className="rounded-2xl bg-slate-100 p-3 text-slate-600">
-          <Icon size={20} />
-        </div>
+      <div>
+        <div class="flow-step-header"><div class="bubble">3</div><div><h3>Review Summary</h3><p>Confirm the details before saving.</p></div></div>
+        <div class="phone-card pad" id="cardReview"></div>
       </div>
-    </div>
-  );
-}
+      <div>
+        <div class="flow-step-header"><div class="bubble">4</div><div><h3>Salary Added</h3><p>Salary is now visible on the player profile.</p></div></div>
+        <div class="phone-card" id="cardAdded"></div>
+      </div>
+    </section>
 
-function Chip({ label, subtle = false }) {
-  return (
-    <span className={cn(
-      "inline-flex rounded-full px-3 py-1.5 text-xs font-semibold",
-      subtle ? "bg-slate-100 text-slate-600" : "bg-blue-100 text-blue-700"
-    )}>
-      {label}
-    </span>
-  );
-}
+    <h2 class="dashboard-title">Salary Cap Tracking – Dashboard Ideas</h2>
+    <section class="dashboard">
+      <aside class="sidebar">
+        <div class="brand"><div class="shield">HQ</div><span>TEAM HQ</span></div>
+        <div class="nav-item active">⌂ Dashboard</div>
+        <div class="nav-item">♙ Players</div>
+        <div class="nav-item">▤ Contracts</div>
+        <div class="nav-item dim">◉ Salary Cap</div>
+        <div class="nav-item">▥ Reports</div>
+        <div class="nav-item">⚙ Settings</div>
+      </aside>
+      <div class="dash-main">
+        <div class="dash-card wide" id="capOverview"></div>
+        <div class="dash-card" id="capBreakdown"></div>
+        <div class="dash-card" id="projectedCap"></div>
+        <div class="dash-card wide" id="playerBreakdown"></div>
+        <div class="dash-card" id="commitments"></div>
+        <div class="dash-card" id="alerts"></div>
+      </div>
+    </section>
+  </main>
 
-function MetricTile({ label, value }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-center">
-      <div className="text-lg font-black">{value}</div>
-      <div className="mt-1 text-[10px] font-bold tracking-[0.12em] text-slate-500">{label}</div>
-    </div>
-  );
-}
+  <script>
+    const defaultPlayers = [
+      { id: 1, name: 'Alex Johnson', pos: 'F', position: 'Forward', age: 26, height: '6\'2"', weight: '205 lbs', exp: '4 yrs', salary: 85000, salaryType: 'Annual', start: '2024-07-01', end: '2025-06-30', guaranteed: true, notes: 'Base salary for 2024-25 season.', y2: 87000, y3: 0 },
+      { id: 2, name: 'Mason Smith', pos: 'D', position: 'Defender', age: 24, height: '6\'0"', weight: '198 lbs', exp: '2 yrs', salary: 6500000, salaryType: 'Annual', start: '2024-07-01', end: '2027-06-30', guaranteed: true, notes: 'Multi-year active contract.', y2: 6750000, y3: 7000000 },
+      { id: 3, name: 'Tyler Brown', pos: 'F', position: 'Forward', age: 27, height: '6\'3"', weight: '210 lbs', exp: '5 yrs', salary: 5750000, salaryType: 'Annual', start: '2024-07-01', end: '2026-06-30', guaranteed: true, notes: 'Core roster contract.', y2: 5750000, y3: 0 },
+      { id: 4, name: 'Jordan Lee', pos: 'G', position: 'Guard', age: 25, height: '6\'1"', weight: '190 lbs', exp: '3 yrs', salary: 5000000, salaryType: 'Annual', start: '2024-07-01', end: '2027-06-30', guaranteed: true, notes: 'Starter salary.', y2: 5250000, y3: 5500000 },
+      { id: 5, name: 'Chris Davis', pos: 'F', position: 'Forward', age: 23, height: '6\'4"', weight: '215 lbs', exp: '1 yr', salary: 4250000, salaryType: 'Annual', start: '2024-07-01', end: '2025-06-30', guaranteed: false, notes: 'Team option next season.', y2: 0, y3: 0 }
+    ];
 
-function Info({ label, value }) {
-  return (
-    <div className="flex items-center justify-between gap-4 py-1.5">
-      <div className="text-slate-500">{label}</div>
-      <div className="text-right font-medium text-slate-800">{value}</div>
-    </div>
-  );
-}
+    let state = JSON.parse(localStorage.getItem('salaryCapState') || 'null') || {
+      players: defaultPlayers,
+      selectedId: 1,
+      salaryCap: 75000000,
+      upperLimit: 90000000,
+      retainedSalary: 1250000,
+      deadMoney: 750000
+    };
 
-function ActionLink({ enabled, label }) {
-  return (
-    <button
-      className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-xl border px-3 py-3 text-sm font-semibold",
-        enabled ? "border-slate-200 bg-white text-slate-800" : "border-slate-100 bg-slate-50 text-slate-400"
-      )}
-    >
-      {enabled ? <ExternalLink size={15} /> : <Check size={15} />}
-      {label}
-    </button>
-  );
-}
+    const fmt = value => Number(value || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    const shortFmt = value => '$' + (Number(value || 0) / 1000000).toFixed(value >= 1000000 ? 2 : 2) + 'M';
+    const pct = (part, total) => total ? ((part / total) * 100) : 0;
+    const saveState = () => localStorage.setItem('salaryCapState', JSON.stringify(state));
+    const selectedPlayer = () => state.players.find(p => p.id === state.selectedId) || state.players[0];
+    const activeTotal = () => state.players.reduce((sum, p) => sum + Number(p.salary || 0), 0);
+    const totalCommitted = () => activeTotal() + Number(state.retainedSalary || 0) + Number(state.deadMoney || 0);
+    const capSpace = () => Number(state.salaryCap || 0) - totalCommitted();
 
-export default App;
+    function profileShell(player, content) {
+      return `
+        <div class="topbar"><span class="back">←</span><span>Players</span></div>
+        <div class="profile"><div class="avatar"></div><div><div class="jersey">#23</div><div class="player-name">${player.name}</div><div class="position">${player.position}</div></div></div>
+        <div class="metrics"><div class="metric"><div class="label">Age</div><div class="value">${player.age}</div></div><div class="metric"><div class="label">Height</div><div class="value">${player.height}</div></div><div class="metric"><div class="label">Weight</div><div class="value">${player.weight}</div></div><div class="metric"><div class="label">Exp</div><div class="value">${player.exp}</div></div></div>
+        <div class="tabs"><div class="tab">Overview</div><div class="tab">Stats</div><div class="tab active">Contract</div><div class="tab">History</div></div>
+        ${content}`;
+    }
+
+    function renderFlowCards() {
+      const p = selectedPlayer();
+      document.getElementById('cardEmpty').innerHTML = profileShell(p, `<div class="empty"><div><div class="empty-icon"></div><h4>No salary information</h4><p>Salary details for this player<br>have not been added yet.</p><button class="btn" onclick="openDrawer(${p.id})">＋ Add Salary</button></div></div>`);
+
+      document.getElementById('cardForm').innerHTML = `
+        <button class="close" onclick="openDrawer(${p.id})">×</button><h3 class="modal-title">Add Salary</h3>
+        <div class="form-row"><label>Salary Type</label><select class="select" disabled><option>${p.salaryType || 'Annual'}</option></select></div>
+        <div class="form-row"><label>Amount</label><div class="money"><span>$</span><input class="field" value="${Number(p.salary || 0)}" readonly></div></div>
+        <div class="form-row"><label>Start Date</label><input class="field" value="${p.start || ''}" readonly></div>
+        <div class="form-row"><label>End Date</label><input class="field" value="${p.end || ''}" readonly></div>
+        <div class="checkline"><input type="checkbox" ${p.guaranteed ? 'checked' : ''} disabled><span>Fully Guaranteed</span></div>
+        <div class="form-row"><label>Notes</label><textarea readonly>${p.notes || ''}</textarea></div>
+        <div class="actions"><button class="btn secondary" onclick="openDrawer(${p.id})">Cancel</button><button class="btn" onclick="openDrawer(${p.id})">Save</button></div>`;
+
+      document.getElementById('cardReview').innerHTML = `
+        <button class="close" onclick="openDrawer(${p.id})">×</button><h3 class="modal-title">Review Salary</h3>
+        <div class="review-box"><div class="review-label">Player</div><div class="review-player"><div class="mini-avatar"></div><div><b>${p.name}</b><br><span class="position">${p.position} • #23</span></div></div></div>
+        <div class="review-box"><div class="review-label">Salary Details</div><div class="review-grid">
+          <div class="k">Salary Type</div><div class="v">${p.salaryType || 'Annual'}</div>
+          <div class="k">Amount</div><div class="v">${fmt(p.salary)}</div>
+          <div class="k">Start Date</div><div class="v">${p.start || '-'}</div>
+          <div class="k">End Date</div><div class="v">${p.end || '-'}</div>
+          <div class="k">Guaranteed</div><div class="v">${p.guaranteed ? 'Fully Guaranteed' : 'Not Guaranteed'}</div>
+          <div class="k">Notes</div><div class="v">${p.notes || '-'}</div>
+        </div></div>
+        <div class="actions"><button class="btn secondary" onclick="openDrawer(${p.id})">Edit</button><button class="btn" onclick="openDrawer(${p.id})">Confirm</button></div>`;
+
+      document.getElementById('cardAdded').innerHTML = profileShell(p, `<div class="contract-area"><div class="salary-title-row"><h4>SALARY (2024-25)</h4><button class="btn ghost small" onclick="openDrawer(${p.id})">✎ Edit</button></div><div class="salary-detail">
+        <div class="k">Salary Type</div><div class="v">${p.salaryType || 'Annual'}</div>
+        <div class="k">Amount</div><div class="v">${fmt(p.salary)}</div>
+        <div class="k">Start Date</div><div class="v">${p.start || '-'}</div>
+        <div class="k">End Date</div><div class="v">${p.end || '-'}</div>
+        <div class="k">Guaranteed</div><div class="v">${p.guaranteed ? 'Fully Guaranteed' : 'Not Guaranteed'}</div>
+        <div class="k">Notes</div><div class="v">${p.notes || '-'}</div>
+      </div></div>`);
+    }
+
+    function renderDashboard() {
+      const active = activeTotal();
+      const total = totalCommitted();
+      const space = capSpace();
+      const usedPct = pct(active, state.salaryCap);
+      const totalPct = pct(total, state.salaryCap);
+      const spacePct = pct(space, state.salaryCap);
+      document.getElementById('capOverview').innerHTML = `
+        <h3>Salary Cap Overview <span class="position">ⓘ</span><br><span class="position">2024 - 2025 League Year</span></h3>
+        <div class="stat-grid"><div class="stat"><div class="big">${fmt(state.salaryCap)}</div><div class="small">Salary Cap</div></div><div class="stat"><div class="big">${fmt(active)}</div><div class="small">Total Committed</div></div><div class="stat"><div class="big green">${fmt(space)}</div><div class="small">Cap Space</div></div><div class="stat"><div class="big">${usedPct.toFixed(1)}%</div><div class="small">Cap Used</div></div></div>
+        <div class="bar-wrap"><div class="bar"><div class="bar-fill" style="width:${Math.max(0, Math.min(100, totalPct))}%"></div></div><div class="tick" style="left:${Math.min(100, pct(state.salaryCap, state.upperLimit))}%"></div><div class="tick upper" style="left:100%"></div><div class="axis"><span>$0</span><span>${fmt(state.salaryCap)}<br>Salary Cap</span><span>${fmt(state.upperLimit)}<br>Upper Limit</span></div></div>`;
+
+      document.getElementById('capBreakdown').innerHTML = `
+        <h3>Cap Space Breakdown</h3><div class="donut-wrap"><div class="donut" style="background:conic-gradient(var(--green) 0 ${Math.max(0,spacePct)}%, var(--blue) ${Math.max(0,spacePct)}% ${Math.max(0,spacePct)+pct(active,state.salaryCap)}%, var(--orange) ${Math.max(0,spacePct)+pct(active,state.salaryCap)}% ${Math.max(0,spacePct)+pct(active,state.salaryCap)+pct(state.retainedSalary,state.salaryCap)}%, #8b99a8 0 100%)"><div class="donut-center">${shortFmt(space)}<span>Cap Space</span></div></div><div class="legend">
+          <div class="legend-row"><span class="swatch" style="background:var(--green)"></span><span>Cap Space</span><b>${shortFmt(space)} (${spacePct.toFixed(1)}%)</b></div>
+          <div class="legend-row"><span class="swatch" style="background:var(--blue)"></span><span>Active Contracts</span><b>${shortFmt(active)} (${pct(active,state.salaryCap).toFixed(1)}%)</b></div>
+          <div class="legend-row"><span class="swatch" style="background:var(--orange)"></span><span>Retained Salary</span><b>${shortFmt(state.retainedSalary)} (${pct(state.retainedSalary,state.salaryCap).toFixed(1)}%)</b></div>
+          <div class="legend-row"><span class="swatch" style="background:#8b99a8"></span><span>Dead Money</span><b>${shortFmt(state.deadMoney)} (${pct(state.deadMoney,state.salaryCap).toFixed(1)}%)</b></div>
+        </div></div>`;
+
+      document.getElementById('projectedCap').innerHTML = `
+        <h3>Projected Cap (Next 3 Seasons)</h3><div class="chart" id="chart"></div>`;
+      drawProjectedChart();
+
+      document.getElementById('playerBreakdown').innerHTML = `
+        <h3>Player Salary Breakdown <span class="position">ⓘ</span></h3><table><thead><tr><th>Player</th><th>Pos</th><th class="num">2024-25 Salary</th><th class="num">2025-26 Salary</th><th class="num">2026-27 Salary</th><th class="num">Total Guaranteed</th><th class="num">Cap %</th></tr></thead><tbody>
+        ${state.players.map(p => `<tr onclick="openDrawer(${p.id})"><td><span class="mini-avatar" style="display:inline-block;width:22px;height:22px;vertical-align:middle;margin-right:8px"></span>${p.name}</td><td>${p.pos}</td><td class="num">${fmt(p.salary)}</td><td class="num">${p.y2 ? fmt(p.y2) : '-'}</td><td class="num">${p.y3 ? fmt(p.y3) : '-'}</td><td class="num">${fmt(Number(p.salary||0)+Number(p.y2||0)+Number(p.y3||0))}</td><td class="num">${pct(p.salary,state.salaryCap).toFixed(2)}%</td></tr>`).join('')}
+        </tbody></table><button class="link" onclick="openDrawer(state.selectedId)">View Full Salary Table / Edit Any Row</button>`;
+
+      document.getElementById('commitments').innerHTML = `
+        <h3>Salary Commitments</h3><div class="commit-row"><span>Active Contracts</span><span>${fmt(active)} &nbsp; ${pct(active,state.salaryCap).toFixed(1)}%</span></div><div class="commit-row"><span>Retained Salary</span><span>${fmt(state.retainedSalary)} &nbsp; ${pct(state.retainedSalary,state.salaryCap).toFixed(1)}%</span></div><div class="commit-row"><span>Dead Money</span><span>${fmt(state.deadMoney)} &nbsp; ${pct(state.deadMoney,state.salaryCap).toFixed(1)}%</span></div><div class="commit-row total"><span>Total Committed</span><span>${fmt(total)} &nbsp; ${pct(total,state.salaryCap).toFixed(1)}%</span></div><div class="commit-row green"><span>Cap Space</span><span>${fmt(space)} &nbsp; ${spacePct.toFixed(1)}%</span></div><p class="position" style="font-size:11px;margin-top:28px">* Upper Limit: ${fmt(state.upperLimit)}</p>
+        <div class="management"><button class="btn ghost small" onclick="editCapSettings()">Override Cap Settings</button></div>`;
+
+      const approaching = state.upperLimit - total;
+      document.getElementById('alerts').innerHTML = `
+        <h3>Alerts & Notifications</h3>
+        <div class="alert warn"><div class="alert-icon warn">!</div><div><h4>${approaching < 15000000 ? 'Approaching Upper Limit' : 'Healthy Cap Space'}</h4><p>You are within ${fmt(Math.abs(approaching))} of the upper limit.</p></div></div>
+        <div class="alert"><div class="alert-icon">i</div><div><h4>${expiringCount()} Contracts Expiring</h4><p>You have ${expiringCount()} player contracts expiring after this season.</p></div></div>
+        <div class="alert"><div class="alert-icon">i</div><div><h4>Roster Spots Available</h4><p>You have 4 open roster spots.</p></div></div>
+        <button class="link" onclick="alert('Alerts are live and update when salary data changes.')">View All Alerts</button>`;
+    }
+
+    function drawProjectedChart() {
+      const chart = document.getElementById('chart');
+      const w = chart.clientWidth || 260, h = chart.clientHeight || 150;
+      const years = ['2024-25','2025-26','2026-27'];
+      const caps = [state.salaryCap, state.salaryCap + 3500000, state.salaryCap + 7000000];
+      const commits = [activeTotal(), state.players.reduce((s,p)=>s+Number(p.y2||0),0)+state.retainedSalary, state.players.reduce((s,p)=>s+Number(p.y3||0),0)];
+      const max = Math.max(...caps, ...commits, 100000000);
+      const x = i => 45 + i * ((w - 70) / 2);
+      const y = v => h - 25 - (v / max) * (h - 40);
+      let html = '';
+      for (let i=0;i<3;i++) html += `<span class="xlab" style="left:${x(i)}px">${years[i]}</span>`;
+      function seg(a,b,klass){ const x1=x(a), y1=y(b.vals[a]), x2=x(a+1), y2=y(b.vals[a+1]); const len=Math.hypot(x2-x1,y2-y1); const ang=Math.atan2(y2-y1,x2-x1)*180/Math.PI; return `<div class="line ${klass}" style="left:${x1}px;top:${y1}px;width:${len}px;transform:rotate(${ang}deg)"></div>`; }
+      html += seg(0,{vals:caps},'') + seg(1,{vals:caps},'') + seg(0,{vals:commits},'greenline') + seg(1,{vals:commits},'greenline');
+      caps.forEach((v,i)=> html += `<div class="point" style="left:${x(i)}px;top:${y(v)}px"></div><div class="chart-label" style="left:${x(i)}px;top:${y(v)}px">${shortFmt(v)}</div>`);
+      commits.forEach((v,i)=> html += `<div class="point g" style="left:${x(i)}px;top:${y(v)}px"></div><div class="chart-label" style="left:${x(i)}px;top:${y(v)+24}px;color:var(--green)">${shortFmt(v)}</div>`);
+      chart.innerHTML = html;
+    }
+
+    function expiringCount() { return state.players.filter(p => (p.end || '').startsWith('2025')).length; }
+
+    function renderPlayerSelect() {
+      const sel = document.getElementById('playerSelect');
+      sel.innerHTML = state.players.map(p => `<option value="${p.id}">${p.name}</option>`).join('');
+      sel.value = state.selectedId;
+      sel.onchange = () => loadPlayerIntoForm(Number(sel.value));
+    }
+
+    function openDrawer(id) {
+      state.selectedId = id || state.selectedId;
+      saveState();
+      renderPlayerSelect();
+      loadPlayerIntoForm(state.selectedId);
+      document.getElementById('overlay').classList.add('open');
+      document.getElementById('drawer').classList.add('open');
+    }
+    function closeDrawer() { document.getElementById('overlay').classList.remove('open'); document.getElementById('drawer').classList.remove('open'); }
+    function loadPlayerIntoForm(id) {
+      const p = state.players.find(x => x.id === Number(id)); if (!p) return;
+      state.selectedId = p.id;
+      document.getElementById('playerSelect').value = p.id;
+      document.getElementById('salaryType').value = p.salaryType || 'Annual';
+      document.getElementById('salaryAmount').value = Number(p.salary || 0);
+      document.getElementById('startDate').value = p.start || '';
+      document.getElementById('endDate').value = p.end || '';
+      document.getElementById('guaranteed').checked = !!p.guaranteed;
+      document.getElementById('notes').value = p.notes || '';
+    }
+    function saveSalary() {
+      const p = state.players.find(x => x.id === Number(document.getElementById('playerSelect').value)); if (!p) return;
+      p.salaryType = document.getElementById('salaryType').value;
+      p.salary = Number(document.getElementById('salaryAmount').value || 0);
+      p.start = document.getElementById('startDate').value;
+      p.end = document.getElementById('endDate').value;
+      p.guaranteed = document.getElementById('guaranteed').checked;
+      p.notes = document.getElementById('notes').value;
+      state.selectedId = p.id;
+      saveState(); render(); closeDrawer();
+    }
+    function clearSalary() {
+      const p = state.players.find(x => x.id === Number(document.getElementById('playerSelect').value)); if (!p) return;
+      p.salary = 0; p.y2 = 0; p.y3 = 0; p.notes = ''; p.guaranteed = false;
+      saveState(); render(); loadPlayerIntoForm(p.id);
+    }
+    function resetApp() { localStorage.removeItem('salaryCapState'); location.reload(); }
+    function editCapSettings() {
+      const cap = prompt('Salary cap amount', state.salaryCap); if (cap === null) return;
+      const upper = prompt('Upper limit amount', state.upperLimit); if (upper === null) return;
+      const retained = prompt('Retained salary amount', state.retainedSalary); if (retained === null) return;
+      const dead = prompt('Dead money amount', state.deadMoney); if (dead === null) return;
+      state.salaryCap = Number(cap || 0); state.upperLimit = Number(upper || 0); state.retainedSalary = Number(retained || 0); state.deadMoney = Number(dead || 0);
+      saveState(); render();
+    }
+    function render() { renderFlowCards(); renderDashboard(); }
+    window.addEventListener('resize', drawProjectedChart);
+    render();
+  </script>
+</body>
+</html>
