@@ -178,6 +178,7 @@
       header { align-items: flex-start; flex-direction: column; }
       .calendar { grid-template-columns: 1fr; }
     }
+  .team-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;background:white;padding:3px 12px 3px 3px;font-weight:700;white-space:nowrap}.mini-dot{width:28px;height:28px;border-radius:50%;color:white;display:inline-grid;place-items:center;font-size:10px;font-weight:900}.check{display:flex;align-items:center;gap:8px;color:#697184;font-weight:500;font-size:15px}.check input{width:auto}.team-filter{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:22px}.team-filter .selected{background:#1f2025;color:white}.empty{border:1px dashed var(--line);border-radius:10px;min-height:120px;display:grid;place-items:center;text-align:center;color:var(--muted);padding:24px}.dashed{box-shadow:none;background:#fffefa}.bar{height:8px;border-radius:99px;background:#24262d;overflow:hidden;max-width:390px}.bar span{display:block;height:100%;background:var(--accent)}.month-grid{display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--line);border-right:0;border-bottom:0}.dow{background:#f1eee8;color:var(--muted);font-weight:800;font-size:13px;letter-spacing:.08em;padding:10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.month-cell{min-height:126px;padding:10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:white}.mini-game{font-size:12px;background:#eef6ff;border-left:4px solid var(--accent);padding:4px 6px;border-radius:4px;margin-top:6px}.mini-conflict{font-size:12px;background:#ffe0dc;color:#a32b28;padding:4px 6px;border-radius:5px;margin-top:6px}.legend{display:inline-block;width:13px;height:13px;border-radius:3px;vertical-align:-2px}.legend.blue{background:var(--accent)}.legend.dark{background:#1f2025}.export-list{display:grid;gap:12px;margin:18px 0}.export-list button{text-align:left;justify-content:flex-start}
   </style>
 </head>
 <body>
@@ -216,6 +217,8 @@
       <section id="schedule"></section>
       <section id="calendar"></section>
       <section id="partners"></section>
+      <section id="balance"></section>
+      <section id="unscheduled"></section>
       <section id="exports"></section>
     </main>
       </div>
@@ -347,11 +350,10 @@
     }
 
     function showTab(id) {
-      if (id === 'balance') id = 'dashboard';
-      if (id === 'unscheduled') id = 'schedule';
       document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
       document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
-      byId(id).classList.add('active');
+      const section = byId(id) || byId('dashboard');
+      section.classList.add('active');
       const item = tabList.find(t => t[0] === id) || tabList.find(t => t[0] === 'dashboard');
       byId('pageTitle').textContent = item[2] || 'Dashboard';
       byId('pageSubtitle').textContent = item[3] || '';
@@ -361,7 +363,7 @@
     }
 
     function render() {
-      renderDashboard(); renderTeams(); renderRules(); renderConflicts(); renderSchedule(); renderCalendar(); renderPartners(); renderExports();
+      renderDashboard(); renderTeams(); renderRules(); renderConflicts(); renderSchedule(); renderCalendar(); renderPartners(); renderBalance(); renderUnscheduled(); renderExports(); renderTabs();
     }
 
     function renderDashboard() {
@@ -431,30 +433,39 @@
     }
 
     function renderTeams() {
-      byId('teams').innerHTML = `<div class="card"><div class="toolbar"><button onclick="openTeamModal()">Add Team</button></div>${teamTable()}</div>`;
+      byId('teams').innerHTML = `<div class="card"><div class="card-head"><h3>Programs</h3><span class="muted">${state.teams.length} teams · ${partnerPairs().filter(p=>p.length===2).length} pairs · ${partnerPairs().filter(p=>p.length===1).length} odd</span></div>${teamTable()}</div>
+      <div class="card" style="margin-top:22px"><div class="card-head"><h3>Travel partner map</h3><span class="muted">9-team odd logic: one program rotates solo</span></div><div class="grid three">${partnerPairs().map(p=>`<div class="stat"><span>${p.length===2?'PAIR':'ODD TEAM'}</span><strong style="font-size:19px">${p.map(x=>teamChip(x.id)).join(' + ')}</strong></div>`).join('')}</div></div>`;
     }
 
+    function abbr(name) { return name.split(' ').map(w=>w[0]).join('').slice(0,4).toUpperCase().replace('FS','FRE'); }
+    function teamChip(id) { const t = team(id); if (!t) return ''; return `<span class="team-chip"><span class="mini-dot" style="background:${t.color}">${abbr(t.name).slice(0,3)}</span>${t.name}</span>`; }
+
     function teamTable() {
-      return `<table><thead><tr><th>Team</th><th>City</th><th>Venue</th><th>Travel Partner</th><th>Actions</th></tr></thead><tbody>
-        ${state.teams.map(t => `<tr><td>${teamDot(t.id)}<strong>${t.name}</strong></td><td>${t.city}</td><td>${t.venue}</td><td>${t.partnerId ? teamLabel(t.partnerId) : '<span class="pill warn">Solo / Bye Partner</span>'}</td><td><button class="small ghost" onclick="openTeamModal('${t.id}')">Edit</button> <button class="small bad" onclick="deleteTeam('${t.id}')">Delete</button></td></tr>`).join('')}
+      return `<table><thead><tr><th>Team</th><th>Abbr</th><th>Location</th><th>Travel Partner</th><th>Color</th><th></th></tr></thead><tbody>
+        ${state.teams.map(t => `<tr><td>${teamChip(t.id)}</td><td>${abbr(t.name)}</td><td>${t.city}</td><td>${t.partnerId ? teamChip(t.partnerId) : '<span class="pill warn">Odd team</span>'}</td><td><span style="display:inline-block;width:13px;height:13px;border-radius:3px;background:${t.color};margin-right:8px"></span>${t.color}</td><td><button class="small ghost" onclick="openTeamModal('${t.id}')">Edit</button> <button class="small ghost" style="color:#dc2626" onclick="deleteTeam('${t.id}')">Remove</button></td></tr>`).join('')}
       </tbody></table>`;
     }
 
     function renderRules() {
-      byId('rules').innerHTML = `<div class="card"><h2>Scheduling Rules</h2><div class="grid three">
-        ${input('Sport', 'sport', state.rules.sport)}
-        ${input('Start Date', 'startDate', state.rules.startDate, 'date')}
-        ${input('End Date', 'endDate', state.rules.endDate, 'date')}
-        ${select('Round Robin', 'roundRobin', state.rules.roundRobin, [['single','Single Round Robin'],['double','Double Round Robin']])}
-        ${input('Target Games Per Team', 'targetGamesPerTeam', state.rules.targetGamesPerTeam, 'number')}
-        ${input('Max Road Trips in a Row', 'maxRoadStreak', state.rules.maxRoadStreak, 'number')}
-        ${input('Minimum Rest Days', 'minRestDays', state.rules.minRestDays, 'number')}
-        ${select('Back-to-Back Days', 'allowBackToBack', String(state.rules.allowBackToBack), [['false','Do Not Allow'],['true','Allow']])}
-        ${select('Prioritize Travel Partners', 'prioritizePartners', String(state.rules.prioritizePartners), [['true','Yes'],['false','No']])}
+      byId('rules').innerHTML = `<div class="grid two">
+        <div class="card"><div class="card-head"><h3>Window & cadence</h3></div><div class="grid two">
+          ${input('Start date', 'startDate', state.rules.startDate, 'date')}
+          ${input('End date', 'endDate', state.rules.endDate, 'date')}
+        </div>
+        <label>Match pattern</label><select onchange="state.rules.allowedDays=this.value.split(','); saveState(); render();"><option value="Thu,Sat" ${state.rules.allowedDays.join(',')==='Thu,Sat'?'selected':''}>Thursday / Saturday (volleyball default)</option><option value="Fri,Sun" ${state.rules.allowedDays.join(',')==='Fri,Sun'?'selected':''}>Friday / Sunday</option><option value="Wed,Sat" ${state.rules.allowedDays.join(',')==='Wed,Sat'?'selected':''}>Wednesday / Saturday</option></select>
+        <label>Allowed days of week</label><div class="toolbar">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => `<label class="check"><input type="checkbox" ${state.rules.allowedDays.includes(d) ? 'checked' : ''} onchange="toggleDay('${d}', this.checked)"> ${d}</label>`).join('')}</div>
+        <label>League-wide blackout dates (comma-separated, YYYY-MM-DD)</label><input value="${state.conflicts.filter(c=>c.scope==='league').map(c=>c.date).join(', ')}" readonly></div>
+        <div class="card"><div class="card-head"><h3>Format & balance</h3></div><div class="grid two">
+          ${select('Round type', 'roundRobin', state.rules.roundRobin, [['single','Single round-robin'],['double','Double round-robin']])}
+          ${input('Matches per team (partial)', 'targetGamesPerTeam', state.rules.targetGamesPerTeam, 'number')}
+          ${input('Max consecutive road weekends', 'maxRoadStreak', state.rules.maxRoadStreak, 'number')}
+          ${input('Min rest days between matches', 'minRestDays', state.rules.minRestDays, 'number')}
+        </div><div class="toolbar"><label class="check"><input type="checkbox" ${state.rules.prioritizePartners?'checked':''} onchange="state.rules.prioritizePartners=this.checked;saveState()"> Prefer travel-pair trips</label><label class="check"><input type="checkbox" checked> Balance home/away</label><label class="check"><input type="checkbox" ${state.rules.allowBackToBack?'checked':''} onchange="state.rules.allowBackToBack=this.checked;saveState()"> Allow Thu→Sat short rest</label></div></div>
       </div>
-      <label>Allowed Match Days</label>
-      <div class="toolbar">${['Thu','Fri','Sat','Sun','Mon','Tue','Wed'].map(d => `<label class="pill"><input type="checkbox" style="width:auto" ${state.rules.allowedDays.includes(d) ? 'checked' : ''} onchange="toggleDay('${d}', this.checked)"> ${d}</label>`).join('')}</div>
-      <div class="footer-actions"><button onclick="saveRules()">Save Rules</button><button class="secondary" onclick="generateSchedule()">Generate With These Rules</button></div></div>`;
+      <div class="card" style="margin-top:22px"><div class="card-head"><h3>Priorities</h3><span class="muted">Generator weights conflicts → travel pairs → balance → rest → road-trip variety</span></div><div class="grid four">
+        ${['Avoid conflicts|Hard constraint. Matches never scheduled on team or league blackouts.','Travel-pair efficiency|Pair-on-pair trips: visitor pair plays both hosts in one weekend window.','Home/Away balance|Aim for even split per team across the season.','Rest & cadence|Honor min rest days and Thu→Sat short-rest tolerance.'].map((x,i)=>{const [h,p]=x.split('|');return `<div class="stat"><span style="background:#1f2025;color:#fff;border-radius:5px;padding:4px 8px;display:inline-block;width:auto;margin-bottom:10px">${i+1}</span><strong style="font-size:17px">${h}</strong><div class="muted">${p}</div></div>`}).join('')}
+      </div></div>
+      <div class="card" style="margin-top:22px"><div class="card-head"><h3>Last run</h3><span class="muted">${state.games.length ? state.games.length+' matches created' : 'No run yet — click Generate'}</span></div><div class="empty">Configure rules above and click <b>Generate schedule</b> in the top right.</div></div>`;
     }
 
     function input(label, key, value, type='text') { return `<div><label>${label}</label><input id="rule_${key}" type="${type}" value="${escapeAttr(value)}"></div>`; }
@@ -481,18 +492,25 @@
     }
 
     function renderConflicts() {
-      byId('conflicts').innerHTML = `<div class="card"><div class="toolbar"><button onclick="openConflictModal()">Add Conflict</button></div>
-      <table><thead><tr><th>Date</th><th>Scope</th><th>Team/Venue</th><th>Type</th><th>Title</th><th>Actions</th></tr></thead><tbody>
-        ${state.conflicts.sort((a,b)=>a.date.localeCompare(b.date)).map(c => `<tr><td>${fmt(c.date)}</td><td><span class="pill blue">${c.scope}</span></td><td>${c.teamId ? teamLabel(c.teamId) : 'League-wide'}</td><td>${c.type}</td><td><strong>${c.title}</strong><br><span class="muted">${c.notes || ''}</span></td><td><button class="small ghost" onclick="openConflictModal('${c.id}')">Edit</button> <button class="small bad" onclick="deleteConflict('${c.id}')">Delete</button></td></tr>`).join('')}
+      byId('conflicts').innerHTML = `<div class="card"><div class="card-head"><h3>All conflicts</h3><span class="muted">${state.conflicts.length} on file</span></div>
+      <table><thead><tr><th>Date</th><th>Scope</th><th>Team / League</th><th>Kind</th><th>Description</th><th></th></tr></thead><tbody>
+        ${state.conflicts.sort((a,b)=>a.date.localeCompare(b.date)).map(c => `<tr><td>${fmt(c.date)}</td><td><span class="pill ${c.scope==='league'?'bad':'warn'}">${c.scope}</span></td><td>${c.teamId ? teamChip(c.teamId) : '<span class="muted">League-wide</span>'}</td><td class="muted">${c.type}</td><td>${c.title}<br><span class="muted">${c.notes || ''}</span></td><td><button class="small ghost" onclick="openConflictModal('${c.id}')">Edit</button> <button class="small ghost" style="color:#dc2626" onclick="deleteConflict('${c.id}')">Delete</button></td></tr>`).join('')}
       </tbody></table></div>`;
     }
 
     function renderSchedule() {
-      byId('schedule').innerHTML = `<div class="card"><div class="toolbar">
-        <button onclick="generateSchedule()">Auto-Generate</button>
-        <button class="ghost" onclick="openGameModal()">Add Game</button>
-        <button class="secondary" onclick="validateSchedule(true)">Validate</button>
-      </div><div class="warnings">${warningHtml()}</div>${scheduleTable()}</div>`;
+      const selected = state.teams[0]?.id;
+      byId('schedule').innerHTML = `<div class="team-filter">${state.teams.map((t,i)=>`<button class="ghost ${i===0?'selected':''}" onclick="renderTeamView('${t.id}')">${teamChip(t.id)}</button>`).join('')}</div>
+      <div id="teamView"></div>`;
+      renderTeamView(selected);
+    }
+
+    function renderTeamView(id) {
+      const t = team(id); if (!t) return;
+      const games = state.games.filter(g=>g.homeId===id||g.awayId===id).sort((a,b)=>(a.date||'9999').localeCompare(b.date||'9999'));
+      const h = games.filter(g=>g.homeId===id).length, a = games.filter(g=>g.awayId===id).length;
+      const c = state.conflicts.filter(x=>x.teamId===id).length;
+      byId('teamView').innerHTML = `<div class="grid three" style="margin-bottom:22px"><div class="stat"><span>Matches</span><strong>${games.length}</strong><div class="muted">${h} home / ${a} away</div></div><div class="stat"><span>Travel Partner</span><strong style="font-size:22px">${teamLabel(t.partnerId)}</strong><div class="muted">Mirrored trip windows</div></div><div class="stat"><span>Conflicts</span><strong>${c}</strong><div class="muted">team-specific dates</div></div></div><div class="card"><div class="card-head"><h3>${t.name} · season schedule</h3></div>${games.length?scheduleTable(games):'<div class="empty">No matches scheduled.</div>'}</div>`;
     }
 
     function scheduleTable(games = state.games) {
@@ -503,17 +521,27 @@
     }
 
     function renderCalendar() {
-      const dates = allowedDates();
-      byId('calendar').innerHTML = `<div class="card"><h2>League Calendar</h2><p class="muted">Click a game card to edit. Locked games show a lock icon.</p><div class="calendar">
-        ${dates.map(d => `<div class="day"><strong>${fmt(d)}</strong>${state.games.filter(g=>g.date===d).map(g => `<div class="game-chip ${g.locked?'locked':''}" style="background:${team(g.homeId)?.color || '#111827'}" onclick="openGameModal('${g.id}')">${teamLabel(g.awayId)} at <strong>${teamLabel(g.homeId)}</strong></div>`).join('')}</div>`).join('')}
-      </div></div>`;
+      const month = 9, year = 2026;
+      const first = new Date(year, month, 1), last = new Date(year, month + 1, 0);
+      const cells = [];
+      for (let i=0;i<first.getDay();i++) cells.push(null);
+      for (let d=1; d<=last.getDate(); d++) cells.push(new Date(year, month, d));
+      byId('calendar').innerHTML = `<div class="card"><div class="card-head"><h3>October 2026 <button class="small ghost">‹ Prev</button> <button class="small ghost">Next ›</button></h3><span class="muted"><span class="legend blue"></span> Home match &nbsp; <span class="legend dark"></span> Away match &nbsp; ◩ Conflict / blackout</span></div><div class="month-grid">${['SUN','MON','TUE','WED','THU','FRI','SAT'].map(d=>`<div class="dow">${d}</div>`).join('')}${cells.map(dt=>{ if(!dt) return '<div class="month-cell muted"></div>'; const iso=dt.toISOString().slice(0,10); const gs=state.games.filter(g=>g.date===iso); const cs=state.conflicts.filter(c=>c.date===iso); return `<div class="month-cell"><b>${dt.getDate()}</b>${gs.map(g=>`<div class="mini-game" style="border-left-color:${team(g.homeId)?.color}">${teamLabel(g.awayId)} @ ${teamLabel(g.homeId)}</div>`).join('')}${cs.map(c=>`<div class="mini-conflict">⚠ ${c.teamId?abbr(teamLabel(c.teamId)):c.title.split(' ')[0]}</div>`).join('')}</div>`}).join('')}</div></div><div class="card" style="margin-top:22px"><div class="card-head"><h3>All matches (chronological)</h3></div>${scheduleTable()}</div>`;
     }
 
     function renderPartners() {
       const pairs = partnerPairs();
-      byId('partners').innerHTML = `<div class="card"><h2>Travel Partner View</h2><div class="grid two">
-        ${pairs.map(pair => `<div class="stat"><strong>${pair.map(t=>t.name).join(' + ')}</strong><span class="muted">${pair.length === 1 ? 'Solo / odd-team rotation partner needed' : 'Linked travel hosts'}</span><br>${partnerTripList(pair)}</div>`).join('')}
-      </div></div>`;
+      const trips = state.games.filter(g => team(g.homeId)?.partnerId && state.games.some(x => x.date === g.date && x.homeId === team(g.homeId).partnerId));
+      byId('partners').innerHTML = `<div class="card"><div class="card-head"><h3>Travel-pair trips</h3><span class="muted">${Math.floor(trips.length/2)} pair-on-pair weekends</span></div>${trips.length?`<div class="grid two">${pairs.map(pair => `<div class="stat"><span>${pair.length===2?'Travel pair':'Odd team'}</span><strong style="font-size:20px">${pair.map(t=>t.name).join(' + ')}</strong>${partnerTripList(pair)}</div>`).join('')}</div>`:'<div class="empty">No pair trips yet — generate a schedule with "Prefer travel-pair trips" enabled.</div>'}</div>`;
+    }
+
+    function renderBalance() {
+      byId('balance').innerHTML = `<div class="card"><div class="card-head"><h3>Home / Away balance</h3><span class="muted">Goal: even split, max ±1 game gap</span></div>${balanceTable()}</div><div class="card" style="margin-top:22px"><div class="card-head"><h3>Per-team weekly load</h3></div><div class="empty">Weekly load chart appears after schedule generation.</div></div>`;
+    }
+
+    function renderUnscheduled() {
+      const u = state.games.filter(g=>!g.date);
+      byId('unscheduled').innerHTML = `<div class="card dashed">${u.length ? scheduleTable(u) : '<div class="empty"><b>All matchups placed.</b><br>Generate the schedule and any unplaceable matches will land here with a reason.</div>'}</div>`;
     }
 
     function partnerTripList(pair) {
@@ -524,12 +552,11 @@
     }
 
     function renderExports() {
-      byId('exports').innerHTML = `<div class="card"><h2>Exports</h2><p class="muted">Export the current schedule or copy it for email, docs, or operations planning.</p><div class="toolbar">
-        <button onclick="downloadCSV()">Export CSV</button>
-        <button onclick="downloadHTML()">Download Full HTML App</button>
-        <button onclick="copyScheduleText()">Copy Schedule Text</button>
-        <button class="ghost" onclick="window.print()">Print / Save PDF</button>
-      </div><textarea id="exportText" readonly>${plainSchedule()}</textarea></div>`;
+      byId('exports').innerHTML = `<div class="card"><div class="card-head"><h3>Export schedule</h3><span class="muted">CSV, text, print, or backup JSON</span></div><div class="toolbar"><button onclick="openExportModal()">Open export menu</button></div><textarea id="exportText" readonly>${plainSchedule()}</textarea></div>`;
+    }
+
+    function openExportModal() {
+      openModal(`<h2>Export schedule <button class="ghost small" style="float:right" onclick="hideModal()">×</button></h2><div class="export-list"><button class="ghost" onclick="downloadCSV()">Download CSV</button><button class="ghost" onclick="copyScheduleText()">Copy as text</button><button class="ghost" onclick="window.print()">Print to PDF</button><button class="ghost" onclick="downloadBlob(JSON.stringify(state,null,2),'schedule_backup.json','application/json')">Download full JSON (backup)</button></div><div class="footer-actions"><button class="ghost" onclick="hideModal()">Cancel</button></div>`);
     }
 
     function partnerPairs() {
@@ -657,8 +684,8 @@
     }
 
     function balanceTable() {
-      return `<table><thead><tr><th>Team</th><th>Home</th><th>Away</th><th>Total</th><th>Balance</th></tr></thead><tbody>
-      ${state.teams.map(t => { const h=state.games.filter(g=>g.homeId===t.id).length; const a=state.games.filter(g=>g.awayId===t.id).length; const diff=h-a; return `<tr><td>${teamDot(t.id)}${t.name}</td><td>${h}</td><td>${a}</td><td>${h+a}</td><td><span class="pill ${Math.abs(diff)<=1?'good':'warn'}">${diff>0?'+':''}${diff}</span></td></tr>`; }).join('')}
+      return `<table><thead><tr><th>Team</th><th>Home</th><th>Away</th><th>Total</th><th>Distribution</th><th>Δ</th></tr></thead><tbody>
+      ${state.teams.map(t => { const h=state.games.filter(g=>g.homeId===t.id).length; const a=state.games.filter(g=>g.awayId===t.id).length; const total=h+a; const diff=h-a; const hp= total ? Math.round((h/total)*100) : 50; return `<tr><td>${teamChip(t.id)}</td><td>${h}</td><td>${a}</td><td>${total}</td><td><div class="bar"><span style="width:${hp}%"></span></div></td><td><span class="pill ${Math.abs(diff)<=1?'good':'warn'}">${diff}</span></td></tr>`; }).join('')}
       </tbody></table>`;
     }
 
