@@ -18,9 +18,9 @@
       --warn: #a86b05;
       --bad: #bf2d2d;
       --blue-soft: #d9edff;
-      --shadow: 0 1px 2px rgba(32,33,36,.08), 0 1px 4px rgba(32,33,36,.06);
-      --radius: 10px;
-      --side: 290px;
+      --shadow: 0 1px 2px rgba(32,33,36,.07), 0 1px 3px rgba(32,33,36,.05);
+      --radius: 8px;
+      --side: 250px;
     }
 
     * { box-sizing: border-box; }
@@ -36,33 +36,27 @@
     aside {
       background: var(--panel);
       border-right: 1px solid var(--line);
-      padding: 32px 18px;
+      padding: 22px 14px;
       position: sticky;
       top: 0;
       height: 100vh;
     }
-    .brand { display: flex; gap: 14px; align-items: center; padding: 6px 8px 30px; border-bottom: 1px solid var(--line); margin-bottom: 36px; }
+    .brand { display: flex; gap: 10px; align-items: center; padding: 4px 6px 22px; border-bottom: 1px solid var(--line); margin-bottom: 26px; }
     .logo { width: 36px; height: 36px; border-radius: 9px; background: #1f2025; color: white; display: grid; place-items: center; font-weight: 900; letter-spacing: -.06em; }
-    .brand strong { display: block; font-size: 18px; line-height: 1.1; }
-    .brand span { color: var(--muted); font-size: 15px; }
-    .nav-group { margin: 0 0 28px; }
+    .brand strong { display: block; font-size: 16px; line-height: 1.1; }
+    .brand span { color: var(--muted); font-size: 13px; }
+    .nav-group { margin: 0 0 20px; }
     .nav-title { padding: 0 10px 10px; color: var(--muted); font-size: 13px; text-transform: uppercase; letter-spacing: .14em; }
     nav button {
-      width: 100%;
-      border: 0;
-      background: transparent;
-      color: #30333b;
-      padding: 11px 14px;
-      margin: 2px 0;
-      border-radius: 8px;
-      text-align: left;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      padding: 7px 12px;
+      background: var(--accent);
+      color: white;
       cursor: pointer;
-      font-size: 17px;
-      box-shadow: none;
-      font-weight: 500;
+      font-weight: 700;
+      box-shadow: var(--shadow);
+      transition: transform .12s ease, opacity .12s ease;
     }
     nav button.active { background: var(--card); box-shadow: var(--shadow); color: #191b20; font-weight: 700; }
     .nav-badge { min-width: 24px; height: 24px; padding: 0 7px; border-radius: 999px; background: white; border: 1px solid var(--line); display: inline-grid; place-items: center; color: var(--muted); font-size: 12px; }
@@ -71,14 +65,14 @@
     header {
       background: rgba(255,254,250,.65);
       border-bottom: 1px solid var(--line);
-      padding: 22px 32px;
+      padding: 16px 26px;
       display: flex;
       justify-content: space-between;
-      gap: 16px;
+      gap: 12px;
       align-items: center;
     }
-    header h1 { margin: 0 0 2px; font-size: 22px; letter-spacing: -.035em; }
-    header p { margin: 0; color: var(--muted); font-size: 16px; }
+    header h1 { margin: 0 0 1px; font-size: 20px; letter-spacing: -.035em; }
+    header p { margin: 0; color: var(--muted); font-size: 14px; }
     .header-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 
     button, input, select, textarea { font: inherit; }
@@ -100,12 +94,12 @@
     button.bad { background: var(--bad); }
     button.small { padding: 6px 9px; font-size: 12px; }
 
-    .app { padding: 30px 32px; }
+    .app { padding: 22px 26px; }
     main { min-width: 0; }
     section { display: none; }
     section.active { display: block; }
 
-    .grid { display: grid; gap: 16px; }
+    .grid { display: grid; gap: 12px; }
     .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
@@ -114,10 +108,10 @@
       border: 1px solid var(--line);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 20px;
+      padding: 14px;
     }
     .card h2, .card h3 { margin: 0; letter-spacing: -.035em; }
-    .card-head { display: flex; justify-content: space-between; align-items: center; padding: 0 0 18px; margin: 0 -20px 20px; border-bottom: 1px solid var(--line); padding-left: 20px; padding-right: 20px; }
+    .card-head { display: flex; justify-content: space-between; align-items: center; padding: 0 0 12px; margin: 0 -14px 14px; border-bottom: 1px solid var(--line); padding-left: 14px; padding-right: 14px; }
     .muted { color: var(--muted); }
     .pill { display:inline-flex; align-items:center; gap:6px; border-radius:999px; padding:4px 10px; font-size:12px; font-weight:800; background:#f1eee8; color:#555b67; }
     .pill.good { background:#dff7e9; color:var(--good); }
@@ -138,16 +132,16 @@
     textarea { min-height: 86px; resize: vertical; }
 
     table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 12px 16px; vertical-align: top; }
+    th, td { text-align: left; border-bottom: 1px solid var(--line); padding: 8px 12px; vertical-align: top; }
     th { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
     tr.locked { background: #fff8e6; }
 
     .team-dot { display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:7px; vertical-align:-1px; border:1px solid rgba(0,0,0,.15); }
     .toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin-bottom: 14px; }
     .toolbar > div { min-width: 150px; }
-    .stat { padding: 18px 20px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
+    .stat { padding: 12px 14px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
     .stat span:first-child { display: block; color: var(--muted); text-transform: uppercase; letter-spacing: .12em; font-size: 14px; margin-bottom: 4px; }
-    .stat strong { display:block; font-size: 32px; letter-spacing:-.05em; line-height: 1; }
+    .stat strong { display:block; font-size: 26px; letter-spacing:-.05em; line-height: 1; }
 
     .health-list { display: grid; gap: 16px; }
     .health-item { display: grid; grid-template-columns: 58px 1fr; gap: 0; align-items: center; border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: #fffefa; }
@@ -178,7 +172,7 @@
       header { align-items: flex-start; flex-direction: column; }
       .calendar { grid-template-columns: 1fr; }
     }
-  .team-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;background:white;padding:3px 12px 3px 3px;font-weight:700;white-space:nowrap}.mini-dot{width:28px;height:28px;border-radius:50%;color:white;display:inline-grid;place-items:center;font-size:10px;font-weight:900}.check{display:flex;align-items:center;gap:8px;color:#697184;font-weight:500;font-size:15px}.check input{width:auto}.team-filter{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:22px}.team-filter .selected{background:#1f2025;color:white}.empty{border:1px dashed var(--line);border-radius:10px;min-height:120px;display:grid;place-items:center;text-align:center;color:var(--muted);padding:24px}.dashed{box-shadow:none;background:#fffefa}.bar{height:8px;border-radius:99px;background:#24262d;overflow:hidden;max-width:390px}.bar span{display:block;height:100%;background:var(--accent)}.month-grid{display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--line);border-right:0;border-bottom:0}.dow{background:#f1eee8;color:var(--muted);font-weight:800;font-size:13px;letter-spacing:.08em;padding:10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.month-cell{min-height:126px;padding:10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:white}.mini-game{font-size:12px;background:#eef6ff;border-left:4px solid var(--accent);padding:4px 6px;border-radius:4px;margin-top:6px}.mini-conflict{font-size:12px;background:#ffe0dc;color:#a32b28;padding:4px 6px;border-radius:5px;margin-top:6px}.legend{display:inline-block;width:13px;height:13px;border-radius:3px;vertical-align:-2px}.legend.blue{background:var(--accent)}.legend.dark{background:#1f2025}.export-list{display:grid;gap:12px;margin:18px 0}.export-list button{text-align:left;justify-content:flex-start}
+  .team-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:999px;background:white;padding:3px 12px 3px 3px;font-weight:700;white-space:nowrap}.mini-dot{width:28px;height:28px;border-radius:50%;color:white;display:inline-grid;place-items:center;font-size:10px;font-weight:900}.check{display:flex;align-items:center;gap:8px;color:#697184;font-weight:500;font-size:15px}.check input{width:auto}.team-filter{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:22px}.team-filter .selected{background:#1f2025;color:white}.empty{border:1px dashed var(--line);border-radius:10px;min-height:120px;display:grid;place-items:center;text-align:center;color:var(--muted);padding:24px}.dashed{box-shadow:none;background:#fffefa}.bar{height:8px;border-radius:99px;background:#24262d;overflow:hidden;max-width:390px}.bar span{display:block;height:100%;background:var(--accent)}.month-grid{display:grid;grid-template-columns:repeat(7,1fr);border:1px solid var(--line);border-right:0;border-bottom:0}.dow{background:#f1eee8;color:var(--muted);font-weight:800;font-size:13px;letter-spacing:.08em;padding:10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.month-cell{min-height:126px;padding:10px;border-right:1px solid var(--line);border-bottom:1px solid var(--line);background:white}.mini-game{font-size:12px;background:#eef6ff;border-left:4px solid var(--accent);padding:4px 6px;border-radius:4px;margin-top:6px}.mini-conflict{font-size:12px;background:#ffe0dc;color:#a32b28;padding:4px 6px;border-radius:5px;margin-top:6px}.legend{display:inline-block;width:13px;height:13px;border-radius:3px;vertical-align:-2px}.legend.blue{background:var(--accent)}.legend.dark{background:#1f2025}.export-list{display:grid;gap:12px;margin:18px 0}.export-list button{ text-align:left; justify-content:flex-start }.grid.four{grid-template-columns:repeat(4,minmax(0,1fr))}.logo{width:32px;height:32px}.nav-title{font-size:12px;padding-bottom:7px}.nav-badge{height:21px;min-width:21px;font-size:11px}.toolbar{margin-bottom:10px}.pill{padding:3px 8px}.team-chip{padding:2px 9px 2px 2px}.mini-dot{width:24px;height:24px;font-size:9px}.health-item{padding:10px;grid-template-columns:50px 1fr}.tip{padding:12px 14px}.month-cell{min-height:105px}.empty{min-height:95px}.modal{border-radius:14px}.row{gap:10px}
   </style>
 </head>
 <body>
@@ -214,11 +208,13 @@
       <section id="teams"></section>
       <section id="rules"></section>
       <section id="conflicts"></section>
+      <section id="byes"></section>
       <section id="schedule"></section>
       <section id="calendar"></section>
       <section id="partners"></section>
       <section id="balance"></section>
       <section id="unscheduled"></section>
+      <section id="championship"></section>
       <section id="exports"></section>
     </main>
       </div>
@@ -259,6 +255,7 @@
       teams: [],
       rules: { ...DEFAULT_RULES },
       conflicts: [],
+      byes: [],
       games: [],
       warnings: []
     };
@@ -266,16 +263,18 @@
     const tabList = [
       ['plan', null, 'PLAN'],
       ['dashboard', 'Dashboard', 'Dashboard', 'Overview of conference, conflicts, and schedule health.'],
-      ['rules', 'Generator', 'Generator', 'Build the league schedule and adjust logic.'],
+      ['rules', 'Generator', 'Schedule generator', 'Configure rules and auto-build the season.'],
       ['manage', null, 'MANAGE'],
-      ['teams', 'Teams', 'Teams', 'Add teams, venues, colors, and travel partners.'],
-      ['conflicts', 'Conflicts', 'Conflicts', 'Manage blackout dates, venue holds, and team restrictions.'],
+      ['teams', 'Teams', 'Teams', 'Programs, travel partners, identity.'],
+      ['conflicts', 'Conflicts', 'Conflicts', 'Arena holds, campus events, league dark dates.'],
+      ['byes', 'Byes', 'Byes', 'Assign team bye windows and open dates.'],
       ['scheduleGroup', null, 'SCHEDULE'],
-      ['calendar', 'League calendar', 'League Calendar', 'View every playable date and matchup.'],
-      ['schedule', 'By team', 'By Team', 'Review and manually edit matchups.'],
-      ['partners', 'Travel pairs', 'Travel Pairs', 'Audit travel partner hosting windows.'],
-      ['balance', 'Balance', 'Balance', 'Home and away equity by team.'],
-      ['unscheduled', 'Unscheduled', 'Unscheduled', 'Games the generator could not place.'],
+      ['calendar', 'League calendar', 'League Calendar', 'All matches by date, color-coded by host.'],
+      ['schedule', 'By team', 'By Team', 'Per-program schedule view.'],
+      ['partners', 'Travel pairs', 'Travel Pairs', 'Trip windows by partner pair.'],
+      ['balance', 'Balance', 'Home/Away balance', 'Distribution per team.'],
+      ['unscheduled', 'Unscheduled', 'Unscheduled', 'Matches the generator could not place.'],
+      ['championship', 'Standings', 'Standings', 'Track wins/losses and Pac-12 semifinal qualifiers.'],
       ['data', null, 'DATA'],
       ['exports', 'Export...', 'Export', 'Download or copy schedule data.'],
       ['reset', 'Reset to sample', 'Reset to Sample', 'Restore the original demo data.']
@@ -309,11 +308,15 @@
       state.warnings = [];
       const fresno = teamByName('Fresno State'), sdsu = teamByName('San Diego State'), gonzaga = teamByName('Gonzaga'), csu = teamByName('Colorado State');
       state.conflicts = [
-        { id: uid(), scope: 'venue', teamId: fresno.id, date: '2026-10-03', title: 'Arena concert hold', type: 'Concert', notes: 'Save Mart Center unavailable.' },
-        { id: uid(), scope: 'team', teamId: sdsu.id, date: '2026-10-10', title: 'Football home game staffing conflict', type: 'Other Sport', notes: 'Avoid home volleyball match.' },
-        { id: uid(), scope: 'league', teamId: '', date: '2026-11-05', title: 'League-wide TV window hold', type: 'League', notes: 'No matches this date.' },
-        { id: uid(), scope: 'venue', teamId: gonzaga.id, date: '2026-10-24', title: 'Campus event', type: 'Campus', notes: 'Venue conversion conflict.' },
-        { id: uid(), scope: 'team', teamId: csu.id, date: '2026-10-17', title: 'Travel restriction', type: 'Travel', notes: 'Avoid away match.' }
+        { id: uid(), scope: 'venue', teamId: fresno.id, date: '2026-10-03', title: 'Arena concert hold', type: 'concert', notes: 'Save Mart Center unavailable.' },
+        { id: uid(), scope: 'team', teamId: sdsu.id, date: '2026-10-10', title: 'Football home game staffing conflict', type: 'campus', notes: 'Avoid home volleyball match.' },
+        { id: uid(), scope: 'league', teamId: '', date: '2026-11-05', title: 'League-wide TV window hold', type: 'league', notes: 'No matches this date.' },
+        { id: uid(), scope: 'venue', teamId: gonzaga.id, date: '2026-10-24', title: 'Campus event', type: 'campus', notes: 'Venue conversion conflict.' },
+        { id: uid(), scope: 'team', teamId: csu.id, date: '2026-10-17', title: 'Travel restriction', type: 'travel', notes: 'Avoid away match.' }
+      ];
+      state.byes = [
+        { id: uid(), teamId: teamByName('Texas State').id, date: '2026-10-31', notes: 'Odd-team bye / dark weekend' },
+        { id: uid(), teamId: teamByName('Gonzaga').id, date: '2026-11-14', notes: 'Travel recovery bye' }
       ];
     }
 
@@ -343,7 +346,7 @@
       byId('tabs').innerHTML = tabList.map(item => {
         const [id, label, title] = item;
         if (!label) return `<div class="nav-group"><div class="nav-title">${title}</div>`;
-        const badge = id === 'teams' ? state.teams.length : id === 'conflicts' ? state.conflicts.length : id === 'unscheduled' ? state.games.filter(g => !g.date).length : '';
+        const badge = id === 'teams' ? state.teams.length : id === 'conflicts' ? state.conflicts.length : id === 'byes' ? state.byes.length : id === 'unscheduled' ? state.games.filter(g => !g.date).length : id === 'championship' ? '4' : '';
         const close = ['rules','conflicts','unscheduled','reset'].includes(id) ? '</div>' : '';
         return `<button class="${id==='dashboard'?'active':''}" onclick="${id==='reset'?'resetDemo()':`showTab('${id}')`}">${label}${badge !== '' ? `<span class="nav-badge">${badge}</span>` : ''}</button>${close}`;
       }).join('');
@@ -363,7 +366,7 @@
     }
 
     function render() {
-      renderDashboard(); renderTeams(); renderRules(); renderConflicts(); renderSchedule(); renderCalendar(); renderPartners(); renderBalance(); renderUnscheduled(); renderExports(); renderTabs();
+      renderDashboard(); renderTeams(); renderRules(); renderConflicts(); renderByes(); renderSchedule(); renderCalendar(); renderPartners(); renderBalance(); renderUnscheduled(); renderChampionship(); renderExports(); renderTabs();
     }
 
     function renderDashboard() {
@@ -498,6 +501,14 @@
       </tbody></table></div>`;
     }
 
+    function renderByes() {
+      byId('byes').innerHTML = `<div class="card"><div class="card-head"><h3>Bye windows</h3><button class="ghost" onclick="openByeModal()">+ Add bye</button></div>
+        <table><thead><tr><th>Date</th><th>Team</th><th>Notes</th><th></th></tr></thead><tbody>${state.byes.sort((a,b)=>a.date.localeCompare(b.date)).map(b=>`<tr><td>${fmt(b.date)}</td><td>${teamChip(b.teamId)}</td><td class="muted">${b.notes||''}</td><td><button class="small ghost" onclick="openByeModal('${b.id}')">Edit</button> <button class="small ghost" style="color:#dc2626" onclick="deleteBye('${b.id}')">Delete</button></td></tr>`).join('')}</tbody></table>
+      </div><div class="card" style="margin-top:14px"><div class="card-head"><h3>Custom schedule import</h3><span class="muted">Paste this year’s schedule as CSV-style rows</span></div><textarea id="customScheduleText" placeholder="Date, Away, Home
+2026-09-24, Fresno State, San Diego State
+2026-09-26, Boise State, Utah State"></textarea><div class="toolbar"><button onclick="importCustomSchedule()">Import custom schedule</button><button class="ghost" onclick="downloadTemplateCSV()">Download template</button></div><p class="muted">Use this to recreate the attached/current-year schedule, then edit teams, byes, and conflicts manually.</p></div>`;
+    }
+
     function renderSchedule() {
       const selected = state.teams[0]?.id;
       byId('schedule').innerHTML = `<div class="team-filter">${state.teams.map((t,i)=>`<button class="ghost ${i===0?'selected':''}" onclick="renderTeamView('${t.id}')">${teamChip(t.id)}</button>`).join('')}</div>
@@ -544,11 +555,18 @@
       byId('unscheduled').innerHTML = `<div class="card dashed">${u.length ? scheduleTable(u) : '<div class="empty"><b>All matchups placed.</b><br>Generate the schedule and any unplaceable matches will land here with a reason.</div>'}</div>`;
     }
 
-    function partnerTripList(pair) {
-      const ids = pair.map(t => t.id);
-      const hosted = state.games.filter(g => ids.includes(g.homeId)).sort((a,b)=>(a.date||'').localeCompare(b.date||''));
-      if (!hosted.length) return '<span class="muted">No hosted games yet.</span>';
-      return hosted.slice(0,12).map(g => `<div style="margin-top:8px">${g.date ? fmt(g.date) : 'Unscheduled'}: ${teamLabel(g.awayId)} at ${teamLabel(g.homeId)}</div>`).join('');
+    function renderChampionship() {
+      const rows = standingsRows();
+      byId('championship').innerHTML = `<div class="grid two" style="margin-bottom:14px"><div class="stat"><span>Championship format</span><strong style="font-size:20px">Top 4 qualify</strong><div class="muted">#1 vs #4 and #2 vs #3 semifinals</div></div><div class="stat"><span>Records source</span><strong style="font-size:20px">Match results</strong><div class="muted">Use game editor to set winner</div></div></div><div class="card"><div class="card-head"><h3>Pac-12 standings</h3><span class="muted">Top 4 make championship semifinals</span></div><table><thead><tr><th>Seed</th><th>Team</th><th>W</th><th>L</th><th>Pct</th><th>Status</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${teamChip(r.id)}</td><td>${r.w}</td><td>${r.l}</td><td>${r.pct}</td><td>${i<4?'<span class="pill good">Semifinal qualifier</span>':'<span class="pill">Outside top 4</span>'}</td></tr>`).join('')}</tbody></table></div><div class="card" style="margin-top:14px"><div class="card-head"><h3>Semifinals</h3></div><div class="grid two">${rows.length>=4?`<div class="stat"><span>Semifinal 1</span><strong style="font-size:20px">#1 ${teamLabel(rows[0].id)} vs #4 ${teamLabel(rows[3].id)}</strong></div><div class="stat"><span>Semifinal 2</span><strong style="font-size:20px">#2 ${teamLabel(rows[1].id)} vs #3 ${teamLabel(rows[2].id)}</strong></div>`:''}</div></div>`;
+    }
+
+    function standingsRows() {
+      return state.teams.map(t => {
+        let w=0,l=0;
+        state.games.forEach(g => { if (g.winnerId === t.id) w++; if (g.winnerId && (g.homeId === t.id || g.awayId === t.id) && g.winnerId !== t.id) l++; });
+        const pct = (w+l) ? (w/(w+l)).toFixed(3) : '.000';
+        return { id:t.id, w, l, pct };
+      }).sort((a,b)=> b.w-a.w || a.l-b.l || teamLabel(a.id).localeCompare(teamLabel(b.id)));
     }
 
     function renderExports() {
@@ -656,6 +674,7 @@
     }
 
     function hasConflict(teamId, date, role) {
+      if (state.byes && state.byes.some(b => b.teamId === teamId && b.date === date)) return true;
       return state.conflicts.some(c => {
         if (c.date !== date) return false;
         if (c.scope === 'league') return true;
@@ -737,11 +756,48 @@
     }
     function deleteConflict(id) { state.conflicts = state.conflicts.filter(c=>c.id!==id); saveState(); render(); }
 
+    function openByeModal(id='') {
+      const b = id ? state.byes.find(x=>x.id===id) : { id:'', teamId:state.teams[0]?.id, date:state.rules.startDate, notes:'' };
+      openModal(`<h2>${id?'Edit':'Add'} Bye</h2><div class="row"><div><label>Team</label><select id="bye_team">${state.teams.map(t=>`<option value="${t.id}" ${t.id===b.teamId?'selected':''}>${t.name}</option>`).join('')}</select></div><div><label>Date</label><input id="bye_date" type="date" value="${b.date}"></div><div style="grid-column:1/-1"><label>Notes</label><textarea id="bye_notes">${b.notes||''}</textarea></div></div><div class="footer-actions"><button class="ghost" onclick="hideModal()">Cancel</button><button onclick="saveBye('${id}')">Save bye</button></div>`);
+    }
+
+    function saveBye(id) {
+      const data = { teamId: byId('bye_team').value, date: byId('bye_date').value, notes: byId('bye_notes').value };
+      if (id) Object.assign(state.byes.find(b=>b.id===id), data); else state.byes.push({ id: uid(), ...data });
+      hideModal(); saveState(); render();
+    }
+    function deleteBye(id) { state.byes = state.byes.filter(b=>b.id!==id); saveState(); render(); }
+
+    function importCustomSchedule() {
+      const text = byId('customScheduleText').value.trim();
+      if (!text) return alert('Paste schedule rows first.');
+      const rows = text.split(/
++/).map(r=>r.split(',').map(x=>x.trim())).filter(r=>r.length>=3);
+      const imported = [];
+      rows.forEach((r,i)=>{
+        if (i===0 && r[0].toLowerCase().includes('date')) return;
+        const [date, awayName, homeName] = r;
+        const away = state.teams.find(t=>t.name.toLowerCase()===awayName.toLowerCase());
+        const home = state.teams.find(t=>t.name.toLowerCase()===homeName.toLowerCase());
+        if (date && away && home) imported.push({ id: uid(), date, awayId: away.id, homeId: home.id, locked: true, winnerId:'', notes:'Imported custom schedule' });
+      });
+      if (!imported.length) return alert('No rows matched. Use: Date, Away, Home with exact team names.');
+      state.games = imported;
+      saveState(); render(); showTab('calendar'); toast(`Imported ${imported.length} games.`);
+    }
+
+    function downloadTemplateCSV() {
+      downloadBlob('Date,Away,Home
+2026-09-24,Fresno State,San Diego State
+2026-09-26,Boise State,Utah State', 'custom_schedule_template.csv', 'text/csv');
+    }
+
     function openGameModal(id='') {
       const g = id ? state.games.find(x=>x.id===id) : { id:'', date:'', homeId:state.teams[0]?.id, awayId:state.teams[1]?.id, locked:false, notes:'' };
       openModal(`<h2>${id?'Edit':'Add'} Game</h2><div class="row">
         <div><label>Date</label><input id="game_date" type="date" value="${g.date || ''}"></div>
         <div><label>Locked</label><select id="game_locked"><option value="false" ${!g.locked?'selected':''}>No</option><option value="true" ${g.locked?'selected':''}>Yes</option></select></div>
+        <div><label>Winner / Result</label><select id="game_winner"><option value="">No result</option><option value="${g.homeId}" ${g.winnerId===g.homeId?'selected':''}>${teamLabel(g.homeId)}</option><option value="${g.awayId}" ${g.winnerId===g.awayId?'selected':''}>${teamLabel(g.awayId)}</option></select></div>
         <div><label>Home</label><select id="game_home">${state.teams.map(t=>`<option value="${t.id}" ${t.id===g.homeId?'selected':''}>${t.name}</option>`).join('')}</select></div>
         <div><label>Away</label><select id="game_away">${state.teams.map(t=>`<option value="${t.id}" ${t.id===g.awayId?'selected':''}>${t.name}</option>`).join('')}</select></div>
         <div style="grid-column:1/-1"><label>Notes</label><textarea id="game_notes">${g.notes || ''}</textarea></div>
@@ -749,7 +805,7 @@
     }
 
     function saveGame(id) {
-      const data = { date: byId('game_date').value, homeId: byId('game_home').value, awayId: byId('game_away').value, locked: byId('game_locked').value === 'true', notes: byId('game_notes').value };
+      const data = { date: byId('game_date').value, homeId: byId('game_home').value, awayId: byId('game_away').value, locked: byId('game_locked').value === 'true', winnerId: byId('game_winner')?.value || '', notes: byId('game_notes').value };
       if (data.homeId === data.awayId) return alert('Home and away teams must be different.');
       const localWarnings = [];
       if (data.date && hasConflict(data.homeId, data.date, 'home')) localWarnings.push(`${teamLabel(data.homeId)} has a home/venue conflict on this date.`);
