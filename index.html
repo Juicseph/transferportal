@@ -58,6 +58,11 @@ header{background:linear-gradient(135deg,#172848 0%,#0c1828 100%);border-bottom:
 .time-input::placeholder{color:#2a3a50;font-weight:400}
 .time-label{font-size:9px;font-weight:700;color:#3a4a5c;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px}
 .r-time-badge{font-size:10px;font-weight:700;color:#f5c842;background:#1e1800;border:1px solid #3a3000;border-radius:3px;padding:1px 6px;margin-left:4px;white-space:nowrap}
+.r-date-badge{font-size:9px;font-weight:700;color:#7abcff;background:#071828;border:1px solid #1a3a5c;border-radius:3px;padding:1px 5px;margin-left:3px;white-space:nowrap}
+.upload-pdf-label{font-size:9px;color:#2a3a52;cursor:pointer;display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border:1px dashed #1a2a3e;border-radius:3px;transition:all .15s;margin-top:5px;width:100%;justify-content:center}
+.upload-pdf-label:hover{border-color:#3a5a7c;color:#5a8ab8;background:#0a1628}
+.upload-pdf-label.replaced{border-color:#1a4a2a;color:#3aaf6a;border-style:solid;background:#04100a}
+.upload-pdf-input{display:none}
 
 /* Status badge colors */
 .sb-interested{background:#0a2a10;color:#4adf7a;border:1px solid #1a5a28}
@@ -151,6 +156,7 @@ let statuses = {};
 let notes = {};
 let callTimes = {};
 let callDates = {};
+let customPDFs = {}; // name -> base64 of user-uploaded PDF
 let activeFilter = 'all';
 let activeRecruit = null;
 let blobURLs = {};
@@ -165,18 +171,20 @@ function loadStorage() {
       notes = d.notes || {};
       callTimes = d.callTimes || {};
       callDates = d.callDates || {};
+      customPDFs = d.customPDFs || {};
     }
   } catch(e) {}
 }
 
 function saveStorage() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({statuses, notes, callTimes, callDates})); } catch(e) {}
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({statuses, notes, callTimes, callDates, customPDFs})); } catch(e) { console.warn('Storage full — custom PDFs may not persist'); }
 }
 
 // ── Blob URL cache ──────────────────────────────────────────────────────────
 function getBlobURL(name) {
   if (blobURLs[name]) return blobURLs[name];
-  const b64 = PDF_MAP[name];
+  // Prefer user-uploaded PDF, fall back to embedded
+  const b64 = customPDFs[name] || PDF_MAP[name];
   if (!b64) return null;
   const chars = atob(b64);
   const arr = new Uint8Array(chars.length);
@@ -255,6 +263,10 @@ function renderList() {
           <input type="text" class="time-input" placeholder="e.g. 10:00 AM, 2:30 PM..." value="${ct}" oninput="setCallTimeDebounced('${nm}',this)" onblur="flushCallTime('${nm}',this)">
           <select class="status-select" onchange="setStatus('${nm}',this.value)" style="margin-top:6px">${statusOpts}</select>
           <textarea class="notes-input" placeholder="Call notes..." onchange="setNote('${nm}',this.value)" oninput="setNote('${nm}',this.value)">${nt}</textarea>
+          <label class="upload-pdf-label${customPDFs[r.name] ? ' replaced' : ''}" id="uplabel_${idKey}">
+            <input type="file" class="upload-pdf-input" accept=".pdf" onchange="uploadPDF('${nm}',this)">
+            ${customPDFs[r.name] ? '&#10003; PDF Replaced' : '&#8593; Replace PDF'}
+          </label>
         </div>
       </div>`;
     });
@@ -321,6 +333,32 @@ function formatDate(dateStr) {
     const d = new Date(dateStr + 'T00:00:00');
     return d.toLocaleDateString('en-US', {month:'short', day:'numeric'});
   } catch(e) { return dateStr; }
+}
+
+// ── Upload / replace PDF ─────────────────────────────────────────────────────
+function uploadPDF(name, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const b64 = e.target.result.split(',')[1];
+    customPDFs[name] = b64;
+    // Bust blob cache so new PDF loads
+    delete blobURLs[name];
+    saveStorage();
+    // Update label
+    const idKey = name.replace(/[^a-zA-Z0-9]/g,'_');
+    const label = document.getElementById('uplabel_' + idKey);
+    if (label) {
+      label.classList.add('replaced');
+      label.querySelector('input').value = '';
+      const textNode = label.childNodes[label.childNodes.length - 1];
+      if (textNode) textNode.textContent = ' PDF Replaced';
+    }
+    // Refresh the PDF viewer if this recruit is currently open
+    if (activeRecruit === name) selectRecruit(name);
+  };
+  reader.readAsDataURL(file);
 }
 
 // ── Select recruit → show PDF ────────────────────────────────────────────────
