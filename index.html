@@ -88,6 +88,8 @@ header{
 .caller-select:focus{outline:none;border-color:#ffcc60}
 .r-caller-badge{font-size:9px;font-weight:700;color:#ffcc60;background:#1e1600;border:1px solid #3a3000;border-radius:3px;padding:1px 5px;white-space:nowrap}
 .r-tz-badge{font-size:9px;color:#8ab8d8;background:#071420;border:1px solid #1a3a5c;border-radius:3px;padding:1px 5px;white-space:nowrap;font-weight:600}
+.r-text-badge{font-size:9px;font-weight:700;color:#5aabff;background:#051828;border:1px solid #1a4a7c;border-radius:3px;padding:1px 5px;white-space:nowrap}
+.r-text-badge.sent{color:#4adf7a;background:#041008;border-color:#1a5a28}
 .sch-tz{font-size:11px;color:#5a8ab0;margin-top:3px;font-weight:600}
 .sch-tz .their-time{color:#90d0ff;font-weight:700}
 .timer-display{font-family:"Oswald",sans-serif;font-size:15px;font-weight:700;color:#4adf7a;background:#04100a;border:1px solid #1a4a2a;border-radius:5px;padding:3px 12px;letter-spacing:2px;min-width:72px;text-align:center;cursor:pointer;transition:all .2s}
@@ -120,6 +122,17 @@ header{
 .upload-input{display:none}
 .delete-btn{font-size:9px;color:#5a2a2a;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;padding:4px 8px;border:1px dashed #3a1a1a;border-radius:3px;margin-top:2px;transition:all .15s;background:none}
 .delete-btn:hover{border-color:#8a2a2a;color:#ff5050;background:#180a0a}
+.text-section{background:#070f20;border:1px solid #1a3050;border-radius:5px;padding:7px 9px;margin-top:5px}
+.text-section-hdr{font-size:9px;font-weight:700;color:#3a7a9c;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.ctrl-text-msg{width:100%;background:#0d1a2e;border:1px solid #1e3560;color:#c0d8e8;padding:5px 8px;border-radius:4px;font-size:11px;font-family:"Source Sans 3",sans-serif;resize:none;min-height:54px}
+.ctrl-text-msg:focus{outline:none;border-color:#3a6a9c}
+.ctrl-text-msg::placeholder{color:#1e3050}
+.text-row{display:flex;gap:6px;margin-top:5px}
+.text-row .ctrl-date{flex:1}
+.text-row .ctrl-time{flex:1}
+.send-text-btn{width:100%;margin-top:5px;padding:6px;background:#0a2030;border:1px solid #1a4a6c;border-radius:4px;color:#5aabff;font-size:11px;font-weight:600;cursor:pointer;font-family:"Source Sans 3",sans-serif;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:5px}
+.send-text-btn:hover{background:#0d2a40;border-color:#3a7aac;color:#90d0ff}
+.send-text-btn.sent{border-color:#1a5a28;color:#4adf7a;background:#041008}
 
 /* ── GUIDE PANEL ── */
 .guide-panel{display:flex;flex-direction:column;height:100%}
@@ -554,7 +567,7 @@ const STATUS_CONFIG = {
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────
-let store = { statuses:{}, notes:{}, callTimes:{}, callDates:{}, customPDFs:{}, positions:{}, deleted:{}, hudlLinks:{}, callers:{}, whisperNotes:{}, newRecruits:[] };
+let store = { statuses:{}, notes:{}, callTimes:{}, callDates:{}, customPDFs:{}, positions:{}, deleted:{}, hudlLinks:{}, callers:{}, whisperNotes:{}, newRecruits:[], textMsgs:{}, textDates:{}, textTimes:{}, textSent:{} };
 let activeFilter = 'all';
 let activeRecruit = null;
 let activeTab = 'roster';
@@ -671,6 +684,10 @@ function renderList() {
       const stBadge = st ? `<span class="badge ${sc.cls}">${sc.label}</span>` : '';
       const commitBadge = st === 'committed' ? '<span class="r-commit-badge">&#127881;</span>' : '';
       const callerBadge = store.callers[r.name] ? `<span class="r-caller-badge">&#128222; ${store.callers[r.name]}</span>` : '';
+      const txDate = store.textDates && store.textDates[r.name] ? store.textDates[r.name] : '';
+      const txTime = store.textTimes && store.textTimes[r.name] ? store.textTimes[r.name] : '';
+      const txSent = store.textSent && store.textSent[r.name];
+      const textBadge = (txDate && txTime) ? `<span class="r-text-badge${txSent?' sent':''}">&#128172; ${fmtDate(txDate)} ${txTime}${txSent?' ✓':''}</span>` : '';
       const timeBadge = ct ? `<span class="r-time-badge" id="tbadge_${esc(r.name)}">&#128336; ${ct}</span>` : `<span class="r-time-badge" id="tbadge_${esc(r.name)}" style="display:none"></span>`;
       const dateBadge = cd ? `<span class="r-date-badge">&#128197; ${fmtDate(cd)}</span>` : '';
       const tzBadge = ct ? getTZBadge(r, ct) : '';
@@ -685,7 +702,7 @@ function renderList() {
 
       html += `<div class="recruit-item${ac}${gb}" id="item_${idKey}">
         <div class="r-main" onclick="selectRecruit('${nm}')">
-          <div class="r-name">${r.name}${commitBadge}${timeBadge}${dateBadge}${tzBadge}${callerBadge} ${stBadge}</div>
+          <div class="r-name">${r.name}${commitBadge}${timeBadge}${dateBadge}${tzBadge}${callerBadge}${textBadge} ${stBadge}</div>
           <div class="r-meta"><span class="badge b-pos">${pos2}</span>${hb}${ib}${gb2}</div>
           <div class="r-club">${r.club||''}</div>
         </div>
@@ -720,6 +737,17 @@ function renderList() {
             <input type="file" class="upload-input" accept=".pdf" onchange="uploadPDF('${nm}',this)">
             ${store.customPDFs[r.name]?'&#10003; Guide Uploaded':'&#8593; Upload Guide PDF'}
           </label>
+          <div class="text-section">
+            <div class="text-section-hdr">&#128172; Schedule Text to Recruit</div>
+            <textarea class="ctrl-text-msg" placeholder="Type the text message to send..." oninput="setTextMsg('${nm}',this.value)">${store.textMsgs&&store.textMsgs[r.name]||''}</textarea>
+            <div class="text-row">
+              <input type="date" class="ctrl-date" placeholder="Date to send" value="${store.textDates&&store.textDates[r.name]||''}" onchange="setTextDate('${nm}',this.value)" title="Date to send text">
+              <input type="text" class="ctrl-time" placeholder="Time (e.g. 9:00 AM)" value="${store.textTimes&&store.textTimes[r.name]||''}" oninput="setTextTime('${nm}',this.value)" onblur="setTextTime('${nm}',this.value)">
+            </div>
+            <button class="send-text-btn${store.textSent&&store.textSent[r.name]?' sent':''}" id="sendbtn_${idKey}" onclick="markTextSent('${nm}')">
+              ${store.textSent&&store.textSent[r.name]?'&#10003; Text Marked Sent':'&#128172; Mark as Sent'}
+            </button>
+          </div>
           <button class="delete-btn" onclick="deleteRecruit('${nm}')">&#128465; Remove from roster</button>
         </div>
       </div>`;
@@ -1382,6 +1410,23 @@ function copyDraft() {
     flash.classList.add('show');
     setTimeout(() => flash.classList.remove('show'), 1800);
   });
+}
+
+function setTextMsg(name, val)  { if(!store.textMsgs) store.textMsgs={}; store.textMsgs[name]=val; saveStore(); }
+function setTextDate(name, val) { if(!store.textDates) store.textDates={}; store.textDates[name]=val; saveStore(); reRender(name); }
+function setTextTime(name, val) { if(!store.textTimes) store.textTimes={}; store.textTimes[name]=val; saveStore(); reRender(name); }
+function markTextSent(name) {
+  if(!store.textSent) store.textSent={};
+  store.textSent[name] = !store.textSent[name];
+  saveStore();
+  const idKey = esc(name);
+  const btn = document.getElementById('sendbtn_' + idKey);
+  if (btn) {
+    btn.classList.toggle('sent', store.textSent[name]);
+    btn.innerHTML = store.textSent[name]
+      ? '&#10003; Text Marked Sent'
+      : '&#128172; Mark as Sent';
+  }
 }
 
 // ── Collapsible filters ───────────────────────────────────────────────────────
