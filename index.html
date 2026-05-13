@@ -92,6 +92,9 @@ header{
 .caller-select{width:100%;background:#0d1a2e;border:1px solid #1e3560;color:#ffcc60;padding:5px 8px;border-radius:4px;font-size:11px;font-family:"Source Sans 3",sans-serif;cursor:pointer}
 .caller-select:focus{outline:none;border-color:#ffcc60}
 .r-caller-badge{font-size:9px;font-weight:700;color:#ffcc60;background:#1e1600;border:1px solid #3a3000;border-radius:3px;padding:1px 5px;white-space:nowrap}
+.r-tz-badge{font-size:9px;color:#8ab8d8;background:#071420;border:1px solid #1a3a5c;border-radius:3px;padding:1px 5px;white-space:nowrap;font-weight:600}
+.sch-tz{font-size:11px;color:#5a8ab0;margin-top:3px;font-weight:600}
+.sch-tz .their-time{color:#90d0ff;font-weight:700}
 .timer-display{font-family:"Oswald",sans-serif;font-size:15px;font-weight:700;color:#4adf7a;background:#04100a;border:1px solid #1a4a2a;border-radius:5px;padding:3px 12px;letter-spacing:2px;min-width:72px;text-align:center;cursor:pointer;transition:all .2s}
 .timer-display.running{color:#f5c842;border-color:#3a3000;background:#100e00;animation:timerPulse 1s ease-in-out infinite}
 .timer-display.stopped{color:#ff6070;border-color:#5a1a1a;background:#100008}
@@ -363,6 +366,7 @@ function renderList() {
       const callerBadge = store.callers[r.name] ? `<span class="r-caller-badge">&#128222; ${store.callers[r.name]}</span>` : '';
       const timeBadge = ct ? `<span class="r-time-badge" id="tbadge_${esc(r.name)}">&#128336; ${ct}</span>` : `<span class="r-time-badge" id="tbadge_${esc(r.name)}" style="display:none"></span>`;
       const dateBadge = cd ? `<span class="r-date-badge">&#128197; ${fmtDate(cd)}</span>` : '';
+      const tzBadge = ct ? getTZBadge(r, ct) : '';
       const posOpts = POSITIONS_LIST.map(p => `<option value="${p}" ${pos2===p?'selected':''}>${p}</option>`).join('');
       const stOpts = Object.entries(STATUS_CONFIG).map(([v,c]) => `<option value="${v}" ${st===v?'selected':''}>${c.label}</option>`).join('');
       const hudl = store.hudlLinks[r.name] || '';
@@ -374,7 +378,7 @@ function renderList() {
 
       html += `<div class="recruit-item${ac}${gb}" id="item_${idKey}">
         <div class="r-main" onclick="selectRecruit('${nm}')">
-          <div class="r-name">${r.name}${commitBadge}${timeBadge}${dateBadge}${callerBadge} ${stBadge}</div>
+          <div class="r-name">${r.name}${commitBadge}${timeBadge}${dateBadge}${tzBadge}${callerBadge} ${stBadge}</div>
           <div class="r-meta"><span class="badge b-pos">${pos2}</span>${hb}${ib}${gb2}</div>
           <div class="r-club">${r.club||''}</div>
         </div>
@@ -430,6 +434,11 @@ function selectRecruit(name) {
   if (url) {
     const hudl = store.hudlLinks[name] || '';
     const caller = store.callers[name] || '';
+    const callTime = store.callTimes[name] || '';
+    const tz = getRecruitTZ(r);
+    const tzLabel = tz ? (TZ_LABEL[tz]||{short:'?',name:'Unknown'}) : null;
+    const tzConv = (callTime && tz) ? convertPSTtoTZ(callTime, tz) : null;
+    const tzLine = tzLabel ? `<span style="color:#7abcdf;font-size:11px">&#127758; ${tzLabel.name}${tzConv?' &mdash; <strong style="color:#90d0ff">'+tzConv.time+' their time</strong>':''}</span>` : '';
     const hudlBtn = hudl ? `<a href="${hudl}" target="_blank" class="hudl-btn" style="padding:7px 14px;font-size:12px;font-family:'Oswald',sans-serif;font-weight:600;letter-spacing:.6px">&#127909; Highlights</a>` : '';
     const callerTag = caller ? `<span style="font-size:11px;color:#ffcc60;background:#1e1600;border:1px solid #3a3000;border-radius:3px;padding:2px 8px;">&#128222; ${caller}</span>` : '';
     gc.innerHTML = `<div class="guide-panel">
@@ -439,6 +448,7 @@ function selectRecruit(name) {
           <div class="guide-meta">
             ${getPos(r) !== '\u2014' ? getPos(r)+' &nbsp;&middot;&nbsp; ':''} ${r.club||''}
             <br>${r.phone||'&mdash;'} &nbsp;&middot;&nbsp; ${r.email||'&mdash;'}
+            ${tzLine ? '<br>'+tzLine : ''}
           </div>
         </div>
         <div class="guide-actions">
@@ -524,7 +534,8 @@ function renderSchedule() {
       html += `<div class="sch-card${guide?' guide-card':''}" onclick="selectRecruit('${nm}')">
         <div>
           <div class="sch-time">${ct || '—'}</div>
-          <div class="sch-time-sub">${ct ? 'scheduled' : 'time TBD'}</div>
+          <div class="sch-time-sub">${ct ? 'PST' : 'time TBD'}</div>
+          ${getTZLine(r, ct) ? `<div style="font-size:10px;color:#5a8ab0;margin-top:4px;white-space:nowrap">${convertPSTtoTZ(ct, getRecruitTZ(r)) ? `<span style="color:#90d0ff;font-weight:700">${convertPSTtoTZ(ct, getRecruitTZ(r)).time}</span><br><span style="color:#3a5a70">${(TZ_LABEL[getRecruitTZ(r)]||{short:''}).short}</span>` : ''}</div>` : ''}
         </div>
         <div>
           <div class="sch-name">${r.name}${guide?' <span style="font-size:11px;color:#3aaf6a">&#10022;</span>':''}</div>
@@ -685,6 +696,102 @@ function fmtDate(ds) {
 }
 function fmtDateLong(ds) {
   try { const d=new Date(ds+'T00:00:00'); return d.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'}); } catch(e){return ds;}
+}
+
+// ── Timezone detection ────────────────────────────────────────────────────────
+// Map state abbreviations in club name to IANA timezone
+const STATE_TZ = {
+  // Pacific (same as coach - PST/PDT)
+  'CA':'America/Los_Angeles','WA':'America/Los_Angeles','OR':'America/Los_Angeles','NV':'America/Los_Angeles',
+  // Mountain
+  'AZ':'America/Phoenix','UT':'America/Denver','CO':'America/Denver','NM':'America/Denver',
+  'ID':'America/Denver','MT':'America/Denver','WY':'America/Denver',
+  // Central
+  'TX':'America/Chicago','OK':'America/Chicago','KS':'America/Chicago','NE':'America/Chicago',
+  'MN':'America/Chicago','IA':'America/Chicago','MO':'America/Chicago','WI':'America/Chicago',
+  'IL':'America/Chicago','MS':'America/Chicago','LA':'America/Chicago','AR':'America/Chicago',
+  'AL':'America/Chicago','TN':'America/Chicago','ND':'America/Chicago','SD':'America/Chicago',
+  // Eastern
+  'FL':'America/New_York','GA':'America/New_York','SC':'America/New_York','NC':'America/New_York',
+  'VA':'America/New_York','WV':'America/New_York','MD':'America/New_York','DE':'America/New_York',
+  'PA':'America/New_York','NJ':'America/New_York','NY':'America/New_York','CT':'America/New_York',
+  'RI':'America/New_York','MA':'America/New_York','VT':'America/New_York','NH':'America/New_York',
+  'ME':'America/New_York','OH':'America/New_York','IN':'America/New_York','MI':'America/New_York',
+  'KY':'America/New_York',
+  // Special
+  'HI':'Pacific/Honolulu','AK':'America/Anchorage',
+};
+
+const TZ_LABEL = {
+  'America/Los_Angeles': {short:'PST', name:'Pacific'},
+  'America/Phoenix':     {short:'MST', name:'Mountain (no DST)'},
+  'America/Denver':      {short:'MST', name:'Mountain'},
+  'America/Chicago':     {short:'CST', name:'Central'},
+  'America/New_York':    {short:'EST', name:'Eastern'},
+  'Pacific/Honolulu':    {short:'HST', name:'Hawaii'},
+  'America/Anchorage':   {short:'AKT', name:'Alaska'},
+};
+
+function getRecruitTZ(r) {
+  const club = (r.club || '').toUpperCase();
+  // Check for Germany / international
+  if (club.includes('GERMANY') || club.includes('DEUTSCHLAND')) return 'Europe/Berlin';
+  // Extract state abbreviation from parentheses: "Club Name (TX)"
+  const m = club.match(/\(([A-Z]{2})\)$/);
+  if (m && STATE_TZ[m[1]]) return STATE_TZ[m[1]];
+  return null;
+}
+
+function parseTimePST(timeStr) {
+  if (!timeStr) return null;
+  const m = timeStr.match(/(\d{1,2}):?(\d{2})?\s*(am|pm|a|p)?/i);
+  if (!m) return null;
+  let h = parseInt(m[1]);
+  const min = parseInt(m[2] || '0');
+  const ap = (m[3] || '').toLowerCase();
+  if (ap.startsWith('p') && h !== 12) h += 12;
+  if (ap.startsWith('a') && h === 12) h = 0;
+  return { h, min };
+}
+
+function convertPSTtoTZ(timeStr, targetTZ) {
+  if (!timeStr || !targetTZ) return null;
+  const t = parseTimePST(timeStr);
+  if (!t) return null;
+  // Use Intl to get current PST offset vs target offset
+  // We create a reference date on the call day (June 15 2027) at the given hour
+  try {
+    const refDate = new Date(2027, 5, 15, t.h, t.min, 0); // month is 0-indexed
+    // Format this UTC moment in both PST and target TZ
+    const pstFmt = new Intl.DateTimeFormat('en-US', {timeZone:'America/Los_Angeles', hour:'numeric', minute:'2-digit', hour12:true});
+    const tgtFmt = new Intl.DateTimeFormat('en-US', {timeZone:targetTZ, hour:'numeric', minute:'2-digit', hour12:true});
+    // Get the offset difference by comparing hours
+    const pstStr = pstFmt.format(refDate);
+    const tgtStr = tgtFmt.format(refDate);
+    if (pstStr === tgtStr) return null; // same zone, no need to show
+    const label = TZ_LABEL[targetTZ] || {short:targetTZ, name:targetTZ};
+    return {time: tgtStr, label};
+  } catch(e) { return null; }
+}
+
+function getTZBadge(r, callTime) {
+  const tz = getRecruitTZ(r);
+  if (!tz || tz === 'America/Los_Angeles') return '';
+  const conv = convertPSTtoTZ(callTime, tz);
+  if (!conv) return '';
+  return `<span class="r-tz-badge">&#127758; ${conv.time} ${conv.label.short}</span>`;
+}
+
+function getTZLine(r, callTime) {
+  const tz = getRecruitTZ(r);
+  if (!tz) return '';
+  const label = TZ_LABEL[tz] || {short:'?', name:'Unknown'};
+  if (tz === 'America/Los_Angeles') {
+    return `<div class="sch-tz">&#127758; ${label.name} Time (same as you)</div>`;
+  }
+  const conv = convertPSTtoTZ(callTime, tz);
+  if (!conv) return `<div class="sch-tz">&#127758; ${label.name} Time</div>`;
+  return `<div class="sch-tz">&#127758; ${label.name} &mdash; <span class="their-time">${conv.time} their time</span></div>`;
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
