@@ -210,14 +210,14 @@ header{
 .clock-divider{width:1px;height:16px;background:#0f1e38}
 
 /* ── OUTCOME BUTTONS ── */
-.outcome-bar{display:none;gap:6px;padding:8px 13px;border-top:1px solid #0f1e38;background:#050d1c;flex-shrink:0}
+.outcome-bar{display:none;flex-wrap:wrap;gap:5px;padding:7px 13px;border-top:1px solid #0f1e38;background:#050d1c;flex-shrink:0}
 .outcome-bar.visible{display:flex}
-.outcome-bar .ob-label{font-size:10px;color:#3a5a7c;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-right:2px;align-self:center;white-space:nowrap}
-.ob-btn{padding:5px 11px;border-radius:4px;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:"Source Sans 3",sans-serif;transition:all .15s;white-space:nowrap}
+.outcome-bar .ob-label{font-size:10px;color:#3a5a7c;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-right:2px;align-self:center;white-space:nowrap;width:100%;margin-bottom:1px}
+.ob-btn{padding:5px 11px;border-radius:4px;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:"Source Sans 3",sans-serif;transition:all .15s;white-space:nowrap;flex:1;min-width:0}
 .ob-connected{background:#0a2a10;color:#4adf7a;border:1px solid #1a5a28}.ob-connected:hover{background:#0d3a14}
 .ob-noanswer{background:#1a0a28;color:#c080ff;border:1px solid #4a1a7c}.ob-noanswer:hover{background:#240a38}
 .ob-voicemail{background:#1e1600;color:#f5c842;border:1px solid #3a3000}.ob-voicemail:hover{background:#2a1e00}
-.ob-log{font-size:10px;color:#2a4a30;margin-left:auto;align-self:center;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ob-log{font-size:10px;color:#2a4a30;width:100%;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* ── AUTO-ADVANCE BANNER ── */
 .advance-banner{display:none;background:#0a1e0a;border:1px solid #1a5a28;border-radius:6px;margin:10px 13px 0;padding:10px 13px;cursor:pointer;transition:background .15s}
@@ -309,6 +309,14 @@ header{
       <button class="filter-btn" onclick="setFilter('followup',this)">&#128309;</button>
       <button class="filter-btn" onclick="setFilter('scheduled',this)">&#128336; Sched</button>
       <button class="filter-btn" onclick="setFilter('committed',this)">&#127881; Committed</button>
+    </div>
+    <div class="filters" style="border-top:none;padding-top:0;padding-bottom:8px">
+      <span style="font-size:9px;color:#2a4a6c;font-weight:700;letter-spacing:1px;text-transform:uppercase;align-self:center;margin-right:2px">Caller:</span>
+      <button class="filter-btn" onclick="setFilter('caller_OJ',this)">OJ</button>
+      <button class="filter-btn" onclick="setFilter('caller_Leisa',this)">Leisa</button>
+      <button class="filter-btn" onclick="setFilter('caller_Jerome',this)">Jerome</button>
+      <button class="filter-btn" onclick="setFilter('caller_Kelsey',this)">Kelsey</button>
+      <button class="filter-btn" onclick="setFilter('unassigned',this)">Unassigned</button>
     </div>
     <div class="recruit-list" id="recruitList"></div>
     <!-- Outcome quick-tap bar — appears when a recruit is open -->
@@ -494,6 +502,8 @@ function renderList() {
       : activeFilter === 'followup' ? st === 'followup'
       : activeFilter === 'committed' ? st === 'committed'
       : activeFilter === 'scheduled' ? hasCT
+      : activeFilter === 'unassigned' ? !store.callers[r.name]
+      : activeFilter.startsWith('caller_') ? store.callers[r.name] === activeFilter.replace('caller_','')
       : activeFilter === 'L' ? pos === 'L'
       : activeFilter === 'OH' ? ['OH','OH/RS','OPP'].includes(pos)
       : activeFilter === 'RS' ? ['RS','OH/RS','OPP'].includes(pos)
