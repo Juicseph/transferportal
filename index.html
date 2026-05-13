@@ -140,7 +140,32 @@ header{
 .welcome h2{font-family:"Oswald",sans-serif;font-size:22px;color:#1e3a6c;margin-bottom:10px}
 .welcome p{font-size:13px;line-height:1.8;color:#1a3050}
 
-/* ── SCHEDULE VIEW ── */
+/* ── LIVE TZ CLOCKS ── */
+.clock-bar{background:#040c18;border-bottom:1px solid #0f1e38;padding:5px 16px;display:flex;gap:20px;align-items:center;flex-shrink:0}
+.clock-item{display:flex;align-items:baseline;gap:5px}
+.clock-zone{font-size:9px;font-weight:700;color:#3a5a7c;letter-spacing:1px;text-transform:uppercase;width:28px}
+.clock-time{font-family:"Oswald",sans-serif;font-size:14px;font-weight:600;color:#7ab8d8;letter-spacing:.5px}
+.clock-time.same-zone{color:#f5c842}
+.clock-item.active-zone .clock-time{color:#f5c842}
+.clock-divider{width:1px;height:16px;background:#0f1e38}
+
+/* ── OUTCOME BUTTONS ── */
+.outcome-bar{display:none;gap:6px;padding:8px 13px;border-top:1px solid #0f1e38;background:#050d1c;flex-shrink:0}
+.outcome-bar.visible{display:flex}
+.outcome-bar .ob-label{font-size:10px;color:#3a5a7c;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-right:2px;align-self:center;white-space:nowrap}
+.ob-btn{padding:5px 11px;border-radius:4px;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:"Source Sans 3",sans-serif;transition:all .15s;white-space:nowrap}
+.ob-connected{background:#0a2a10;color:#4adf7a;border:1px solid #1a5a28}.ob-connected:hover{background:#0d3a14}
+.ob-noanswer{background:#1a0a28;color:#c080ff;border:1px solid #4a1a7c}.ob-noanswer:hover{background:#240a38}
+.ob-voicemail{background:#1e1600;color:#f5c842;border:1px solid #3a3000}.ob-voicemail:hover{background:#2a1e00}
+.ob-log{font-size:10px;color:#2a4a30;margin-left:auto;align-self:center;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── AUTO-ADVANCE BANNER ── */
+.advance-banner{display:none;background:#0a1e0a;border:1px solid #1a5a28;border-radius:6px;margin:10px 13px 0;padding:10px 13px;cursor:pointer;transition:background .15s}
+.advance-banner:hover{background:#0d2810}
+.advance-banner.visible{display:block}
+.ab-label{font-size:9px;font-weight:700;color:#3aaf6a;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
+.ab-name{font-family:"Oswald",sans-serif;font-size:15px;color:#fff;font-weight:600}
+.ab-detail{font-size:10px;color:#3a6a4a;margin-top:2px}
 .schedule-view{flex:1;overflow-y:auto;padding:20px 24px}
 .schedule-view h2{font-family:"Oswald",sans-serif;font-size:20px;color:#fff;margin-bottom:4px}
 .schedule-view .sch-sub{font-size:12px;color:#3a5a80;margin-bottom:20px}
@@ -189,6 +214,19 @@ header{
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('roster',this)">&#128203; ROSTER</button>
   <button class="tab-btn" onclick="switchTab('schedule',this)">&#128197; SCHEDULE</button>
+  <div style="margin-left:auto;display:flex;align-items:center;padding-right:8px;gap:16px">
+    <div class="clock-bar" style="background:transparent;border:none;padding:0">
+      <div class="clock-item" id="clk-PST"><span class="clock-zone">PST</span><span class="clock-time same-zone" id="ct-PST">--:--</span></div>
+      <div class="clock-divider"></div>
+      <div class="clock-item" id="clk-MST"><span class="clock-zone">MST</span><span class="clock-time" id="ct-MST">--:--</span></div>
+      <div class="clock-divider"></div>
+      <div class="clock-item" id="clk-CST"><span class="clock-zone">CST</span><span class="clock-time" id="ct-CST">--:--</span></div>
+      <div class="clock-divider"></div>
+      <div class="clock-item" id="clk-EST"><span class="clock-zone">EST</span><span class="clock-time" id="ct-EST">--:--</span></div>
+      <div class="clock-divider"></div>
+      <div class="clock-item" id="clk-CET"><span class="clock-zone">CET</span><span class="clock-time" id="ct-CET">--:--</span></div>
+    </div>
+  </div>
 </div>
 
 <div class="main">
@@ -213,6 +251,20 @@ header{
       <button class="filter-btn" onclick="setFilter('committed',this)">&#127881; Committed</button>
     </div>
     <div class="recruit-list" id="recruitList"></div>
+    <!-- Outcome quick-tap bar — appears when a recruit is open -->
+    <div class="outcome-bar" id="outcomeBar">
+      <span class="ob-label">Log outcome:</span>
+      <button class="ob-btn ob-connected" onclick="logOutcome('connected')">&#10003; Connected</button>
+      <button class="ob-btn ob-noanswer" onclick="logOutcome('noanswer')">&#128683; No Answer</button>
+      <button class="ob-btn ob-voicemail" onclick="logOutcome('voicemail')">&#128235; Voicemail</button>
+      <span class="ob-log" id="obLog"></span>
+    </div>
+    <!-- Auto-advance — shows next scheduled recruit -->
+    <div class="advance-banner" id="advanceBanner" onclick="advanceToNext()">
+      <div class="ab-label">&#9654; Up Next</div>
+      <div class="ab-name" id="abName">—</div>
+      <div class="ab-detail" id="abDetail"></div>
+    </div>
   </div>
 
   <!-- ROSTER TAB CONTENT -->
@@ -424,6 +476,7 @@ function selectRecruit(name) {
   if (activeTab === 'schedule') { switchTab('roster', document.querySelectorAll('.tab-btn')[0]); }
   const r = getRecruits().find(x => x.name === name);
   if (!r) return;
+  showOutcomeBar(name);
   document.getElementById('welcomeMsg').style.display = 'none';
   const gc = document.getElementById('guideContainer');
   gc.style.display = 'block';
@@ -794,9 +847,137 @@ function getTZLine(r, callTime) {
   return `<div class="sch-tz">&#127758; ${label.name} &mdash; <span class="their-time">${conv.time} their time</span></div>`;
 }
 
+// ── Live TZ Clocks ────────────────────────────────────────────────────────────
+const CLOCK_ZONES = {
+  'PST': 'America/Los_Angeles',
+  'MST': 'America/Denver',
+  'CST': 'America/Chicago',
+  'EST': 'America/New_York',
+  'CET': 'Europe/Berlin',
+};
+
+function startLiveClocks() {
+  function tick() {
+    const now = new Date();
+    Object.entries(CLOCK_ZONES).forEach(([key, tz]) => {
+      const el = document.getElementById('ct-' + key);
+      if (!el) return;
+      try {
+        const t = now.toLocaleTimeString('en-US', {
+          timeZone: tz, hour: 'numeric', minute: '2-digit', hour12: true
+        });
+        el.textContent = t;
+      } catch(e) {}
+    });
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 loadStore();
 renderList();
+startLiveClocks();
+
+// ── Outcome logging ───────────────────────────────────────────────────────────
+function showOutcomeBar(name) {
+  const bar = document.getElementById('outcomeBar');
+  const log = document.getElementById('obLog');
+  bar.classList.add('visible');
+  bar.dataset.recruit = name;
+  // Show last logged outcome if any
+  const note = store.notes[name] || '';
+  const lastOutcome = note.split('\n').filter(l => l.includes('[') && l.includes(']')).pop();
+  log.textContent = lastOutcome ? lastOutcome.replace(/^\[.*?\] /, '') : '';
+}
+
+function hideOutcomeBar() {
+  document.getElementById('outcomeBar').classList.remove('visible');
+  document.getElementById('outcomeBar').dataset.recruit = '';
+  document.getElementById('obLog').textContent = '';
+}
+
+function logOutcome(type) {
+  const name = document.getElementById('outcomeBar').dataset.recruit;
+  if (!name) return;
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('en-US', {
+    timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit', hour12: true
+  });
+  const labels = { connected: '✓ Connected', noanswer: '✗ No Answer', voicemail: '✉ Left Voicemail' };
+  const entry = `[${timeStr} PST] ${labels[type]}`;
+  const existing = store.notes[name] || '';
+  store.notes[name] = existing ? existing + '\n' + entry : entry;
+  saveStore();
+  // Flash feedback
+  const log = document.getElementById('obLog');
+  log.textContent = labels[type];
+  log.style.color = type === 'connected' ? '#4adf7a' : type === 'voicemail' ? '#f5c842' : '#c080ff';
+  // Also auto-set status based on outcome
+  if (type === 'connected' && !store.statuses[name]) {
+    store.statuses[name] = 'followup';
+    saveStore();
+    renderList();
+    activeRecruit = name;
+    renderList();
+  }
+  // Update the notes textarea if visible
+  const idKey = esc(name);
+  const ta = document.querySelector(`#item_${idKey} .ctrl-notes`);
+  if (ta) ta.value = store.notes[name];
+  // Show auto-advance after connected
+  if (type === 'connected' || type === 'noanswer' || type === 'voicemail') {
+    updateAutoAdvance(name);
+  }
+}
+
+// ── Auto-advance ──────────────────────────────────────────────────────────────
+function updateAutoAdvance(currentName) {
+  const banner = document.getElementById('advanceBanner');
+  const abName = document.getElementById('abName');
+  const abDetail = document.getElementById('abDetail');
+
+  // Get all scheduled recruits sorted by time
+  function parseTime(t) {
+    if (!t) return 9999;
+    const m = t.match(/(\d{1,2}):?(\d{2})?\s*(am|pm|a|p)?/i);
+    if (!m) return 9999;
+    let h = parseInt(m[1]), min = parseInt(m[2]||'0');
+    const ap = (m[3]||'').toLowerCase();
+    if (ap.startsWith('p') && h !== 12) h += 12;
+    if (ap.startsWith('a') && h === 12) h = 0;
+    return h * 60 + min;
+  }
+
+  const scheduled = getRecruits()
+    .filter(r => store.callTimes[r.name] || store.callDates[r.name])
+    .sort((a,b) => parseTime(store.callTimes[a.name]) - parseTime(store.callTimes[b.name]));
+
+  const currentIdx = scheduled.findIndex(r => r.name === currentName);
+  const next = currentIdx >= 0 && currentIdx < scheduled.length - 1
+    ? scheduled[currentIdx + 1]
+    : scheduled.find(r => r.name !== currentName); // fallback: first different
+
+  if (next) {
+    banner.classList.add('visible');
+    abName.textContent = next.name;
+    const ct = store.callTimes[next.name] || 'time TBD';
+    const tz = getRecruitTZ(next);
+    const tzConv = ct !== 'time TBD' && tz ? convertPSTtoTZ(ct, tz) : null;
+    const tzStr = tzConv ? ` · ${tzConv.time} their time` : '';
+    abDetail.textContent = `${getPos(next)} · ${ct} PST${tzStr} · ${next.phone||'no phone'}`;
+  } else {
+    banner.classList.remove('visible');
+  }
+}
+
+function advanceToNext() {
+  const name = document.getElementById('abName').textContent;
+  if (name && name !== '—') {
+    document.getElementById('advanceBanner').classList.remove('visible');
+    selectRecruit(name);
+  }
+}
 </script>
 </body>
 </html>
