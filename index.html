@@ -42,7 +42,7 @@ header{
 
 /* ── LAYOUT ── */
 .main{display:grid;grid-template-columns:330px 1fr;height:calc(100vh - 88px)}
-.sidebar{background:#060e1c;border-right:1px solid #192e50;display:flex;flex-direction:column;overflow:hidden}
+.sidebar{background:#060e1c;border-right:1px solid #192e50;display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .content-area{overflow:hidden;display:flex;flex-direction:column;height:100%}
 
 /* ── SIDEBAR ── */
@@ -52,11 +52,7 @@ header{
 .filters{display:flex;gap:4px;padding:8px 13px;border-bottom:1px solid #192e50;flex-wrap:wrap;flex-shrink:0}
 .filter-btn{padding:3px 9px;border-radius:12px;border:1px solid #1e3560;background:#0a1628;color:#5a7ab8;font-size:10px;font-weight:600;cursor:pointer;transition:all .15s}
 .filter-btn.active{background:#172848;color:#e0d8cc;border-color:#3a5a9c}
-.recruit-list{overflow-y:auto;flex:1}
-.section-label{padding:8px 13px 3px;font-size:9px;font-weight:700;color:#243a58;letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;gap:5px}
-.count-badge{background:#b8001e;color:#fff;border-radius:8px;padding:1px 5px;font-size:8px;font-weight:700}
-
-/* ── RECRUIT CARDS ── */
+.recruit-list{overflow-y:auto;flex:1;min-height:0}
 .recruit-item{cursor:pointer;border-bottom:1px solid #0c1825;border-left:3px solid transparent}
 .recruit-item:hover .r-main{background:#0c1828}
 .recruit-item.active .r-main{background:#101f38}
@@ -64,9 +60,8 @@ header{
 .recruit-item.guide-border{border-left-color:#2a7a4a}
 .recruit-item.active.guide-border{border-left-color:#b8001e}
 .r-main{padding:9px 12px;transition:background .12s}
-.r-name{font-size:13px;font-weight:600;color:#ccc4bc;margin-bottom:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-.r-meta{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:2px}
-.r-club{font-size:9px;color:#243a58}
+.r-status-row{padding:0 12px 9px;display:none;flex-direction:column;gap:4px;overflow-y:auto;max-height:340px}
+.recruit-item.active .r-status-row{display:flex}
 .badge{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:700;white-space:nowrap}
 .b-pos{background:#172848;color:#7a9acc}
 .b-hot{background:#280a10;color:#ff6070}
@@ -101,9 +96,14 @@ header{
 @keyframes timerPulse{0%,100%{opacity:1}50%{opacity:.7}}
 
 /* ── RECRUIT DROPDOWN ── */
-.r-status-row{padding:0 12px 9px;display:none;flex-direction:column;gap:4px}
+.r-status-row{padding:0 12px 9px;display:none;flex-direction:column;gap:4px;overflow-y:auto;max-height:360px}
 .recruit-item.active .r-status-row{display:flex}
-.field-label{font-size:9px;font-weight:700;color:#3a4a5c;letter-spacing:1px;text-transform:uppercase;margin-top:5px;margin-bottom:1px}
+.r-name{font-size:13px;font-weight:600;color:#ccc4bc;margin-bottom:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.r-meta{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:2px}
+.r-club{font-size:9px;color:#243a58}
+.section-label{padding:8px 13px 3px;font-size:9px;font-weight:700;color:#243a58;letter-spacing:1.5px;text-transform:uppercase;display:flex;align-items:center;gap:5px}
+.count-badge{background:#b8001e;color:#fff;border-radius:8px;padding:1px 5px;font-size:8px;font-weight:700}
+.field-label{font-size:9px;font-weight:700;color:#3a4a5c;letter-spacing:1px;text-transform:uppercase;margin-top:4px;margin-bottom:1px}
 .ctrl-select{width:100%;background:#0d1a2e;border:1px solid #1e3560;color:#e0d8cc;padding:5px 8px;border-radius:4px;font-size:11px;font-family:"Source Sans 3",sans-serif;cursor:pointer}
 .ctrl-select:focus{outline:none;border-color:#3a5a9c}
 .ctrl-date{width:100%;background:#0d1a2e;border:1px solid #1e3560;color:#a0c8ff;padding:5px 8px;border-radius:4px;font-size:11px;font-family:"Source Sans 3",sans-serif;cursor:pointer}
@@ -111,7 +111,7 @@ header{
 .ctrl-time{width:100%;background:#0d1a2e;border:1px solid #1e3560;color:#f5c842;padding:5px 8px;border-radius:4px;font-size:12px;font-weight:600;font-family:"Source Sans 3",sans-serif}
 .ctrl-time:focus{outline:none;border-color:#f5c842}
 .ctrl-time::placeholder{color:#2a3a50;font-weight:400}
-.ctrl-notes{width:100%;background:#0d1a2e;border:1px solid #1e3560;color:#c0b8b0;padding:5px 8px;border-radius:4px;font-size:11px;font-family:"Source Sans 3",sans-serif;resize:none;height:52px}
+.ctrl-notes{width:100%;background:#0d1a2e;border:1px solid #1e3560;color:#c0b8b0;padding:5px 8px;border-radius:4px;font-size:11px;font-family:"Source Sans 3",sans-serif;resize:vertical;min-height:80px}
 .ctrl-notes:focus{outline:none;border-color:#3a5a9c}
 .ctrl-notes::placeholder{color:#2a3a50}
 .upload-label{font-size:9px;color:#2a3a52;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:3px;padding:4px 8px;border:1px dashed #1a2a3e;border-radius:3px;margin-top:3px;transition:all .15s}
@@ -235,10 +235,11 @@ header{
 .clock-divider{width:1px;height:16px;background:#0f1e38}
 
 /* ── OUTCOME BUTTONS ── */
-.outcome-bar{display:none;flex-wrap:wrap;gap:5px;padding:7px 13px;border-top:1px solid #0f1e38;background:#050d1c;flex-shrink:0}
+.sidebar-bottom{flex-shrink:0;display:flex;flex-direction:column}
+.outcome-bar{display:none;flex-wrap:wrap;gap:5px;padding:7px 13px;border-top:1px solid #0f1e38;background:#050d1c}
 .outcome-bar.visible{display:flex}
-.outcome-bar .ob-label{font-size:10px;color:#3a5a7c;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-right:2px;align-self:center;white-space:nowrap;width:100%;margin-bottom:1px}
-.ob-btn{padding:5px 11px;border-radius:4px;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:"Source Sans 3",sans-serif;transition:all .15s;white-space:nowrap;flex:1;min-width:0}
+.outcome-bar .ob-label{font-size:10px;color:#3a5a7c;font-weight:600;letter-spacing:.5px;text-transform:uppercase;width:100%;margin-bottom:2px}
+.ob-btn{padding:6px 0;border-radius:4px;border:none;font-size:11px;font-weight:600;cursor:pointer;font-family:"Source Sans 3",sans-serif;transition:all .15s;white-space:nowrap;flex:1}
 .ob-connected{background:#0a2a10;color:#4adf7a;border:1px solid #1a5a28}.ob-connected:hover{background:#0d3a14}
 .ob-noanswer{background:#1a0a28;color:#c080ff;border:1px solid #4a1a7c}.ob-noanswer:hover{background:#240a38}
 .ob-voicemail{background:#1e1600;color:#f5c842;border:1px solid #3a3000}.ob-voicemail:hover{background:#2a1e00}
@@ -329,9 +330,9 @@ header{
     </div>
     <div class="filter-section">
       <button class="filter-toggle" onclick="toggleFilters('mainFilters',this)">
-        <span>Filters</span><span class="filter-toggle-arrow open" id="mainFiltersArrow">&#9660;</span>
+        <span>Filters</span><span class="filter-toggle-arrow" id="mainFiltersArrow">&#9660;</span>
       </button>
-      <div class="filter-content open" id="mainFilters">
+      <div class="filter-content" id="mainFilters">
         <button class="filter-btn active" onclick="setFilter('all',this)">All</button>
         <button class="filter-btn" onclick="setFilter('L',this)">L</button>
         <button class="filter-btn" onclick="setFilter('OH',this)">OH</button>
@@ -361,19 +362,13 @@ header{
       </div>
     </div>
     <div class="recruit-list" id="recruitList"></div>
-    <!-- Outcome quick-tap bar — appears when a recruit is open -->
-    <div class="outcome-bar" id="outcomeBar">
-      <span class="ob-label">Log outcome:</span>
-      <button class="ob-btn ob-connected" onclick="logOutcome('connected')">&#10003; Connected</button>
-      <button class="ob-btn ob-noanswer" onclick="logOutcome('noanswer')">&#128683; No Answer</button>
-      <button class="ob-btn ob-voicemail" onclick="logOutcome('voicemail')">&#128235; Voicemail</button>
-      <span class="ob-log" id="obLog"></span>
-    </div>
-    <!-- Auto-advance — shows next scheduled recruit -->
-    <div class="advance-banner" id="advanceBanner" onclick="advanceToNext()">
-      <div class="ab-label">&#9654; Up Next</div>
-      <div class="ab-name" id="abName">—</div>
-      <div class="ab-detail" id="abDetail"></div>
+    <div class="sidebar-bottom">
+      <!-- Auto-advance — shows next scheduled recruit -->
+      <div class="advance-banner" id="advanceBanner" onclick="advanceToNext()">
+        <div class="ab-label">&#9654; Up Next</div>
+        <div class="ab-name" id="abName">—</div>
+        <div class="ab-detail" id="abDetail"></div>
+      </div>
     </div>
   </div>
 
@@ -712,6 +707,13 @@ function renderList() {
           ${hudl?`<a href="${hudl}" target="_blank" class="hudl-btn">&#127909; Open Highlight Reel</a>`:''}
           <div class="field-label">Status</div>
           <select class="ctrl-select" onchange="setSt('${nm}',this.value)">${stOpts}</select>
+          <div class="field-label" style="margin-top:6px">Log Outcome</div>
+          <div style="display:flex;gap:5px;margin-bottom:2px">
+            <button class="ob-btn ob-connected" style="flex:1;padding:6px 4px;font-size:10px" onclick="logOutcome_named('${nm}','connected')">&#10003; Connected</button>
+            <button class="ob-btn ob-noanswer" style="flex:1;padding:6px 4px;font-size:10px" onclick="logOutcome_named('${nm}','noanswer')">&#128683; No Answer</button>
+            <button class="ob-btn ob-voicemail" style="flex:1;padding:6px 4px;font-size:10px" onclick="logOutcome_named('${nm}','voicemail')">&#128235; Voicemail</button>
+          </div>
+          <div id="oblog_${idKey}" style="font-size:10px;color:#2a5a30;min-height:14px;margin-bottom:2px"></div>
           <div class="field-label">Notes</div>
           <textarea class="ctrl-notes" placeholder="Call notes, next steps..." oninput="setNote('${nm}',this.value)">${store.notes[r.name]||''}</textarea>
           <label class="upload-label${store.customPDFs[r.name]?' done':''}" id="uplabel_${idKey}">
@@ -1500,26 +1502,10 @@ renderLeaderboard();
 startLiveClocks();
 
 // ── Outcome logging ───────────────────────────────────────────────────────────
-function showOutcomeBar(name) {
-  const bar = document.getElementById('outcomeBar');
-  const log = document.getElementById('obLog');
-  bar.classList.add('visible');
-  bar.dataset.recruit = name;
-  // Show last logged outcome if any
-  const note = store.notes[name] || '';
-  const lastOutcome = note.split('\n').filter(l => l.includes('[') && l.includes(']')).pop();
-  log.textContent = lastOutcome ? lastOutcome.replace(/^\[.*?\] /, '') : '';
-}
+function showOutcomeBar(name) { /* outcomes now inline in dropdown */ }
+function hideOutcomeBar() { /* outcomes now inline in dropdown */ }
 
-function hideOutcomeBar() {
-  document.getElementById('outcomeBar').classList.remove('visible');
-  document.getElementById('outcomeBar').dataset.recruit = '';
-  document.getElementById('obLog').textContent = '';
-}
-
-function logOutcome(type) {
-  const name = document.getElementById('outcomeBar').dataset.recruit;
-  if (!name) return;
+function logOutcome_named(name, type) {
   const now = new Date();
   const timeStr = now.toLocaleTimeString('en-US', {
     timeZone: 'America/Los_Angeles', hour: 'numeric', minute: '2-digit', hour12: true
@@ -1529,28 +1515,28 @@ function logOutcome(type) {
   const existing = store.notes[name] || '';
   store.notes[name] = existing ? existing + '\n' + entry : entry;
   saveStore();
-  // Flash feedback
-  const log = document.getElementById('obLog');
-  log.textContent = labels[type];
-  log.style.color = type === 'connected' ? '#4adf7a' : type === 'voicemail' ? '#f5c842' : '#c080ff';
-  // Also auto-set status based on outcome
-  if (type === 'connected' && !store.statuses[name]) {
-    store.statuses[name] = 'followup';
-    saveStore();
-    renderList();
-    activeRecruit = name;
-    renderList();
-  }
-  // Update the notes textarea if visible
+  // Update notes textarea if visible
   const idKey = esc(name);
   const ta = document.querySelector(`#item_${idKey} .ctrl-notes`);
   if (ta) ta.value = store.notes[name];
-  // Show auto-advance after connected
-  if (type === 'connected' || type === 'noanswer' || type === 'voicemail') {
-    updateAutoAdvance(name);
-    renderLeaderboard();
+  // Show inline feedback
+  const logEl = document.getElementById('oblog_' + idKey);
+  if (logEl) {
+    logEl.textContent = labels[type];
+    logEl.style.color = type === 'connected' ? '#4adf7a' : type === 'voicemail' ? '#f5c842' : '#c080ff';
   }
+  // Auto-set status on connected
+  if (type === 'connected' && !store.statuses[name]) {
+    store.statuses[name] = 'followup';
+    saveStore();
+    reRender(name);
+  }
+  updateAutoAdvance(name);
+  renderLeaderboard();
+  updateCounts();
 }
+
+function logOutcome(type) { /* legacy — no longer used */ }
 
 // ── Auto-advance ──────────────────────────────────────────────────────────────
 function updateAutoAdvance(currentName) {
