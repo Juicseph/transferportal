@@ -842,7 +842,7 @@ function renderList() {
       const idKey = esc(r.name);
 
       html += `<div class="recruit-item${ac}${gb}" id="item_${idKey}">
-        <div class="r-main" onclick="selectRecruit('${nm}')">
+        <div class="r-main" onclick="toggleRecruit('${nm}')">
           <div class="r-name">${r.name}${commitBadge}${timeBadge}${dateBadge}${tzBadge}${callerBadge}${textBadge} ${stBadge}</div>
           <div class="r-meta"><span class="badge b-pos">${pos2}</span>${hb}${ib}${gb2}</div>
           <div class="r-club">${r.club||''}</div>
@@ -901,6 +901,23 @@ function renderList() {
 }
 
 // ── Select recruit → show PDF ─────────────────────────────────────────────────
+function toggleRecruit(name) {
+  if (activeRecruit === name) {
+    closeGuide();
+  } else {
+    selectRecruit(name);
+  }
+}
+
+function closeGuide() {
+  activeRecruit = null;
+  renderList();
+  document.getElementById('welcomeMsg').style.display = 'flex';
+  document.getElementById('guideContainer').style.display = 'none';
+  document.getElementById('whisperToggle').style.display = 'none';
+  if (document.getElementById('whisperPanel').classList.contains('open')) toggleWhisper();
+}
+
 function selectRecruit(name) {
   activeRecruit = name;
   renderList();
@@ -945,6 +962,7 @@ function selectRecruit(name) {
           <button class="btn btn-open" onclick="openDrafter('${q2(name)}')" style="background:#0f1e38;border:1px solid #2a4a6c;color:#7ab8d8">&#9997; Draft Text</button>
           <button class="btn btn-open" onclick="window.open('${url}','_blank')">&#8599; Full Screen</button>
           <a href="${url}" download="${safeName}_Call_Guide.pdf"><button class="btn btn-dl">&#8595; Download</button></a>
+          <button class="btn btn-open" onclick="closeGuide()" title="Close guide" style="background:#1a0a10;border:1px solid #5a1a2a;color:#ff7088;padding:7px 10px">&#10005;</button>
         </div>
       </div>
       <div class="weather-strip" id="weatherStrip"><span class="weather-loading">&#127756; Loading weather...</span></div>
