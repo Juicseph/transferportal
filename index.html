@@ -265,6 +265,31 @@ header{
 .ab-label{font-size:9px;font-weight:700;color:#3aaf6a;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
 .ab-name{font-family:"Oswald",sans-serif;font-size:15px;color:#fff;font-weight:600}
 .ab-detail{font-size:10px;color:#3a6a4a;margin-top:2px}
+/* ── TEXT SCHEDULE VIEW ── */
+.text-schedule-view{flex:1;overflow-y:auto;padding:20px 24px}
+.text-schedule-view h2{font-family:"Oswald",sans-serif;font-size:20px;color:#fff;margin-bottom:4px}
+.ts-sub{font-size:12px;color:#3a5a80;margin-bottom:18px}
+.ts-empty{text-align:center;padding:60px 20px;color:#1e3050}
+.ts-empty h3{font-family:"Oswald",sans-serif;font-size:20px;margin-bottom:8px;color:#243a60}
+.ts-empty p{font-size:13px;line-height:1.7}
+.ts-group{margin-bottom:24px}
+.ts-date-hdr{font-family:"Oswald",sans-serif;font-size:13px;font-weight:600;color:#5aabff;letter-spacing:1px;text-transform:uppercase;padding:6px 0;border-bottom:1px solid #1e3050;margin-bottom:10px}
+.ts-card{background:#0a1828;border:1px solid #192e50;border-radius:6px;padding:12px 16px;margin-bottom:8px;display:grid;grid-template-columns:90px 1fr auto;gap:12px;align-items:center;cursor:pointer;transition:background .15s;border-left:3px solid #1a4a7c}
+.ts-card:hover{background:#0d1f38}
+.ts-card.sent{border-left-color:#1a5a28;opacity:.8}
+.ts-time{font-family:"Oswald",sans-serif;font-size:18px;font-weight:700;color:#5aabff;line-height:1}
+.ts-time-lbl{font-size:9px;color:#2a4a6c;margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
+.ts-name{font-family:"Oswald",sans-serif;font-size:15px;font-weight:600;color:#fff;margin-bottom:3px}
+.ts-details{font-size:11px;color:#3a5a80;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.ts-msg{font-size:11px;color:#4a7a60;font-style:italic;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:400px}
+.ts-sent-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:3px;background:#041008;color:#4adf7a;border:1px solid #1a5a28}
+.ts-unsent-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:3px;background:#051828;color:#5aabff;border:1px solid #1a4a7c}
+.ts-summary{background:#0a1828;border:1px solid #1e3050;border-radius:6px;padding:12px 16px;margin-bottom:18px;display:flex;gap:24px;flex-wrap:wrap}
+.ts-stat{text-align:center}
+.ts-stat-n{font-family:"Oswald",sans-serif;font-size:22px;font-weight:700}
+.ts-stat-l{font-size:10px;color:#3a5a80;text-transform:uppercase;letter-spacing:.8px}
+
+/* ── SCHEDULE VIEW ── */
 .schedule-view{flex:1;overflow-y:auto;padding:20px 24px}
 .schedule-view h2{font-family:"Oswald",sans-serif;font-size:20px;color:#fff;margin-bottom:4px}
 .schedule-view .sch-sub{font-size:12px;color:#3a5a80;margin-bottom:20px}
@@ -313,6 +338,7 @@ header{
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('roster',this)">&#128203; ROSTER</button>
   <button class="tab-btn" onclick="switchTab('schedule',this)">&#128197; SCHEDULE</button>
+  <button class="tab-btn" onclick="switchTab('texts',this)">&#128172; TEXTS</button>
   <div style="margin-left:auto;display:flex;align-items:center;padding-right:8px;gap:16px">
     <div class="clock-bar" style="background:transparent;border:none;padding:0">
       <div class="clock-item" id="clk-PST"><span class="clock-zone">PST</span><span class="clock-time same-zone" id="ct-PST">--:--</span></div>
@@ -401,6 +427,11 @@ header{
   <!-- SCHEDULE TAB CONTENT -->
   <div class="content-area" id="tabSchedule" style="display:none">
     <div class="schedule-view" id="scheduleView"></div>
+  </div>
+
+  <!-- TEXT SCHEDULE TAB CONTENT -->
+  <div class="content-area" id="tabTexts" style="display:none">
+    <div class="text-schedule-view" id="textScheduleView"></div>
   </div>
 </div>
 
@@ -617,9 +648,119 @@ function switchTab(tab, btn) {
   activeTab = tab;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('tabRoster').style.display = tab === 'roster' ? 'flex' : 'none';
+  document.getElementById('tabRoster').style.display   = tab === 'roster'   ? 'flex' : 'none';
   document.getElementById('tabSchedule').style.display = tab === 'schedule' ? 'flex' : 'none';
+  document.getElementById('tabTexts').style.display    = tab === 'texts'    ? 'flex' : 'none';
   if (tab === 'schedule') renderSchedule();
+  if (tab === 'texts')    renderTextSchedule();
+}
+
+// ── Text Schedule View ────────────────────────────────────────────────────────
+function renderTextSchedule() {
+  const all = getRecruits();
+  const withText = all.filter(r => store.textDates&&store.textDates[r.name] && store.textTimes&&store.textTimes[r.name]);
+  const noText   = all.filter(r => !(store.textDates&&store.textDates[r.name] && store.textTimes&&store.textTimes[r.name]));
+
+  function parseTime(t) {
+    if (!t) return 9999;
+    const m = t.match(/(\d{1,2}):?(\d{2})?\s*(am|pm|a|p)?/i);
+    if (!m) return 9999;
+    let h = parseInt(m[1]), min = parseInt(m[2]||'0');
+    const ap = (m[3]||'').toLowerCase();
+    if (ap.startsWith('p') && h !== 12) h += 12;
+    if (ap.startsWith('a') && h === 12) h = 0;
+    return h * 60 + min;
+  }
+
+  // Group by date
+  const byDate = {};
+  withText.forEach(r => {
+    const d = store.textDates[r.name];
+    if (!byDate[d]) byDate[d] = [];
+    byDate[d].push(r);
+  });
+  Object.values(byDate).forEach(arr => arr.sort((a,b) => parseTime(store.textTimes[a.name]) - parseTime(store.textTimes[b.name])));
+
+  const totalSent   = withText.filter(r => store.textSent&&store.textSent[r.name]).length;
+  const totalUnsent = withText.length - totalSent;
+
+  let html = `<h2>&#128172; Text Schedule</h2>
+  <div class="ts-sub">${withText.length} text${withText.length!==1?'s':''} scheduled &nbsp;&middot;&nbsp; ${noText.length} not scheduled</div>`;
+
+  if (withText.length > 0) {
+    html += `<div class="ts-summary">
+      <div class="ts-stat"><div class="ts-stat-n" style="color:#5aabff">${withText.length}</div><div class="ts-stat-l">Scheduled</div></div>
+      <div class="ts-stat"><div class="ts-stat-n" style="color:#4adf7a">${totalSent}</div><div class="ts-stat-l">Sent</div></div>
+      <div class="ts-stat"><div class="ts-stat-n" style="color:#ffcc60">${totalUnsent}</div><div class="ts-stat-l">Pending</div></div>
+      <div class="ts-stat"><div class="ts-stat-n" style="color:#c0b8b0">${noText.length}</div><div class="ts-stat-l">Not Scheduled</div></div>
+    </div>`;
+  }
+
+  if (withText.length === 0) {
+    html += `<div class="ts-empty">
+      <h3>No texts scheduled yet</h3>
+      <p>Open any recruit, scroll to the<br><strong style="color:#5aabff">💬 Schedule Text to Recruit</strong> section,<br>and set a date and time to see them here.</p>
+    </div>`;
+  }
+
+  const sortedDates = Object.keys(byDate).sort();
+  sortedDates.forEach(d => {
+    const arr = byDate[d];
+    html += `<div class="ts-group"><div class="ts-date-hdr">&#128172; ${fmtDateLong(d)} &mdash; ${arr.length} text${arr.length!==1?'s':''}</div>`;
+    arr.forEach(r => {
+      const tt = store.textTimes[r.name] || '';
+      const msg = store.textMsgs&&store.textMsgs[r.name] ? store.textMsgs[r.name] : '';
+      const sent = store.textSent&&store.textSent[r.name];
+      const caller = store.callers[r.name] || '';
+      const pos2 = getPos(r);
+      const nm = q2(r.name);
+      const tz = getRecruitTZ(r);
+      const tzConv = (tt && tz) ? convertPSTtoTZ(tt, tz) : null;
+      const tzLabel = tz ? (TZ_LABEL[tz]||{short:'?',name:'Unknown'}) : null;
+      const tzStr = tzConv ? `<span style="color:#90d0ff;font-weight:700">${tzConv.time}</span> <span style="color:#2a4a6c">${tzConv.label.short}</span>` : '';
+      html += `<div class="ts-card${sent?' sent':''}" onclick="selectRecruit('${nm}')">
+        <div>
+          <div class="ts-time">${tt||'—'}</div>
+          <div class="ts-time-lbl">PST send time</div>
+          ${tzStr ? `<div style="margin-top:4px;font-size:10px;line-height:1.3">${tzStr}</div>` : ''}
+        </div>
+        <div>
+          <div class="ts-name">${r.name}</div>
+          <div class="ts-details">
+            <span class="badge b-pos" style="font-size:10px">${pos2}</span>
+            ${caller?`<span style="color:#ffcc60;font-size:10px">&#128222; ${caller}</span>`:''}
+            <span style="color:#2a4a6c">${r.phone||'no phone'}</span>
+          </div>
+          ${msg?`<div class="ts-msg">"${msg.substring(0,100)}${msg.length>100?'…':''}"</div>`:'<div class="ts-msg" style="color:#1e3050">No message drafted</div>'}
+        </div>
+        <div>
+          ${sent
+            ? `<span class="ts-sent-badge">&#10003; Sent</span>`
+            : `<span class="ts-unsent-badge">&#128172; Pending</span>`}
+        </div>
+      </div>`;
+    });
+    html += '</div>';
+  });
+
+  // Not scheduled
+  if (noText.length > 0 && withText.length > 0) {
+    html += `<div class="ts-group"><div class="ts-date-hdr" style="color:#3a5a80">NOT SCHEDULED &mdash; ${noText.length}</div>`;
+    noText.forEach(r => {
+      const nm = q2(r.name);
+      html += `<div class="ts-card" style="opacity:.45;border-left-color:#1a2a3e;cursor:default" onclick="selectRecruit('${nm}')">
+        <div><div class="ts-time" style="color:#2a4a6c">—</div><div class="ts-time-lbl">no time</div></div>
+        <div>
+          <div class="ts-name" style="color:#4a6a80">${r.name}</div>
+          <div class="ts-details"><span class="badge b-pos" style="font-size:10px">${getPos(r)}</span><span style="color:#1e3050">${r.phone||''}</span></div>
+        </div>
+        <div><span style="font-size:10px;color:#1e3050">Not set</span></div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  document.getElementById('textScheduleView').innerHTML = html;
 }
 
 // ── Filter ────────────────────────────────────────────────────────────────────
@@ -742,7 +883,7 @@ function renderList() {
             <textarea class="ctrl-text-msg" placeholder="Type the text message to send..." oninput="setTextMsg('${nm}',this.value)">${store.textMsgs&&store.textMsgs[r.name]||''}</textarea>
             <div class="text-row">
               <input type="date" class="ctrl-date" placeholder="Date to send" value="${store.textDates&&store.textDates[r.name]||''}" onchange="setTextDate('${nm}',this.value)" title="Date to send text">
-              <input type="text" class="ctrl-time" placeholder="Time (e.g. 9:00 AM)" value="${store.textTimes&&store.textTimes[r.name]||''}" oninput="setTextTime('${nm}',this.value)" onblur="setTextTime('${nm}',this.value)">
+              <input type="text" class="ctrl-time" placeholder="Time (e.g. 9:00 AM)" value="${store.textTimes&&store.textTimes[r.name]||''}" oninput="setTextTime('${nm}',this)" onblur="setTextTimeFlush('${nm}',this)" title="Time to send text">
             </div>
             <button class="send-text-btn${store.textSent&&store.textSent[r.name]?' sent':''}" id="sendbtn_${idKey}" onclick="markTextSent('${nm}')">
               ${store.textSent&&store.textSent[r.name]?'&#10003; Text Marked Sent':'&#128172; Mark as Sent'}
@@ -1023,8 +1164,19 @@ function resetTimer() {
   if (el) { el.textContent = '0:00'; el.classList.remove('running','stopped'); }
 }
 function reRender(name) {
+  // Save focused element ID/selector so we can restore focus after re-render
+  const active = document.activeElement;
+  const wasInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.tagName === 'SELECT');
+  const focusId = wasInput ? active.id : null;
+  const focusClass = wasInput && !focusId ? active.className.split(' ')[0] : null;
   activeRecruit = name;
   renderList();
+  // Restore focus
+  if (focusId) {
+    const el = document.getElementById(focusId);
+    if (el) { el.focus(); if (el.tagName==='INPUT'||el.tagName==='TEXTAREA') { const l=el.value.length; el.setSelectionRange(l,l); } }
+  }
+  if (activeTab === 'texts') renderTextSchedule();
 }
 
 // ── Counts ────────────────────────────────────────────────────────────────────
@@ -1414,7 +1566,19 @@ function copyDraft() {
 
 function setTextMsg(name, val)  { if(!store.textMsgs) store.textMsgs={}; store.textMsgs[name]=val; saveStore(); }
 function setTextDate(name, val) { if(!store.textDates) store.textDates={}; store.textDates[name]=val; saveStore(); reRender(name); }
-function setTextTime(name, val) { if(!store.textTimes) store.textTimes={}; store.textTimes[name]=val; saveStore(); reRender(name); }
+function setTextTime(name, input) {
+  // Just save the value — no re-render, no badge update while typing
+  if(!store.textTimes) store.textTimes={};
+  store.textTimes[name] = input.value;
+  saveStore();
+}
+function setTextTimeFlush(name, input) {
+  // On blur: save and re-render so badge updates
+  if(!store.textTimes) store.textTimes={};
+  store.textTimes[name] = input.value.trim();
+  saveStore();
+  reRender(name);
+}
 function markTextSent(name) {
   if(!store.textSent) store.textSent={};
   store.textSent[name] = !store.textSent[name];
