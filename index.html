@@ -152,15 +152,15 @@ header{
 .whisper-toggle.has-note{border-color:#3a7a5c;background:#0a1e14}
 
 /* ── COACH CALL TRACKER ── */
-.lb-panel{background:#060e1c;border-top:1px solid #0f1e38;padding:10px 13px;flex-shrink:0}
-.lb-title{font-size:9px;font-weight:700;color:#3a5a7c;letter-spacing:1px;text-transform:uppercase;margin-bottom:7px;display:flex;align-items:center;justify-content:space-between}
-.lb-rows{display:grid;grid-template-columns:1fr 1fr;gap:5px}
-.lb-row{background:#0a1628;border:1px solid #0f1e38;border-radius:4px;padding:6px 8px}
-.lb-coach{font-size:10px;font-weight:700;color:#5a8ab0;letter-spacing:.5px;margin-bottom:3px}
-.lb-stats{display:flex;gap:8px}
-.lb-stat{text-align:center}
-.lb-stat-n{font-family:"Oswald",sans-serif;font-size:14px;font-weight:600;color:#c0b8b0;line-height:1}
-.lb-stat-l{font-size:8px;color:#2a4a6c;text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+.lb-panel{background:#060e1c;border-top:1px solid #0f1e38;padding:8px 13px;flex-shrink:0}
+.lb-title{font-size:9px;font-weight:700;color:#3a5a7c;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between}
+.lb-rows{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.lb-row{background:#0a1628;border:1px solid #0f1e38;border-radius:4px;padding:5px 7px}
+.lb-coach{font-size:10px;font-weight:700;color:#5a8ab0;letter-spacing:.5px;margin-bottom:4px}
+.lb-stats{display:flex;gap:6px}
+.lb-stat{text-align:center;flex:1}
+.lb-stat-n{font-family:"Oswald",sans-serif;font-size:13px;font-weight:600;color:#c0b8b0;line-height:1}
+.lb-stat-l{font-size:7px;color:#2a4a6c;text-transform:uppercase;letter-spacing:.3px;margin-top:1px}
 .lb-stat-n.done{color:#4adf7a}
 .lb-stat-n.missed{color:#c080ff}
 .lb-stat-n.vm{color:#f5c842}
@@ -327,7 +327,7 @@ header{
     </div>
     <!-- Leaderboard -->
     <div class="lb-panel" id="lbPanel">
-      <div class="lb-title">&#127942; Coach Leaderboard <span id="lbTotal" style="color:#3a5a7c;font-weight:400;font-size:9px"></span></div>
+      <div class="lb-title">&#128222; Call Tracker <span id="lbTotal" style="color:#2a4a5c;font-weight:400;font-size:9px"></span></div>
       <div class="lb-rows" id="lbRows"></div>
     </div>
   </div>
@@ -752,7 +752,7 @@ function setSt(name, val)  { store.statuses[name] = val; saveStore(); reRender(n
 function setNote(name, val){ store.notes[name] = val; saveStore(); }
 function setPos(name, val) { if(val) store.positions[name]=val; else delete store.positions[name]; saveStore(); reRender(name); }
 function setCDate(name,val){ store.callDates[name]=val; saveStore(); reRender(name); }
-function setCaller(name,val){ store.callers[name]=val; saveStore(); reRender(name); }
+function setCaller(name,val){ store.callers[name]=val; saveStore(); reRender(name); renderLeaderboard(); }
 function setHudl(name,val) {
   store.hudlLinks[name] = val.trim();
   saveStore();
@@ -1041,17 +1041,18 @@ function renderLeaderboard() {
   });
 
   const total = COACHES.reduce((s,c) => s + counts[c].connected + counts[c].noanswer + counts[c].voicemail, 0);
-  document.getElementById('lbTotal').textContent = total ? `${total} outcomes logged` : 'No outcomes yet';
+  const totalAssigned = COACHES.reduce((s,c) => s + counts[c].assigned, 0);
+  document.getElementById('lbTotal').textContent = totalAssigned ? `${totalAssigned} assigned · ${total} logged` : '';
 
   document.getElementById('lbRows').innerHTML = COACHES.map(c => {
     const d = counts[c];
     return `<div class="lb-row">
       <div class="lb-coach">${c}</div>
       <div class="lb-stats">
-        <div class="lb-stat"><div class="lb-stat-n">${d.assigned}</div><div class="lb-stat-l">Assigned</div></div>
-        <div class="lb-stat"><div class="lb-stat-n done">${d.connected}</div><div class="lb-stat-l">Connected</div></div>
-        <div class="lb-stat"><div class="lb-stat-n vm">${d.voicemail}</div><div class="lb-stat-l">Voicemail</div></div>
-        <div class="lb-stat"><div class="lb-stat-n missed">${d.noanswer}</div><div class="lb-stat-l">No Answer</div></div>
+        <div class="lb-stat"><div class="lb-stat-n">${d.assigned}</div><div class="lb-stat-l">Asgn</div></div>
+        <div class="lb-stat"><div class="lb-stat-n done">${d.connected}</div><div class="lb-stat-l">Done</div></div>
+        <div class="lb-stat"><div class="lb-stat-n vm">${d.voicemail}</div><div class="lb-stat-l">VM</div></div>
+        <div class="lb-stat"><div class="lb-stat-n missed">${d.noanswer}</div><div class="lb-stat-l">Miss</div></div>
       </div>
     </div>`;
   }).join('');
