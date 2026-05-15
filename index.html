@@ -293,6 +293,9 @@ header{
 .depth-badge{font-size:8px;font-weight:700;position:absolute;top:3px;right:4px;padding:1px 4px;border-radius:2px}
 .depth-badge.hot{background:#280a10;color:#ff6070}
 .depth-badge.committed{background:#200838;color:#c080ff}
+.depth-filter-btn{padding:4px 10px;border-radius:4px;border:1px solid #1e3050;background:#0a1628;color:#3a5a7c;font-size:10px;font-weight:600;cursor:pointer;font-family:"Source Sans 3",sans-serif;transition:all .15s}
+.depth-filter-btn.active{background:#172848;color:#e0d8cc;border-color:#3a5a9c}
+.depth-filter-btn:hover{color:#7a9acc}
 
 /* ── COMMAND CENTER ── */
 .cmd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px;height:100%;box-sizing:border-box}
@@ -1776,22 +1779,22 @@ function setTextMsg(name, val)  { if(!store.textMsgs) store.textMsgs={}; store.t
 function setTextDate(name, val) { if(!store.textDates) store.textDates={}; store.textDates[name]=val; saveStore(); reRender(name); }
 
 // Location overrides for map
-let _locTimers = {};
 function setLocation(name, val) {
-  // Save silently while typing — no re-render
-  if(!store.locations) store.locations={};
+  // Save on every keystroke — no re-render while typing
+  if (!store.locations) store.locations = {};
   store.locations[name] = val.trim();
   saveStore();
 }
 function setLocationFlush(name, val) {
-  if(!store.locations) store.locations={};
-  store.locations[name] = val.trim();
+  // On blur: save, re-render sidebar badge, refresh map
+  if (!store.locations) store.locations = {};
+  const trimmed = val.trim();
+  store.locations[name] = trimmed;
   saveStore();
-  // Refresh map if open
   if (activeTab === 'map') renderMap();
 }
 function clearLocation(name) {
-  if(!store.locations) store.locations={};
+  if (!store.locations) store.locations = {};
   delete store.locations[name];
   saveStore();
   reRender(name);
@@ -2167,8 +2170,11 @@ function renderMap() {
       } else {
         // Default: state center with offset for multiple recruits
         const total = recruits.length;
-        const offsetLon = total > 1 ? (i - (total-1)/2) * 0.9 : 0;
-        const offsetLat = total > 1 ? (i % 2 === 0 ? 0.3 : -0.3) : 0;
+        // Spiral offset so dots never stack — each gets a unique angle+radius
+        const angle = (i / Math.max(total, 1)) * 2 * Math.PI;
+        const radius = total === 1 ? 0 : 0.35 + Math.floor(i / 8) * 0.3;
+        const offsetLat = radius * Math.sin(angle);
+        const offsetLon = radius * Math.cos(angle) * 1.4; // lon needs more spread
         pos = [latlon[0] + offsetLat, latlon[1] + offsetLon];
       }
 
@@ -2257,6 +2263,9 @@ const DEPTH_POSITIONS = [
   {key:'DS',  label:'Defensive Spec.', slots:1},
 ];
 
+let depthFilter = 'hot'; // 'hot' = 4+ only, 'all' = everyone
+let depthMinInterest = 4;
+
 function getDepthSlots(key) {
   if (!store.depthTargets) store.depthTargets = {};
   const def = DEPTH_POSITIONS.find(p => p.key===key);
@@ -2266,63 +2275,119 @@ function getDepthSlots(key) {
 function adjustDepthSlot(key, delta) {
   if (!store.depthTargets) store.depthTargets = {};
   const cur = getDepthSlots(key);
-  store.depthTargets[key] = Math.max(0, Math.min(8, cur + delta));
+  store.depthTargets[key] = Math.max(0, Math.min(10, cur + delta));
   saveStore();
   renderDepth();
 }
+
+function setDepthFilter(f) {
+  depthFilter = f;
+  document.querySelectorAll('.depth-filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.depth-filter-btn').forEach(b => { if (b.dataset.f===f) b.classList.add('active'); });
+  renderDepth();
+}
+
+function setDepthMinInterest(val) {
+  depthMinInterest = parseInt(val);
+  renderDepth();
+}
+
+function getDepthRecruits(key) {
+  const all = getRecruits();
+  return all.filter(r => {
+    const pos = getPos(r);
+    const st = store.statuses[r.name]||'';
+    const interest = parseFloat(r.interest)||0;
+    const posMatch = pos===key || (pos==='OH/RS' && (key==='OH'||key==='RS'));
+    if (!posMatch) return false;
+    if (depthFilter==='committed') return st==='committed';
+    if (depthFilter==='hot') return r.hot || st==='committed' || interest>=depthMinInterest;
+    return true; // 'all'
+  });
+}
+
+// Drag state
+let depthDrag = null;
 
 function renderDepth() {
   const el = document.getElementById('depthChart');
   if (!el) return;
   const all = getRecruits();
-  let html = `<div style="font-size:11px;color:#2a4a6c;margin-bottom:14px">Use <strong style="color:#5a8ab0">+/−</strong> to set how many recruits you need at each position. Shows hot (🔥 4+) and committed (🎉) recruits.</div>`;
+
+  // Manually pinned recruits per position slot
+  if (!store.depthPins) store.depthPins = {}; // {posKey: [name, name, ...]}
+
+  const totalCommitted = all.filter(r => (store.statuses[r.name]||'')==='committed').length;
+  const totalHot = all.filter(r => r.hot || parseFloat(r.interest)>=5).length;
+
+  let html = `
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+    <div style="font-family:'Oswald',sans-serif;font-size:16px;color:#fff">CLASS DEPTH CHART</div>
+    <div style="display:flex;gap:5px;margin-left:8px">
+      <button class="depth-filter-btn${depthFilter==='all'?' active':''}" data-f="all" onclick="setDepthFilter('all')">All Recruits</button>
+      <button class="depth-filter-btn${depthFilter==='hot'?' active':''}" data-f="hot" onclick="setDepthFilter('hot')">Hot / ${depthMinInterest}★+</button>
+      <button class="depth-filter-btn${depthFilter==='committed'?' active':''}" data-f="committed" onclick="setDepthFilter('committed')">🎉 Committed Only</button>
+    </div>
+    ${depthFilter==='hot'?`<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#3a5a7c">
+      Min interest:
+      <button onclick="setDepthMinInterest(${Math.max(1,depthMinInterest-1)})" style="background:#0a1628;border:1px solid #1e3050;color:#7a9acc;width:18px;height:18px;border-radius:3px;cursor:pointer;font-size:12px;line-height:1">−</button>
+      <span style="color:#f5c842;font-weight:700;min-width:14px;text-align:center">${depthMinInterest}★</span>
+      <button onclick="setDepthMinInterest(${Math.min(5,depthMinInterest+1)})" style="background:#0a1628;border:1px solid #1e3050;color:#7a9acc;width:18px;height:18px;border-radius:3px;cursor:pointer;font-size:12px;line-height:1">+</button>
+    </div>`:''}
+    <div style="margin-left:auto;font-size:11px;color:#3a5a7c">
+      <span style="color:#d0a0ff;font-weight:700">${totalCommitted}</span> committed &nbsp;·&nbsp;
+      <span style="color:#ff6070;font-weight:700">${totalHot}</span> hot &nbsp;·&nbsp;
+      <span style="color:#e0d8cc">${all.length}</span> total
+    </div>
+  </div>`;
 
   DEPTH_POSITIONS.forEach(({key, label}) => {
     const slots = getDepthSlots(key);
-    const recruits = all.filter(r => {
-      const pos = getPos(r);
-      const st = store.statuses[r.name]||'';
-      const interest = parseFloat(r.interest)||0;
-      return (pos === key || (pos === 'OH/RS' && (key==='OH'||key==='RS'))) &&
-             (r.hot || st === 'committed' || interest >= 4);
-    }).slice(0, slots + 3);
-
-    const filled = recruits.length;
-    const statusColor = filled >= slots ? '#4adf7a' : filled > 0 ? '#f5c842' : '#ff4060';
+    const recruits = getDepthRecruits(key);
+    const filled = Math.min(recruits.length, slots);
+    const statusColor = recruits.length >= slots ? '#4adf7a' : recruits.length > 0 ? '#f5c842' : '#ff4060';
 
     html += `<div class="depth-pos">
       <div class="depth-pos-hdr">
         <span>${label}</span>
         <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
-          <span style="font-size:10px;color:${statusColor};font-weight:700">${filled}/${slots} filled</span>
+          <span style="font-size:10px;color:${statusColor};font-weight:700">${recruits.length}/${slots} needed</span>
           <button onclick="adjustDepthSlot('${key}',-1)" style="background:#0a1628;border:1px solid #1e3050;color:#7a9acc;width:20px;height:20px;border-radius:3px;cursor:pointer;font-size:13px;line-height:1;font-family:monospace">−</button>
-          <span style="font-family:'Oswald',sans-serif;font-size:14px;color:#e0d8cc;min-width:16px;text-align:center">${slots}</span>
+          <span style="font-family:'Oswald',sans-serif;font-size:14px;color:#e0d8cc;min-width:20px;text-align:center">${slots}</span>
           <button onclick="adjustDepthSlot('${key}',1)" style="background:#0a1628;border:1px solid #1e3050;color:#7a9acc;width:20px;height:20px;border-radius:3px;cursor:pointer;font-size:13px;line-height:1;font-family:monospace">+</button>
         </div>
       </div>
       <div class="depth-slots">`;
 
+    // Filled slots
     for (let i = 0; i < Math.max(slots, recruits.length); i++) {
       const r = recruits[i];
       if (r) {
         const st = store.statuses[r.name]||'';
-        const isCommitted = st === 'committed';
+        const isCommitted = st==='committed';
         const isHot = r.hot || parseFloat(r.interest)>=5;
-        const cls = isCommitted ? 'filled committed' : isHot ? 'filled hot' : 'filled';
-        const badge = isCommitted ? '<span class="depth-badge committed">🎉</span>' :
-                      isHot       ? '<span class="depth-badge hot">🔥</span>' : '';
+        const interest = parseFloat(r.interest)||0;
+        const cls = isCommitted?'filled committed':isHot?'filled hot':'filled';
+        const badge = isCommitted?'<span class="depth-badge committed">🎉</span>':isHot?'<span class="depth-badge hot">🔥</span>':'';
         const caller = store.callers[r.name]||'';
-        html += `<div class="depth-slot ${cls}" onclick="selectRecruit('${q2(r.name)}')" style="cursor:pointer" title="${r.name}">
+        const interestColor = interest>=5?'#4adf7a':interest>=4?'#f5c842':interest>=3?'#5aabff':'#3a5a7c';
+        const nm = q2(r.name);
+        html += `<div class="depth-slot ${cls}" onclick="selectRecruit('${nm}')" style="cursor:pointer" title="${r.name}">
           ${badge}
           <div class="depth-name">${r.name.split(' ')[0]} ${(r.name.split(' ')[1]||'')[0]||''}.</div>
-          <div class="depth-detail">⭐ ${r.interest||'?'}${caller?' · '+caller:''}</div>
+          <div class="depth-detail" style="color:${interestColor}">⭐ ${r.interest||'?'}${caller?' · <span style="color:#ffcc60">'+caller+'</span>':''}</div>
+          ${store.callTimes[r.name]?`<div style="font-size:8px;color:#2a4a5c;margin-top:1px">🕐 ${store.callTimes[r.name]}</div>`:''}
         </div>`;
       } else if (i < slots) {
-        html += `<div class="depth-slot empty"><div style="font-size:10px;color:#3a1010;text-align:center;width:100%">OPEN</div></div>`;
+        html += `<div class="depth-slot empty" title="Open slot — ${label}">
+          <div style="font-size:9px;color:#3a1010;text-align:center;width:100%">OPEN</div>
+          <div style="font-size:8px;color:#2a0808;text-align:center">${label.split(' ')[0]}</div>
+        </div>`;
       }
     }
     html += `</div></div>`;
   });
+
   el.innerHTML = html;
 }
 
