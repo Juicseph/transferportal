@@ -33,6 +33,8 @@ header{
 .stat-pill{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:4px 12px;font-size:11px;color:rgba(255,255,255,.5);white-space:nowrap}
 .stat-pill span{font-weight:700;font-family:"Oswald",sans-serif;font-size:14px;margin-right:3px}
 .s-hot{color:#ff7088}.s-int{color:#60f0a0}.s-fol{color:#80c8ff}.s-gui{color:#fff}
+.hdr-btn{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:4px 11px;font-size:11px;font-weight:600;color:rgba(255,255,255,.7);cursor:pointer;font-family:"Source Sans 3",sans-serif;transition:all .15s;white-space:nowrap}
+.hdr-btn:hover{background:rgba(255,255,255,.14);color:#fff}
 
 /* ── TABS ── */
 .tab-bar{display:flex;background:#060e1c;border-bottom:2px solid #192e50;flex-shrink:0}
@@ -209,6 +211,21 @@ header{
 .filter-toggle-arrow.open{transform:rotate(180deg)}
 .filter-content{display:none;padding:0 13px 8px}
 .filter-content.open{display:flex;flex-wrap:wrap;gap:4px}
+/* ── BULK ASSIGN ── */
+.bulk-bar{display:none;gap:5px;padding:6px 13px;background:#0a1e0a;border-top:1px solid #1a5a28;flex-shrink:0;flex-wrap:wrap;align-items:center}
+.bulk-bar.visible{display:flex}
+.bulk-label{font-size:10px;font-weight:700;color:#3aaf6a;letter-spacing:.5px;white-space:nowrap}
+.bulk-count{font-family:"Oswald",sans-serif;font-size:13px;color:#4adf7a;font-weight:700}
+.bulk-select{background:#0d2010;border:1px solid #1a5a28;color:#e0d8cc;padding:4px 7px;border-radius:4px;font-size:11px;font-family:"Source Sans 3",sans-serif;cursor:pointer;flex:1;min-width:80px}
+.bulk-select:focus{outline:none;border-color:#3aaf6a}
+.bulk-assign-btn{padding:5px 11px;background:#0d3a14;border:1px solid #2a7a3a;border-radius:4px;color:#4adf7a;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s;font-family:"Source Sans 3",sans-serif}
+.bulk-assign-btn:hover{background:#0f4a18}
+.bulk-cancel{padding:5px 9px;background:none;border:1px solid #1a3a28;border-radius:4px;color:#2a6a3a;font-size:11px;cursor:pointer;font-family:"Source Sans 3",sans-serif;white-space:nowrap}
+.bulk-cancel:hover{color:#4aaf6a}
+.bulk-mode-btn{padding:4px 10px;border-radius:4px;border:1px dashed #1a5a28;background:#041008;color:#3aaf6a;font-size:10px;font-weight:700;cursor:pointer;font-family:"Source Sans 3",sans-serif;transition:all .15s;margin-top:5px;width:100%;text-align:center}
+.bulk-mode-btn:hover{background:#0a2010;color:#5adf8a}
+.recruit-checkbox{width:15px;height:15px;cursor:pointer;accent-color:#4adf7a;flex-shrink:0;margin-right:6px;margin-top:1px}
+
 .add-btn{width:100%;padding:7px;background:#0a1e0a;border:1px dashed #1a5a28;border-radius:5px;color:#3aaf6a;font-size:11px;font-weight:700;cursor:pointer;font-family:"Source Sans 3",sans-serif;transition:all .15s;letter-spacing:.5px;margin-top:6px}
 .add-btn:hover{background:#0d2a10;border-color:#2a7a3a;color:#5adf8a}
 .ar-modal{background:#0c1828;border:1px solid #1e3a5c;border-radius:10px;width:500px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 80px rgba(0,0,0,.8)}
@@ -331,7 +348,10 @@ header{
     <div class="stat-pill"><span class="s-int" id="cntInterested">0</span> Interested</div>
     <div class="stat-pill"><span class="s-fol" id="cntFollowup">0</span> Follow Up</div>
     <div class="stat-pill"><span class="s-gui" id="cntGuides">0</span> Guides</div>
+    <div class="stat-pill" id="unschedPill" style="display:none"><span style="color:#ffb840" id="cntUnscheduled">0</span> &#9888; No Call Time</div>
     <div class="stat-pill" style="display:none"><span style="color:#d0a0ff" id="cntCommitted">0</span> &#127881; Committed</div>
+    <button class="hdr-btn" onclick="exportData()" title="Export all data to backup file">&#8595; Export</button>
+    <label class="hdr-btn" title="Import data from backup file" style="cursor:pointer">&#8593; Import<input type="file" accept=".json" onchange="importData(this)" style="display:none"></label>
   </div>
 </header>
 
@@ -366,6 +386,7 @@ header{
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="&#128269;  Search by name or club..." oninput="renderList()">
       <button class="add-btn" onclick="openAddRecruit()">&#43; Add New Recruit</button>
+      <button class="bulk-mode-btn" id="bulkModeBtn" onclick="toggleBulkMode()">&#9745; Bulk Assign Caller</button>
     </div>
     <div class="filter-section">
       <button class="filter-toggle" onclick="toggleFilters('mainFilters',this)">
@@ -402,7 +423,20 @@ header{
     </div>
     <div class="recruit-list" id="recruitList"></div>
     <div class="sidebar-bottom">
-      <!-- Auto-advance — shows next scheduled recruit -->
+      <!-- Bulk assign bar -->
+      <div class="bulk-bar" id="bulkBar">
+        <span class="bulk-label">&#9745; <span class="bulk-count" id="bulkCount">0</span> selected &mdash; assign to:</span>
+        <select class="bulk-select" id="bulkCaller">
+          <option value="">— Caller —</option>
+          <option value="OJ">OJ</option>
+          <option value="Leisa">Leisa</option>
+          <option value="Jerome">Jerome</option>
+          <option value="Kelsey">Kelsey</option>
+        </select>
+        <button class="bulk-assign-btn" onclick="applyBulkAssign()">&#10003; Assign</button>
+        <button class="bulk-cancel" onclick="toggleBulkMode()">Cancel</button>
+      </div>
+      <!-- Auto-advance -->
       <div class="advance-banner" id="advanceBanner" onclick="advanceToNext()">
         <div class="ab-label">&#9654; Up Next</div>
         <div class="ab-name" id="abName">—</div>
@@ -604,6 +638,8 @@ let activeRecruit = null;
 let activeTab = 'roster';
 let blobURLs = {};
 let debounceTimers = {};
+let bulkMode = false;
+let bulkSelected = new Set();
 
 // Call timer state
 let timerInterval = null;
@@ -842,12 +878,15 @@ function renderList() {
       const idKey = esc(r.name);
 
       html += `<div class="recruit-item${ac}${gb}" id="item_${idKey}">
-        <div class="r-main" onclick="toggleRecruit('${nm}')">
-          <div class="r-name">${r.name}${commitBadge}${timeBadge}${dateBadge}${tzBadge}${callerBadge}${textBadge} ${stBadge}</div>
-          <div class="r-meta"><span class="badge b-pos">${pos2}</span>${hb}${ib}${gb2}</div>
-          <div class="r-club">${r.club||''}</div>
+        <div class="r-main" onclick="${bulkMode ? `toggleBulkSelect('${nm}')` : `toggleRecruit('${nm}')`}" style="display:flex;align-items:flex-start;gap:0">
+          ${bulkMode ? `<input type="checkbox" class="recruit-checkbox" ${bulkSelected.has(r.name)?'checked':''} onclick="event.stopPropagation();toggleBulkSelect('${nm}')">` : ''}
+          <div style="flex:1;min-width:0">
+            <div class="r-name">${r.name}${commitBadge}${timeBadge}${dateBadge}${tzBadge}${callerBadge}${textBadge} ${stBadge}</div>
+            <div class="r-meta"><span class="badge b-pos">${pos2}</span>${hb}${ib}${gb2}</div>
+            <div class="r-club">${r.club||''}</div>
+          </div>
         </div>
-        <div class="r-status-row">
+        <div class="r-status-row" style="${bulkMode?'display:none':''}">
           <div class="field-label">Who is Calling</div>
           <select class="caller-select" onchange="setCaller('${nm}',this.value)">${callerOpts}</select>
           <div class="field-label">Position</div>
@@ -891,8 +930,7 @@ function renderList() {
           </div>
           <button class="delete-btn" onclick="deleteRecruit('${nm}')">&#128465; Remove from roster</button>
         </div>
-      </div>`;
-    });
+      </div>`;    });
   });
 
   document.getElementById('recruitList').innerHTML = html ||
@@ -952,7 +990,7 @@ function selectRecruit(name) {
           <h2>${name} ${tag} ${callerTag}</h2>
           <div class="guide-meta">
             ${getPos(r) !== '\u2014' ? getPos(r)+' &nbsp;&middot;&nbsp; ':''} ${r.club||''}
-            <br>${r.phone||'&mdash;'} &nbsp;&middot;&nbsp; ${r.email||'&mdash;'}
+            <br>${r.phone ? `<a href="tel:${r.phone.replace(/[^0-9+]/g,'')}" style="color:#90d0ff;text-decoration:none;font-weight:700">&#128222; ${r.phone}</a>` : '&mdash;'} &nbsp;&middot;&nbsp; ${r.email ? `<a href="mailto:${r.email}" style="color:#7ab8d8;text-decoration:none">${r.email}</a>` : '&mdash;'}
             ${tzLine ? '<br>'+tzLine : ''}
           </div>
         </div>
@@ -1207,6 +1245,14 @@ function updateCounts() {
   const committed = Object.entries(store.statuses).filter(([n,v])=>v==='committed'&&!store.deleted[n]).length;
   const pill = document.getElementById('cntCommitted');
   if (pill) { pill.textContent = committed; pill.closest('.stat-pill').style.display = committed>0?'':'none'; }
+  // Unscheduled warning
+  const unscheduled = all.filter(r => !store.callTimes[r.name] && !store.callDates[r.name]).length;
+  const unschedEl = document.getElementById('cntUnscheduled');
+  const unschedPill = document.getElementById('unschedPill');
+  if (unschedEl && unschedPill) {
+    unschedEl.textContent = unscheduled;
+    unschedPill.style.display = unscheduled > 0 ? '' : 'none';
+  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1609,6 +1655,102 @@ function markTextSent(name) {
       ? '&#10003; Text Marked Sent'
       : '&#128172; Mark as Sent';
   }
+}
+
+// ── Data Backup & Restore ─────────────────────────────────────────────────────
+function exportData() {
+  const now = new Date();
+  const stamp = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`;
+  const payload = JSON.stringify(store, null, 2);
+  const blob = new Blob([payload], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `FSVU_Recruiting_Backup_${stamp}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      // Validate it looks like our data
+      if (typeof imported !== 'object' || Array.isArray(imported)) {
+        alert('Invalid backup file — not a valid hub export.'); return;
+      }
+      if (!confirm(`Import backup from "${file.name}"?\n\nThis will MERGE the imported data with your current data. Existing entries will be overwritten where they conflict.\n\nThis cannot be undone.`)) return;
+      // Deep merge — imported values win on conflict
+      Object.keys(imported).forEach(key => {
+        if (typeof imported[key] === 'object' && !Array.isArray(imported[key]) && imported[key] !== null) {
+          store[key] = Object.assign({}, store[key]||{}, imported[key]);
+        } else if (Array.isArray(imported[key])) {
+          // For arrays like newRecruits, merge without duplicates
+          const existing = store[key] || [];
+          const existingNames = new Set(existing.map(r => r.name));
+          const newItems = imported[key].filter(r => !existingNames.has(r.name));
+          store[key] = [...existing, ...newItems];
+        } else {
+          store[key] = imported[key];
+        }
+      });
+      saveStore();
+      renderList();
+      renderLeaderboard();
+      updateCounts();
+      input.value = '';
+      // Flash success
+      const btn = input.closest('label');
+      const orig = btn.childNodes[0].textContent;
+      btn.childNodes[0].textContent = '✓ Imported!';
+      btn.style.color = '#4adf7a';
+      setTimeout(() => { btn.childNodes[0].textContent = '↑ Import'; btn.style.color = ''; }, 2000);
+    } catch(err) {
+      alert('Failed to read backup file. Make sure it\'s a valid FSVU export JSON.\n\n' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ── Bulk Assign ───────────────────────────────────────────────────────────────
+function toggleBulkMode() {
+  bulkMode = !bulkMode;
+  bulkSelected.clear();
+  const btn = document.getElementById('bulkModeBtn');
+  const bar = document.getElementById('bulkBar');
+  btn.textContent = bulkMode ? '✕ Exit Bulk Mode' : '☑ Bulk Assign Caller';
+  bar.classList.toggle('visible', bulkMode);
+  if (bulkMode && activeRecruit) {
+    closeGuide();
+  }
+  renderList();
+}
+
+function toggleBulkSelect(name) {
+  if (bulkSelected.has(name)) bulkSelected.delete(name);
+  else bulkSelected.add(name);
+  document.getElementById('bulkCount').textContent = bulkSelected.size;
+  renderList();
+}
+
+function applyBulkAssign() {
+  const caller = document.getElementById('bulkCaller').value;
+  if (!caller) { alert('Please choose a caller first.'); return; }
+  if (bulkSelected.size === 0) { alert('No recruits selected.'); return; }
+  bulkSelected.forEach(name => { store.callers[name] = caller; });
+  saveStore();
+  renderLeaderboard();
+  updateCounts();
+  // Exit bulk mode
+  bulkSelected.clear();
+  bulkMode = false;
+  document.getElementById('bulkModeBtn').textContent = '☑ Bulk Assign Caller';
+  document.getElementById('bulkBar').classList.remove('visible');
+  document.getElementById('bulkCount').textContent = '0';
+  renderList();
 }
 
 // ── Collapsible filters ───────────────────────────────────────────────────────
