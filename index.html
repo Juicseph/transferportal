@@ -9,7 +9,8 @@
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Source+Sans+3:wght@300;400;600&display=swap");
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Source Sans 3",sans-serif;background:#07111f;color:#e0d8cc;min-height:100vh;overflow:hidden;display:flex;flex-direction:column}
+html{height:100%;overflow:hidden}
+body{font-family:"Source Sans 3",sans-serif;background:#07111f;color:#e0d8cc;height:100%;overflow:hidden;display:flex;flex-direction:column;position:fixed;width:100%;top:0;left:0}
 
 /* ── HEADER ── */
 header{
@@ -17,9 +18,10 @@ header{
   border-bottom:3px solid #b8001e;
   padding:0 24px;
   display:flex;align-items:center;gap:16px;
-  position:sticky;top:0;z-index:600;flex-shrink:0;
+  flex-shrink:0;
   min-height:56px;max-height:56px;
   box-shadow:0 4px 24px rgba(0,0,0,.6);
+  z-index:600;position:relative;
 }
 .logo{
   font-family:"Oswald",sans-serif;font-size:11px;font-weight:700;
@@ -39,13 +41,13 @@ header{
 .hdr-btn:hover{background:rgba(255,255,255,.14);color:#fff}
 
 /* ── TABS ── */
-.tab-bar{display:flex;background:#060e1c;border-bottom:2px solid #192e50;flex-shrink:0;position:sticky;top:0;z-index:600}
+.tab-bar{display:flex;background:#060e1c;border-bottom:2px solid #192e50;flex-shrink:0;z-index:600;position:relative}
 .tab-btn{padding:10px 22px;font-family:"Oswald",sans-serif;font-size:13px;font-weight:600;letter-spacing:.8px;color:#3a5a80;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none}
 .tab-btn.active{color:#e0d8cc;border-bottom-color:#b8001e}
 .tab-btn:hover:not(.active){color:#7a9acc}
 
 /* ── LAYOUT ── */
-.main{display:grid;grid-template-columns:330px 1fr;height:calc(100vh - 88px)}
+.main{display:grid;grid-template-columns:330px 1fr;flex:1;min-height:0;overflow:hidden}
 .sidebar{background:#060e1c;border-right:1px solid #192e50;display:flex;flex-direction:column;overflow:hidden;min-height:0;position:relative;z-index:10}
 .content-area{overflow:hidden;display:flex;flex-direction:column;height:100%}
 
@@ -169,7 +171,7 @@ header{
 .whisper-toggle.has-note{border-color:#3a7a5c;background:#0a1e14}
 
 /* ── CALL TRACKER (full-width strip) ── */
-.lb-panel{background:#040c18;border-bottom:1px solid #0f1e38;padding:5px 20px;flex-shrink:0;display:flex;align-items:center;gap:0;overflow-x:auto;width:100%;position:sticky;top:0;z-index:500}
+.lb-panel{background:#040c18;border-bottom:1px solid #0f1e38;padding:5px 20px;flex-shrink:0;display:flex;align-items:center;gap:0;overflow-x:auto;width:100%;z-index:600;position:relative}
 .lb-title{font-size:9px;font-weight:700;color:#2a4a6c;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;margin-right:14px;flex-shrink:0}
 .lb-rows{display:flex;gap:0;flex:1}
 .lb-row{display:flex;align-items:center;gap:7px;padding:0 14px;border-left:1px solid #0f1e38;flex:1;min-width:0}
