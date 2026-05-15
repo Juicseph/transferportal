@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fresno State VB — Recruit Call Guides</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Source+Sans+3:wght@300;400;600&display=swap");
 *{box-sizing:border-box;margin:0;padding:0}
@@ -242,7 +244,16 @@ header{
 .ar-footer{padding:12px 20px;border-top:1px solid #1e3a5c;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
 .ar-error{grid-column:1/-1;color:#ff7070;font-size:11px;display:none}
 .ar-error.show{display:block}
-/* ── COUNTDOWN ── */
+/* ── LEAFLET DARK POPUP ── */
+.dark-popup .leaflet-popup-content-wrapper{background:#0c1828;border:1px solid #2a4a7c;border-radius:8px;color:#e0d8cc;box-shadow:0 8px 32px rgba(0,0,0,.8)}
+.dark-popup .leaflet-popup-content{margin:12px 14px;line-height:1.5}
+.dark-popup .leaflet-popup-tip{background:#0c1828}
+.dark-popup .leaflet-popup-close-button{color:#3a5a7c!important;font-size:16px!important;padding:4px 6px!important}
+.dark-popup .leaflet-popup-close-button:hover{color:#e0d8cc!important}
+.leaflet-control-attribution{background:rgba(6,14,28,.7)!important;color:#1e3050!important}
+.leaflet-control-attribution a{color:#2a4a6c!important}
+.leaflet-bar a{background:#0c1828!important;color:#7a9acc!important;border-color:#1e3560!important}
+.leaflet-bar a:hover{background:#172848!important;color:#e0d8cc!important}
 .countdown-block{margin-bottom:16px}
 .cd-title{font-family:"Oswald",sans-serif;font-size:13px;color:#b8001e;letter-spacing:3px;margin-bottom:10px}
 .cd-timer{font-family:"Oswald",sans-serif;font-size:52px;font-weight:700;color:#fff;letter-spacing:4px;line-height:1;text-shadow:0 0 40px rgba(184,0,30,.4)}
@@ -535,15 +546,15 @@ canvas#confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-even
 
   <!-- MAP TAB CONTENT -->
   <div class="content-area" id="tabMap" style="display:none">
-    <div id="mapView" style="width:100%;height:100%;position:relative;background:#07111f;overflow:hidden">
-      <div style="position:absolute;top:16px;left:50%;transform:translateX(-50%);font-family:'Oswald',sans-serif;font-size:14px;color:#3a5a7c;letter-spacing:1px;z-index:10">RECRUITING FOOTPRINT — 2028 CLASS</div>
-      <svg id="usSvg" viewBox="0 0 960 600" style="width:100%;height:100%;position:absolute;top:0;left:0"></svg>
-      <div id="mapTooltip" style="display:none;position:absolute;background:#0c1828;border:1px solid #2a4a7c;border-radius:6px;padding:10px 14px;font-size:12px;color:#e0d8cc;pointer-events:none;z-index:100;min-width:180px;box-shadow:0 4px 20px rgba(0,0,0,.6)"></div>
-      <div style="position:absolute;bottom:16px;left:20px;display:flex;gap:14px;font-size:11px;color:#3a5a7c">
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ff4060;margin-right:4px"></span>Hot / 5★</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f5c842;margin-right:4px"></span>Interested (3-4)</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#5aabff;margin-right:4px"></span>Neutral</span>
-        <span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#d0a0ff;border:1px solid #8040c0;margin-right:4px"></span>Committed</span>
+    <div id="mapView" style="width:100%;height:100%;position:relative">
+      <div id="leafletMap" style="width:100%;height:100%"></div>
+      <div id="mapTooltip" style="display:none;position:fixed;background:#0c1828;border:1px solid #2a4a7c;border-radius:6px;padding:10px 14px;font-size:12px;color:#e0d8cc;pointer-events:none;z-index:1000;min-width:190px;box-shadow:0 4px 24px rgba(0,0,0,.8)"></div>
+      <div style="position:absolute;bottom:30px;left:12px;display:flex;flex-direction:column;gap:5px;background:rgba(6,14,28,.88);border:1px solid #1a3050;border-radius:6px;padding:8px 12px;z-index:999;font-size:11px;color:#5a8ab0">
+        <div style="font-family:'Oswald',sans-serif;font-size:10px;color:#3a5a7c;letter-spacing:1px;margin-bottom:3px">RECRUITING MAP — 2028</div>
+        <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#ff4060;margin-right:6px;vertical-align:middle"></span>Hot / 5★</div>
+        <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#f5c842;margin-right:6px;vertical-align:middle"></span>Interested (3-4★)</div>
+        <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#5aabff;margin-right:6px;vertical-align:middle"></span>Neutral</div>
+        <div><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#d0a0ff;margin-right:6px;vertical-align:middle"></span>Committed</div>
       </div>
     </div>
   </div>
@@ -1233,7 +1244,13 @@ function renderSchedule() {
 }
 
 // ── Setters ───────────────────────────────────────────────────────────────────
-function setSt(name, val)  { store.statuses[name] = val; saveStore(); reRender(name); }
+function setSt(name, val) {
+  const prev = store.statuses[name]||'';
+  store.statuses[name] = val;
+  saveStore();
+  reRender(name);
+  if (val === 'committed' && prev !== 'committed') launchConfetti(name);
+}
 function setNote(name, val){ store.notes[name] = val; saveStore(); }
 function setPos(name, val) { if(val) store.positions[name]=val; else delete store.positions[name]; saveStore(); reRender(name); }
 function setCDate(name,val){ store.callDates[name]=val; saveStore(); reRender(name); }
@@ -2021,125 +2038,134 @@ function updateCountdown() {
   ).join('');
 }
 
-// ── US Map ────────────────────────────────────────────────────────────────────
-const STATE_COORDS = {
-  'AL':[867,430],'AK':[150,530],'AZ':[220,390],'AR':[740,400],'CA':[120,330],
-  'CO':[360,310],'CT':[960,220],'DE':[930,270],'FL':[870,500],'GA':[860,430],
-  'HI':[280,540],'ID':[220,200],'IL':[770,280],'IN':[810,290],'IA':[700,250],
-  'KS':[610,340],'KY':[830,340],'LA':[730,460],'ME':[970,150],'MD':[920,280],
-  'MA':[960,200],'MI':[820,220],'MN':[680,180],'MS':[780,430],'MO':[730,330],
-  'MT':[310,160],'NE':[580,280],'NV':[185,290],'NH':[955,185],'NJ':[940,255],
-  'NM':[330,400],'NY':[910,210],'NC':[890,370],'ND':[580,170],'OH':[850,280],
-  'OK':[640,400],'OR':[140,210],'PA':[900,250],'RI':[965,215],'SC':[880,400],
-  'SD':[580,220],'TN':[810,380],'TX':[600,450],'UT':[270,300],'VT':[940,175],
-  'VA':[900,310],'WA':[160,165],'WV':[880,310],'WI':[760,210],'WY':[340,240],
+// ── US Map (Leaflet) ─────────────────────────────────────────────────────────
+const STATE_LATLON = {
+  'AL':[32.8,-86.8],'AK':[64,-153],'AZ':[34.3,-111.7],'AR':[34.8,-92.2],
+  'CA':[36.8,-119.4],'CO':[39,-105.5],'CT':[41.6,-72.7],'DE':[39,-75.5],
+  'FL':[27.8,-81.6],'GA':[32.2,-83.4],'HI':[20.3,-156.3],'ID':[44.3,-114.5],
+  'IL':[40,-89.2],'IN':[40,-86.1],'IA':[42.1,-93.5],'KS':[38.5,-98.4],
+  'KY':[37.5,-85],'LA':[30.9,-91.8],'ME':[45.4,-69],'MD':[39,-76.7],
+  'MA':[42.2,-71.5],'MI':[44.3,-85.4],'MN':[46.4,-93.1],'MS':[32.7,-89.7],
+  'MO':[38.4,-92.3],'MT':[46.9,-110.4],'NE':[41.5,-99.9],'NV':[38.5,-117],
+  'NH':[43.7,-71.6],'NJ':[40,-74.4],'NM':[34.5,-106],'NY':[42.9,-75.5],
+  'NC':[35.6,-79.8],'ND':[47.5,-100.5],'OH':[40.4,-82.8],'OK':[35.6,-96.9],
+  'OR':[43.9,-120.6],'PA':[40.9,-77.8],'RI':[41.7,-71.5],'SC':[33.8,-81],
+  'SD':[44.3,-100.2],'TN':[35.8,-86.4],'TX':[31.5,-99.3],'UT':[39.4,-111.1],
+  'VT':[44,-72.7],'VA':[37.8,-78.2],'WA':[47.4,-120.5],'WV':[38.6,-80.6],
+  'WI':[44.3,-89.8],'WY':[43,-107.6],
+  // Germany for Johanna
+  'GERMANY':[51.2,10.5],
 };
 
+let leafletMap = null;
+let mapMarkers = [];
+
 function renderMap() {
-  const svg = document.getElementById('usSvg');
-  if (!svg) return;
-  svg.innerHTML = '';
-  // Draw subtle state boundaries as simple shapes — use circles as state markers
-  // Add background
-  const bg = document.createElementNS('http://www.w3.org/2000/svg','rect');
-  Object.assign(bg, {});
-  bg.setAttribute('width','960');bg.setAttribute('height','600');
-  bg.setAttribute('fill','#07111f');svg.appendChild(bg);
+  // Init map once
+  if (!leafletMap) {
+    leafletMap = L.map('leafletMap', {
+      center: [39.5, -98.5],
+      zoom: 4,
+      zoomControl: true,
+      scrollWheelZoom: true,
+    });
 
-  // Draw grid lines for visual depth
-  for (let x=0;x<960;x+=80) {
-    const l=document.createElementNS('http://www.w3.org/2000/svg','line');
-    l.setAttribute('x1',x);l.setAttribute('y1',0);l.setAttribute('x2',x);l.setAttribute('y2',600);
-    l.setAttribute('stroke','#0a1828');l.setAttribute('stroke-width','1');svg.appendChild(l);
-  }
-  for (let y=0;y<600;y+=80) {
-    const l=document.createElementNS('http://www.w3.org/2000/svg','line');
-    l.setAttribute('x1',0);l.setAttribute('y1',y);l.setAttribute('x2',960);l.setAttribute('y2',y);
-    l.setAttribute('stroke','#0a1828');l.setAttribute('stroke-width','1');svg.appendChild(l);
+    // Dark tile layer — CartoDB Dark Matter (free, no API key)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://carto.com/" style="color:#2a4a6c">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19,
+    }).addTo(leafletMap);
   }
 
-  // State labels
-  Object.entries(STATE_COORDS).forEach(([state,[x,y]]) => {
-    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
-    t.setAttribute('x',x);t.setAttribute('y',y);t.setAttribute('text-anchor','middle');
-    t.setAttribute('font-size','9');t.setAttribute('fill','#152030');t.setAttribute('font-family','sans-serif');
-    t.textContent=state;svg.appendChild(t);
-  });
+  // Clear existing markers
+  mapMarkers.forEach(m => m.remove());
+  mapMarkers = [];
 
-  // Plot recruits
   const all = getRecruits();
+
+  // Group by state
   const byState = {};
   all.forEach(r => {
-    const m = (r.club||'').toUpperCase().match(/\(([A-Z]{2})\)$/);
-    if (!m) return;
-    const st = m[1];
-    if (!byState[st]) byState[st] = [];
-    byState[st].push(r);
+    const club = (r.club||'').toUpperCase();
+    const isGermany = club.includes('GERMANY') || club.includes('DEUTSCHLAND');
+    const m = club.match(/\(([A-Z]{2})\)$/);
+    const key = isGermany ? 'GERMANY' : (m ? m[1] : null);
+    if (!key) return;
+    if (!byState[key]) byState[key] = [];
+    byState[key].push(r);
   });
 
   Object.entries(byState).forEach(([state, recruits]) => {
-    const coords = STATE_COORDS[state];
-    if (!coords) return;
-    const [bx,by] = coords;
-    const tooltip = document.getElementById('mapTooltip');
+    const latlon = STATE_LATLON[state];
+    if (!latlon) return;
 
-    recruits.forEach((r,i) => {
-      const offset = recruits.length > 1 ? (i - (recruits.length-1)/2) * 14 : 0;
-      const x = bx + offset;
-      const y = by - 16;
-      const st = store.statuses[r.name] || '';
-      const interest = parseFloat(r.interest) || 0;
-      const isHot = r.hot || interest >= 5;
+    recruits.forEach((r, i) => {
+      const st = store.statuses[r.name]||'';
+      const interest = parseFloat(r.interest)||0;
       const isCommitted = st === 'committed';
+      const isHot = r.hot || interest >= 5;
       const isWarm = interest >= 3;
-      const color = isCommitted ? '#d0a0ff' : isHot ? '#ff4060' : isWarm ? '#f5c842' : '#5aabff';
-      const radius = isHot || isCommitted ? 8 : 6;
+      const color = isCommitted?'#d0a0ff':isHot?'#ff4060':isWarm?'#f5c842':'#5aabff';
+      const size = isCommitted||isHot ? 18 : 13;
+      const glow = isCommitted||isHot ? `box-shadow:0 0 12px 4px ${color}55;` : '';
 
-      // Glow
-      const glow=document.createElementNS('http://www.w3.org/2000/svg','circle');
-      glow.setAttribute('cx',x);glow.setAttribute('cy',y);glow.setAttribute('r',radius+4);
-      glow.setAttribute('fill',color);glow.setAttribute('opacity','0.2');svg.appendChild(glow);
+      // Offset multiple recruits in same state
+      const total = recruits.length;
+      const offsetLon = total > 1 ? (i - (total-1)/2) * 0.9 : 0;
+      const offsetLat = total > 1 ? (i % 2 === 0 ? 0.3 : -0.3) : 0;
+      const pos = [latlon[0] + offsetLat, latlon[1] + offsetLon];
 
-      // Dot
-      const dot=document.createElementNS('http://www.w3.org/2000/svg','circle');
-      dot.setAttribute('cx',x);dot.setAttribute('cy',y);dot.setAttribute('r',radius);
-      dot.setAttribute('fill',color);dot.setAttribute('stroke','#07111f');dot.setAttribute('stroke-width','1.5');
-      dot.setAttribute('cursor','pointer');dot.style.transition='all .2s';
-      dot.addEventListener('mouseenter', e => {
-        dot.setAttribute('r', radius+3);
-        const sc = STATUS_CONFIG[st]||STATUS_CONFIG[''];
-        const caller = store.callers[r.name]||'';
-        tooltip.style.display='block';
-        tooltip.innerHTML=`<div style="font-family:'Oswald',sans-serif;font-size:15px;color:#fff;margin-bottom:4px">${r.name}</div>
-          <div style="font-size:10px;color:#5a8ab0">${getPos(r)} &middot; ${r.club||''}</div>
-          <div style="margin-top:5px;display:flex;gap:8px;font-size:11px">
-            <span style="color:${color}">&#11088; ${r.interest||'?'}</span>
-            ${st?`<span class="badge ${sc.cls}" style="font-size:10px">${sc.label}</span>`:''}
-            ${caller?`<span style="color:#ffcc60">&#128222; ${caller}</span>`:''}
-          </div>
-          ${r.phone?`<div style="font-size:10px;color:#3a5a7c;margin-top:4px">${r.phone}</div>`:''}`;
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="width:${size}px;height:${size}px;border-radius:50%;background:${color};border:2px solid #07111f;${glow}cursor:pointer;transition:transform .15s"></div>`,
+        iconSize: [size, size],
+        iconAnchor: [size/2, size/2],
       });
-      dot.addEventListener('mousemove', e => {
-        const svgRect = svg.getBoundingClientRect();
-        let tx = e.clientX + 12, ty = e.clientY - 10;
-        if (tx + 200 > window.innerWidth) tx = e.clientX - 210;
-        tooltip.style.left = tx+'px'; tooltip.style.top = ty+'px';
+
+      const marker = L.marker(pos, {icon}).addTo(leafletMap);
+
+      const sc = STATUS_CONFIG[st]||STATUS_CONFIG[''];
+      const caller = store.callers[r.name]||'';
+      const phone = r.phone ? `<div style="margin-top:5px"><a href="tel:${r.phone.replace(/[^0-9+]/g,'')}" style="color:#5aabff;text-decoration:none;font-size:11px">&#128222; ${r.phone}</a></div>` : '';
+      const popContent = `<div style="font-family:'Oswald',sans-serif;font-size:15px;color:#fff;margin-bottom:4px">${r.name}</div>
+        <div style="font-size:10px;color:#5a8ab0">${getPos(r)} &middot; ${r.club||''}</div>
+        <div style="margin-top:5px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <span style="color:${color};font-weight:700">&#11088; ${r.interest||'?'}</span>
+          ${st?`<span style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:3px" class="badge ${sc.cls}">${sc.label}</span>`:''}
+          ${caller?`<span style="color:#ffcc60;font-size:10px">&#128222; ${caller}</span>`:''}
+        </div>${phone}
+        <div style="margin-top:8px"><button onclick="window.hub_selectRecruit('${r.name.replace(/'/g,"\\'")}');this.closest('.leaflet-popup').querySelector('.leaflet-popup-close-button').click()" style="background:#b8001e;border:none;color:#fff;padding:4px 10px;border-radius:3px;font-size:10px;cursor:pointer;font-family:'Oswald',sans-serif;letter-spacing:.5px">VIEW GUIDE</button></div>`;
+
+      marker.bindPopup(popContent, {
+        maxWidth: 240,
+        className: 'dark-popup',
       });
-      dot.addEventListener('mouseleave', () => {
-        dot.setAttribute('r', radius);
-        tooltip.style.display='none';
-      });
-      dot.addEventListener('click', () => selectRecruit(r.name));
-      svg.appendChild(dot);
+
+      mapMarkers.push(marker);
     });
   });
 
-  // Fresno State star
-  const fsStar=document.createElementNS('http://www.w3.org/2000/svg','text');
-  fsStar.setAttribute('x','120');fsStar.setAttribute('y','340');
-  fsStar.setAttribute('text-anchor','middle');fsStar.setAttribute('font-size','14');
-  fsStar.setAttribute('fill','#b8001e');fsStar.textContent='★FS';svg.appendChild(fsStar);
+  // Fresno State marker
+  const fsIcon = L.divIcon({
+    className: '',
+    html: `<div style="font-family:'Oswald',sans-serif;font-size:13px;color:#b8001e;font-weight:700;text-shadow:0 0 8px rgba(184,0,30,.6);white-space:nowrap">★ FRESNO STATE</div>`,
+    iconSize: [120, 20],
+    iconAnchor: [60, 10],
+  });
+  const fsMarker = L.marker([36.8,-119.8], {icon: fsIcon, zIndexOffset: -100}).addTo(leafletMap);
+  mapMarkers.push(fsMarker);
+
+  // Trigger map size recalc (needed when tab was hidden)
+  setTimeout(() => leafletMap.invalidateSize(), 50);
 }
+
+// Global reference for popup button
+window.hub_selectRecruit = function(name) {
+  switchTab('roster', document.querySelectorAll('.tab-btn')[0]);
+  setTimeout(() => selectRecruit(name), 150);
+};
+
 
 // ── Depth Chart ───────────────────────────────────────────────────────────────
 const DEPTH_POSITIONS = [
@@ -2325,14 +2351,6 @@ function stopConfetti() {
   document.getElementById('confettiCanvas').style.display = 'none';
   document.getElementById('confettiOverlay').classList.remove('active');
   confettiParticles = [];
-}
-
-// Trigger confetti when status set to committed
-const _origSetSt = setSt;
-function setSt(name, val) {
-  const prev = store.statuses[name]||'';
-  _origSetSt(name, val);
-  if (val === 'committed' && prev !== 'committed') launchConfetti(name);
 }
 
 // ── Live Clocks ────────────────────────────────────────────────────────────────
