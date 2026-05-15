@@ -1159,6 +1159,7 @@ function closeGuide() {
   document.getElementById('guideContainer').style.display = 'none';
   document.getElementById('whisperToggle').style.display = 'none';
   if (document.getElementById('whisperPanel').classList.contains('open')) toggleWhisper();
+  stopHeartbeat();
 }
 
 function selectRecruit(name) {
@@ -1486,6 +1487,7 @@ function toggleTimer(name) {
     timerInterval = null;
     const el = document.getElementById('timerDisplay');
     if (el) el.classList.replace('running','stopped');
+    stopHeartbeat();
   } else {
     // Start fresh or switch recruit
     if (timerInterval) clearInterval(timerInterval);
@@ -1494,6 +1496,7 @@ function toggleTimer(name) {
     timerInterval = setInterval(updateTimerDisplay, 1000);
     const el = document.getElementById('timerDisplay');
     if (el) { el.classList.remove('stopped'); el.classList.add('running'); }
+    startHeartbeat();
   }
 }
 
@@ -2605,6 +2608,10 @@ function renderCommand() {
 let confettiParticles = [];
 let confettiRAF = null;
 
+function getInitials(name) {
+  return name.split(' ').map(w => w[0]).filter(Boolean).join('').toUpperCase().substring(0,3);
+}
+
 function launchConfetti(name) {
   const canvas = document.getElementById('confettiCanvas');
   const overlay = document.getElementById('confettiOverlay');
@@ -2614,28 +2621,66 @@ function launchConfetti(name) {
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
   const ctx = canvas.getContext('2d');
-  const colors = ['#b8001e','#ffffff','#f5c842','#1a3a7c','#ff6080','#4adf7a'];
-  confettiParticles = Array.from({length:180}, () => ({
-    x: Math.random()*canvas.width, y: -20 - Math.random()*100,
-    w: 8+Math.random()*8, h: 4+Math.random()*4,
-    color: colors[Math.floor(Math.random()*colors.length)],
-    rot: Math.random()*360, rotV: (Math.random()-0.5)*6,
-    vx: (Math.random()-0.5)*4, vy: 3+Math.random()*4,
-    alpha: 1
-  }));
+  const initials = getInitials(name);
+  const colors = ['#b8001e','#ffffff','#f5c842','#c8a0ff','#ff6080','#4adf7a','#5aabff'];
+
+  // Mix of initial-letter particles and classic small rectangles
+  confettiParticles = Array.from({length:200}, (_, i) => {
+    const useLetter = i < 120; // 120 letter particles, 80 classic
+    const letter = initials[Math.floor(Math.random()*initials.length)];
+    return {
+      x: Math.random()*canvas.width,
+      y: -30 - Math.random()*200,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      rot: Math.random()*360,
+      rotV: (Math.random()-0.5)*(useLetter ? 3 : 8),
+      vx: (Math.random()-0.5)*5,
+      vy: 2.5 + Math.random()*4.5,
+      alpha: 1,
+      useLetter,
+      letter,
+      fontSize: useLetter ? (14 + Math.random()*20) : 0,
+      w: useLetter ? 0 : (6+Math.random()*8),
+      h: useLetter ? 0 : (3+Math.random()*5),
+      wobble: Math.random()*Math.PI*2,
+      wobbleSpeed: 0.05 + Math.random()*0.05,
+    };
+  });
+
   function frame() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
     confettiParticles.forEach(p => {
-      p.x += p.vx; p.y += p.vy; p.rot += p.rotV;
-      if (p.y > canvas.height) { p.y = -10; p.x = Math.random()*canvas.width; }
-      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
-      ctx.globalAlpha = p.alpha; ctx.fillStyle = p.color;
-      ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h); ctx.restore();
+      p.x += p.vx + Math.sin(p.wobble)*0.8;
+      p.y += p.vy;
+      p.rot += p.rotV;
+      p.wobble += p.wobbleSpeed;
+      if (p.y > canvas.height + 30) {
+        p.y = -30;
+        p.x = Math.random()*canvas.width;
+      }
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot * Math.PI/180);
+      ctx.globalAlpha = p.alpha;
+      ctx.fillStyle = p.color;
+      if (p.useLetter) {
+        ctx.font = `900 ${p.fontSize}px 'Oswald', sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        // Subtle text shadow for depth
+        ctx.shadowColor = p.color;
+        ctx.shadowBlur = 4;
+        ctx.fillText(p.letter, 0, 0);
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      }
+      ctx.restore();
     });
     confettiRAF = requestAnimationFrame(frame);
   }
   frame();
-  setTimeout(() => stopConfetti(), 8000);
+  setTimeout(() => stopConfetti(), 10000);
 }
 
 function stopConfetti() {
@@ -2643,6 +2688,53 @@ function stopConfetti() {
   document.getElementById('confettiCanvas').style.display = 'none';
   document.getElementById('confettiOverlay').classList.remove('active');
   confettiParticles = [];
+}
+
+// ── Heartbeat Mode ────────────────────────────────────────────────────────────
+let heartbeatRAF = null;
+let heartbeatPhase = 0;
+
+function startHeartbeat() {
+  stopHeartbeat();
+  const gc = document.getElementById('guideContainer');
+  if (!gc) return;
+
+  function beat() {
+    if (!timerInterval || !timerStart) { stopHeartbeat(); return; }
+    const elapsed = Math.floor((Date.now() - timerStart) / 1000);
+
+    // BPM increases with call duration: starts ~60, peaks ~100 at 15min
+    const minutes = elapsed / 60;
+    const bpm = Math.min(60 + minutes * 2.7, 100);
+    const period = 60000 / bpm; // ms per beat
+
+    // Two-pulse heartbeat shape: lub-dub
+    const t = (Date.now() % period) / period; // 0–1 within each beat
+    let intensity = 0;
+    if (t < 0.08) intensity = t / 0.08;          // lub rise
+    else if (t < 0.14) intensity = 1 - (t-0.08)/0.06; // lub fall
+    else if (t < 0.22) intensity = ((t-0.14)/0.08)*0.6; // dub rise (softer)
+    else if (t < 0.28) intensity = 0.6 - ((t-0.22)/0.06)*0.6; // dub fall
+    else intensity = 0;                            // rest
+
+    // Color shifts from deep red (calm) to bright red (urgent)
+    const urgency = Math.min(minutes / 15, 1);
+    const r1 = Math.round(100 + urgency * 84);
+    const alpha = intensity * (0.06 + urgency * 0.1);
+
+    gc.style.background = alpha > 0.005
+      ? `radial-gradient(ellipse at 50% 30%, rgba(${r1},0,30,${alpha.toFixed(3)}) 0%, transparent 70%)`
+      : '';
+
+    heartbeatRAF = requestAnimationFrame(beat);
+  }
+  beat();
+}
+
+function stopHeartbeat() {
+  if (heartbeatRAF) { cancelAnimationFrame(heartbeatRAF); heartbeatRAF = null; }
+  const gc = document.getElementById('guideContainer');
+  if (gc) gc.style.background = '';
 }
 
 // ── Card Flip ─────────────────────────────────────────────────────────────────
