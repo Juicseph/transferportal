@@ -9,7 +9,7 @@
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Source+Sans+3:wght@300;400;600&display=swap");
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:"Source Sans 3",sans-serif;background:#07111f;color:#e0d8cc;min-height:100vh;overflow:hidden}
+body{font-family:"Source Sans 3",sans-serif;background:#07111f;color:#e0d8cc;min-height:100vh;overflow:hidden;display:flex;flex-direction:column}
 
 /* ── HEADER ── */
 header{
@@ -39,7 +39,7 @@ header{
 .hdr-btn:hover{background:rgba(255,255,255,.14);color:#fff}
 
 /* ── TABS ── */
-.tab-bar{display:flex;background:#060e1c;border-bottom:2px solid #192e50;flex-shrink:0;position:relative;z-index:500}
+.tab-bar{display:flex;background:#060e1c;border-bottom:2px solid #192e50;flex-shrink:0;position:sticky;top:0;z-index:600}
 .tab-btn{padding:10px 22px;font-family:"Oswald",sans-serif;font-size:13px;font-weight:600;letter-spacing:.8px;color:#3a5a80;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none}
 .tab-btn.active{color:#e0d8cc;border-bottom-color:#b8001e}
 .tab-btn:hover:not(.active){color:#7a9acc}
@@ -169,7 +169,7 @@ header{
 .whisper-toggle.has-note{border-color:#3a7a5c;background:#0a1e14}
 
 /* ── CALL TRACKER (full-width strip) ── */
-.lb-panel{background:#040c18;border-bottom:1px solid #0f1e38;padding:5px 20px;flex-shrink:0;display:flex;align-items:center;gap:0;overflow-x:auto;width:100%;position:relative;z-index:500}
+.lb-panel{background:#040c18;border-bottom:1px solid #0f1e38;padding:5px 20px;flex-shrink:0;display:flex;align-items:center;gap:0;overflow-x:auto;width:100%;position:sticky;top:0;z-index:500}
 .lb-title{font-size:9px;font-weight:700;color:#2a4a6c;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;margin-right:14px;flex-shrink:0}
 .lb-rows{display:flex;gap:0;flex:1}
 .lb-row{display:flex;align-items:center;gap:7px;padding:0 14px;border-left:1px solid #0f1e38;flex:1;min-width:0}
@@ -263,6 +263,8 @@ header{
 #tabMap .leaflet-popup-pane{z-index:6!important}
 #tabMap .leaflet-control-container{z-index:7!important}
 #tabMap .leaflet-top, #tabMap .leaflet-bottom{z-index:7!important}
+/* Dark filter on OSM tiles */
+#tabMap .leaflet-tile-pane{filter:invert(1) hue-rotate(200deg) brightness(0.7) saturate(0.4) contrast(1.1)}
 .countdown-block{margin-bottom:16px}
 .cd-title{font-family:"Oswald",sans-serif;font-size:13px;color:#b8001e;letter-spacing:3px;margin-bottom:10px}
 .cd-timer{font-family:"Oswald",sans-serif;font-size:52px;font-weight:700;color:#fff;letter-spacing:4px;line-height:1;text-shadow:0 0 40px rgba(184,0,30,.4)}
@@ -2107,9 +2109,10 @@ function renderMap() {
       scrollWheelZoom: true,
     });
 
-    // Dark tile layer — Stadia Alidade Smooth Dark (free, no API key)
-    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://stadiamaps.com/" style="color:#2a4a6c">Stadia</a>',
+    // OpenStreetMap tiles — free, no API key, dark filter applied via CSS
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" style="color:#2a4a6c">OpenStreetMap</a>',
+      subdomains: 'abc',
       maxZoom: 18,
     }).addTo(leafletMap);
   }
