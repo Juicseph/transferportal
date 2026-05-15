@@ -17,7 +17,7 @@ header{
   border-bottom:3px solid #b8001e;
   padding:0 24px;
   display:flex;align-items:center;gap:16px;
-  position:sticky;top:0;z-index:200;flex-shrink:0;
+  position:sticky;top:0;z-index:600;flex-shrink:0;
   min-height:56px;max-height:56px;
   box-shadow:0 4px 24px rgba(0,0,0,.6);
 }
@@ -39,14 +39,14 @@ header{
 .hdr-btn:hover{background:rgba(255,255,255,.14);color:#fff}
 
 /* ── TABS ── */
-.tab-bar{display:flex;background:#060e1c;border-bottom:2px solid #192e50;flex-shrink:0}
+.tab-bar{display:flex;background:#060e1c;border-bottom:2px solid #192e50;flex-shrink:0;position:relative;z-index:500}
 .tab-btn{padding:10px 22px;font-family:"Oswald",sans-serif;font-size:13px;font-weight:600;letter-spacing:.8px;color:#3a5a80;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none}
 .tab-btn.active{color:#e0d8cc;border-bottom-color:#b8001e}
 .tab-btn:hover:not(.active){color:#7a9acc}
 
 /* ── LAYOUT ── */
 .main{display:grid;grid-template-columns:330px 1fr;height:calc(100vh - 88px)}
-.sidebar{background:#060e1c;border-right:1px solid #192e50;display:flex;flex-direction:column;overflow:hidden;min-height:0}
+.sidebar{background:#060e1c;border-right:1px solid #192e50;display:flex;flex-direction:column;overflow:hidden;min-height:0;position:relative;z-index:10}
 .content-area{overflow:hidden;display:flex;flex-direction:column;height:100%}
 
 /* ── SIDEBAR ── */
@@ -168,8 +168,8 @@ header{
 .whisper-toggle:hover{background:#162e50;transform:scale(1.08)}
 .whisper-toggle.has-note{border-color:#3a7a5c;background:#0a1e14}
 
-/* ── COACH CALL TRACKER (full-width strip) ── */
-.lb-panel{background:#040c18;border-bottom:1px solid #0f1e38;padding:5px 20px;flex-shrink:0;display:flex;align-items:center;gap:0;overflow-x:auto;width:100%}
+/* ── CALL TRACKER (full-width strip) ── */
+.lb-panel{background:#040c18;border-bottom:1px solid #0f1e38;padding:5px 20px;flex-shrink:0;display:flex;align-items:center;gap:0;overflow-x:auto;width:100%;position:relative;z-index:500}
 .lb-title{font-size:9px;font-weight:700;color:#2a4a6c;letter-spacing:1px;text-transform:uppercase;white-space:nowrap;margin-right:14px;flex-shrink:0}
 .lb-rows{display:flex;gap:0;flex:1}
 .lb-row{display:flex;align-items:center;gap:7px;padding:0 14px;border-left:1px solid #0f1e38;flex:1;min-width:0}
@@ -254,6 +254,15 @@ header{
 .leaflet-control-attribution a{color:#2a4a6c!important}
 .leaflet-bar a{background:#0c1828!important;color:#7a9acc!important;border-color:#1e3560!important}
 .leaflet-bar a:hover{background:#172848!important;color:#e0d8cc!important}
+/* Force Leaflet panes to stay below UI chrome */
+#tabMap .leaflet-pane{z-index:1!important}
+#tabMap .leaflet-tile-pane{z-index:2!important}
+#tabMap .leaflet-overlay-pane{z-index:3!important}
+#tabMap .leaflet-marker-pane{z-index:4!important}
+#tabMap .leaflet-tooltip-pane{z-index:5!important}
+#tabMap .leaflet-popup-pane{z-index:6!important}
+#tabMap .leaflet-control-container{z-index:7!important}
+#tabMap .leaflet-top, #tabMap .leaflet-bottom{z-index:7!important}
 .countdown-block{margin-bottom:16px}
 .cd-title{font-family:"Oswald",sans-serif;font-size:13px;color:#b8001e;letter-spacing:3px;margin-bottom:10px}
 .cd-timer{font-family:"Oswald",sans-serif;font-size:52px;font-weight:700;color:#fff;letter-spacing:4px;line-height:1;text-shadow:0 0 40px rgba(184,0,30,.4)}
@@ -545,9 +554,9 @@ canvas#confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-even
   </div>
 
   <!-- MAP TAB CONTENT -->
-  <div class="content-area" id="tabMap" style="display:none">
-    <div id="mapView" style="width:100%;height:100%;position:relative">
-      <div id="leafletMap" style="width:100%;height:100%"></div>
+  <div class="content-area" id="tabMap" style="display:none;position:relative;z-index:1">
+    <div id="mapView" style="width:100%;height:100%;position:relative;isolation:isolate">
+      <div id="leafletMap" style="width:100%;height:100%;z-index:1"></div>
       <div id="mapTooltip" style="display:none;position:fixed;background:#0c1828;border:1px solid #2a4a7c;border-radius:6px;padding:10px 14px;font-size:12px;color:#e0d8cc;pointer-events:none;z-index:1000;min-width:190px;box-shadow:0 4px 24px rgba(0,0,0,.8)"></div>
       <div style="position:absolute;bottom:30px;left:12px;display:flex;flex-direction:column;gap:5px;background:rgba(6,14,28,.88);border:1px solid #1a3050;border-radius:6px;padding:8px 12px;z-index:999;font-size:11px;color:#5a8ab0">
         <div style="font-family:'Oswald',sans-serif;font-size:10px;color:#3a5a7c;letter-spacing:1px;margin-bottom:3px">RECRUITING MAP — 2028</div>
@@ -745,7 +754,7 @@ const STATUS_CONFIG = {
 };
 
 // ── State ─────────────────────────────────────────────────────────────────────
-let store = { statuses:{}, notes:{}, callTimes:{}, callDates:{}, customPDFs:{}, positions:{}, deleted:{}, hudlLinks:{}, callers:{}, whisperNotes:{}, newRecruits:[], textMsgs:{}, textDates:{}, textTimes:{}, textSent:{} };
+let store = { statuses:{}, notes:{}, callTimes:{}, callDates:{}, customPDFs:{}, positions:{}, deleted:{}, hudlLinks:{}, callers:{}, whisperNotes:{}, newRecruits:[], textMsgs:{}, textDates:{}, textTimes:{}, textSent:{}, locations:{} };
 let activeFilter = 'all';
 let activeRecruit = null;
 let activeTab = 'roster';
@@ -1046,6 +1055,11 @@ function renderList() {
             <button class="send-text-btn${store.textSent&&store.textSent[r.name]?' sent':''}" id="sendbtn_${idKey}" onclick="markTextSent('${nm}')">
               ${store.textSent&&store.textSent[r.name]?'&#10003; Text Marked Sent':'&#128172; Mark as Sent'}
             </button>
+          </div>
+          <div class="field-label">&#127757; Map Location (city, state or lat,lon)</div>
+          <div style="display:flex;gap:5px">
+            <input type="text" class="ctrl-link" placeholder="e.g. Miami, FL  or  25.77,-80.19" value="${store.locations&&store.locations[r.name]||''}" oninput="setLocation('${nm}',this.value)" onblur="setLocationFlush('${nm}',this.value)" style="color:#c0d8b0">
+            <button onclick="clearLocation('${nm}')" title="Reset to default" style="padding:5px 8px;background:#0d1a2e;border:1px solid #1e3560;border-radius:4px;color:#3a5a7c;cursor:pointer;font-size:10px;white-space:nowrap;flex-shrink:0">Reset</button>
           </div>
           <button class="delete-btn" onclick="deleteRecruit('${nm}')">&#128465; Remove from roster</button>
           ${getMajorRow(r)}
@@ -1756,6 +1770,29 @@ function copyDraft() {
 
 function setTextMsg(name, val)  { if(!store.textMsgs) store.textMsgs={}; store.textMsgs[name]=val; saveStore(); }
 function setTextDate(name, val) { if(!store.textDates) store.textDates={}; store.textDates[name]=val; saveStore(); reRender(name); }
+
+// Location overrides for map
+let _locTimers = {};
+function setLocation(name, val) {
+  // Save silently while typing — no re-render
+  if(!store.locations) store.locations={};
+  store.locations[name] = val.trim();
+  saveStore();
+}
+function setLocationFlush(name, val) {
+  if(!store.locations) store.locations={};
+  store.locations[name] = val.trim();
+  saveStore();
+  // Refresh map if open
+  if (activeTab === 'map') renderMap();
+}
+function clearLocation(name) {
+  if(!store.locations) store.locations={};
+  delete store.locations[name];
+  saveStore();
+  reRender(name);
+  if (activeTab === 'map') renderMap();
+}
 function setTextTime(name, input) {
   // Just save the value — no re-render, no badge update while typing
   if(!store.textTimes) store.textTimes={};
@@ -2070,11 +2107,10 @@ function renderMap() {
       scrollWheelZoom: true,
     });
 
-    // Dark tile layer — CartoDB Dark Matter (free, no API key)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://carto.com/" style="color:#2a4a6c">CARTO</a>',
-      subdomains: 'abcd',
-      maxZoom: 19,
+    // Dark tile layer — Stadia Alidade Smooth Dark (free, no API key)
+    L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://stadiamaps.com/" style="color:#2a4a6c">Stadia</a>',
+      maxZoom: 18,
     }).addTo(leafletMap);
   }
 
@@ -2110,11 +2146,26 @@ function renderMap() {
       const size = isCommitted||isHot ? 18 : 13;
       const glow = isCommitted||isHot ? `box-shadow:0 0 12px 4px ${color}55;` : '';
 
-      // Offset multiple recruits in same state
-      const total = recruits.length;
-      const offsetLon = total > 1 ? (i - (total-1)/2) * 0.9 : 0;
-      const offsetLat = total > 1 ? (i % 2 === 0 ? 0.3 : -0.3) : 0;
-      const pos = [latlon[0] + offsetLat, latlon[1] + offsetLon];
+      // Check for manual location override
+      const locOverride = store.locations && store.locations[r.name];
+      let pos;
+      if (locOverride) {
+        // Try lat,lon format first
+        const latLonMatch = locOverride.match(/^(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)$/);
+        if (latLonMatch) {
+          pos = [parseFloat(latLonMatch[1]), parseFloat(latLonMatch[2])];
+        } else {
+          // Use state center as fallback, geocode async
+          pos = latlon.slice();
+          geocodeAndMove(r.name, locOverride, color, size, glow, st);
+        }
+      } else {
+        // Default: state center with offset for multiple recruits
+        const total = recruits.length;
+        const offsetLon = total > 1 ? (i - (total-1)/2) * 0.9 : 0;
+        const offsetLat = total > 1 ? (i % 2 === 0 ? 0.3 : -0.3) : 0;
+        pos = [latlon[0] + offsetLat, latlon[1] + offsetLon];
+      }
 
       const icon = L.divIcon({
         className: '',
@@ -2124,6 +2175,7 @@ function renderMap() {
       });
 
       const marker = L.marker(pos, {icon}).addTo(leafletMap);
+      marker._recruitName = r.name;
 
       const sc = STATUS_CONFIG[st]||STATUS_CONFIG[''];
       const caller = store.callers[r.name]||'';
@@ -2165,6 +2217,28 @@ window.hub_selectRecruit = function(name) {
   switchTab('roster', document.querySelectorAll('.tab-btn')[0]);
   setTimeout(() => selectRecruit(name), 150);
 };
+
+// Geocode a city name and move an existing marker
+const _geocodeCache = {};
+async function geocodeAndMove(recruitName, cityStr, color, size, glow, st) {
+  if (_geocodeCache[cityStr]) {
+    // Move marker if it exists
+    const existing = mapMarkers.find(m => m._recruitName === recruitName);
+    if (existing) existing.setLatLng(_geocodeCache[cityStr]);
+    return;
+  }
+  try {
+    const query = cityStr.split(',')[0].trim();
+    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=en&format=json`);
+    const data = await res.json();
+    if (data.results && data.results[0]) {
+      const {latitude, longitude} = data.results[0];
+      _geocodeCache[cityStr] = [latitude, longitude];
+      const existing = mapMarkers.find(m => m._recruitName === recruitName);
+      if (existing) existing.setLatLng([latitude, longitude]);
+    }
+  } catch(e) {}
+}
 
 
 // ── Depth Chart ───────────────────────────────────────────────────────────────
