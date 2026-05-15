@@ -246,7 +246,34 @@ header{
 .ar-footer{padding:12px 20px;border-top:1px solid #1e3a5c;display:flex;gap:8px;justify-content:flex-end;flex-shrink:0}
 .ar-error{grid-column:1/-1;color:#ff7070;font-size:11px;display:none}
 .ar-error.show{display:block}
-/* ── LEAFLET DARK POPUP ── */
+/* ── CARD FLIP ── */
+.card-flip-scene{width:340px;height:480px;perspective:1200px;cursor:pointer}
+.card-flip-card{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.4,0,.2,1);border-radius:16px}
+.card-flip-card.flipped{transform:rotateY(180deg)}
+.card-face{position:absolute;inset:0;border-radius:16px;backface-visibility:hidden;overflow:hidden}
+.card-front{background:linear-gradient(145deg,#0c1e3c 0%,#180a20 60%,#0c1828 100%);border:1px solid #2a4a7c;box-shadow:0 20px 60px rgba(0,0,0,.8),inset 0 1px 0 rgba(255,255,255,.05)}
+.card-back{background:linear-gradient(145deg,#1a0818 0%,#0c1428 60%,#180820 100%);border:1px solid #4a1a5c;box-shadow:0 20px 60px rgba(0,0,0,.8);transform:rotateY(180deg)}
+.card-shine{position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.04) 0%,transparent 50%,rgba(255,255,255,.02) 100%);border-radius:16px;pointer-events:none}
+.card-stripe{position:absolute;top:0;left:0;right:0;height:5px;border-radius:16px 16px 0 0}
+.card-pos-badge{display:inline-block;padding:4px 12px;border-radius:3px;font-family:"Oswald",sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;margin-top:6px}
+.card-interest-pip{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px}
+
+/* ── SIGNING WALL ── */
+.wall-header{padding:28px 32px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:flex-end;justify-content:space-between}
+.wall-title{font-family:"Oswald",sans-serif;font-size:28px;font-weight:700;color:#fff;letter-spacing:1px}
+.wall-subtitle{font-size:12px;color:#3a5a7c;margin-top:4px;letter-spacing:.5px}
+.wall-grid{display:flex;flex-wrap:wrap;gap:16px;padding:24px 32px}
+.wall-card{background:linear-gradient(135deg,#0c1828 0%,#180a28 100%);border:1px solid #2a1a4c;border-radius:12px;padding:20px 22px;min-width:200px;flex:1;max-width:260px;position:relative;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s}
+.wall-card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,0,0,.6)}
+.wall-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#b8001e,#d0a0ff)}
+.wall-number{position:absolute;top:12px;right:14px;font-family:"Oswald",sans-serif;font-size:36px;font-weight:700;color:rgba(255,255,255,.05);line-height:1}
+.wall-pos-tag{font-size:9px;font-weight:700;color:#d0a0ff;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px}
+.wall-name{font-family:"Oswald",sans-serif;font-size:22px;font-weight:700;color:#fff;line-height:1.1;margin-bottom:4px}
+.wall-detail{font-size:11px;color:#5a7ab0;margin-top:2px}
+.wall-timestamp{font-size:10px;color:#2a4a60;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.05)}
+.wall-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:60px;text-align:center;color:#1e3050}
+.wall-share-btn{padding:8px 18px;background:#b8001e;border:none;color:#fff;font-family:"Oswald",sans-serif;font-size:13px;letter-spacing:.8px;border-radius:5px;cursor:pointer;transition:background .2s}
+.wall-share-btn:hover{background:#d81535}
 .dark-popup .leaflet-popup-content-wrapper{background:#0c1828;border:1px solid #2a4a7c;border-radius:8px;color:#e0d8cc;box-shadow:0 8px 32px rgba(0,0,0,.8)}
 .dark-popup .leaflet-popup-content{margin:12px 14px;line-height:1.5}
 .dark-popup .leaflet-popup-tip{background:#0c1828}
@@ -448,6 +475,7 @@ canvas#confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-even
   <button class="tab-btn" onclick="switchTab('map',this)">&#127758; MAP</button>
   <button class="tab-btn" onclick="switchTab('depth',this)">&#127951; DEPTH</button>
   <button class="tab-btn" onclick="switchTab('command',this)">&#128187; COMMAND</button>
+  <button class="tab-btn" onclick="switchTab('wall',this)">&#127881; WALL</button>
   <div style="margin-left:auto;display:flex;align-items:center;padding-right:8px;gap:16px">
     <div class="clock-bar" style="background:transparent;border:none;padding:0">
       <div class="clock-item" id="clk-PST"><span class="clock-zone">PST</span><span class="clock-time same-zone" id="ct-PST">--:--</span></div>
@@ -587,6 +615,27 @@ canvas#confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-even
   <!-- COMMAND CENTER TAB CONTENT -->
   <div class="content-area" id="tabCommand" style="display:none">
     <div id="commandView" style="width:100%;height:100%;background:#040c18;overflow-y:auto"></div>
+  </div>
+
+  <!-- SIGNING WALL TAB CONTENT -->
+  <div class="content-area" id="tabWall" style="display:none">
+    <div id="wallView" style="width:100%;height:100%;overflow-y:auto;background:linear-gradient(160deg,#07111f 0%,#0c0510 100%)"></div>
+  </div>
+</div>
+
+<!-- Card Flip Modal -->
+<div id="cardFlipOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99990;align-items:center;justify-content:center;backdrop-filter:blur(4px)" onclick="closeCardFlip(event)">
+  <div class="card-flip-scene" id="cardFlipScene">
+    <div class="card-flip-card" id="cardFlipCard">
+      <!-- FRONT -->
+      <div class="card-face card-front" id="cardFront"></div>
+      <!-- BACK -->
+      <div class="card-face card-back" id="cardBack"></div>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:12px">
+    <button onclick="flipCard()" style="background:#172848;border:1px solid #2a4a8c;color:#7a9acc;padding:8px 20px;border-radius:5px;font-family:'Oswald',sans-serif;font-size:13px;cursor:pointer;letter-spacing:.8px">↻ FLIP</button>
+    <button onclick="closeCardFlip()" style="background:#1a0a10;border:1px solid #5a1a2a;color:#ff7088;padding:8px 20px;border-radius:5px;font-family:'Oswald',sans-serif;font-size:13px;cursor:pointer;letter-spacing:.8px">✕ CLOSE</button>
   </div>
 </div>
 
@@ -819,11 +868,13 @@ function switchTab(tab, btn) {
   document.getElementById('tabMap').style.display      = tab==='map'     ?'flex':'none';
   document.getElementById('tabDepth').style.display    = tab==='depth'   ?'flex':'none';
   document.getElementById('tabCommand').style.display  = tab==='command' ?'flex':'none';
+  document.getElementById('tabWall').style.display     = tab==='wall'    ?'flex':'none';
   if (tab==='schedule') renderSchedule();
   if (tab==='texts')    renderTextSchedule();
   if (tab==='map')      renderMap();
   if (tab==='depth')    renderDepth();
   if (tab==='command')  renderCommand();
+  if (tab==='wall')     renderWall();
 }
 
 // ── Text Schedule View ────────────────────────────────────────────────────────
@@ -1138,6 +1189,7 @@ function selectRecruit(name) {
         <div class="guide-actions">
           ${hudlBtn}
           <div class="timer-display" id="timerDisplay" onclick="toggleTimer('${q2(name)}')" title="Click to start/stop call timer">0:00</div>
+          <button class="btn btn-open" onclick="openCardFlip('${q2(name)}')" style="background:#0f1e38;border:1px solid #2a4a6c;color:#7ab8d8">&#9654; Card</button>
           <button class="btn btn-open" onclick="openDrafter('${q2(name)}')" style="background:#0f1e38;border:1px solid #2a4a6c;color:#7ab8d8">&#9997; Draft Text</button>
           <button class="btn btn-open" onclick="window.open('${url}','_blank')">&#8599; Full Screen</button>
           <a href="${url}" download="${safeName}_Call_Guide.pdf"><button class="btn btn-dl">&#8595; Download</button></a>
@@ -1268,6 +1320,10 @@ function renderSchedule() {
 function setSt(name, val) {
   const prev = store.statuses[name]||'';
   store.statuses[name] = val;
+  if (val === 'committed' && prev !== 'committed') {
+    if (!store.commitTimes) store.commitTimes = {};
+    store.commitTimes[name] = new Date().toISOString();
+  }
   saveStore();
   reRender(name);
   if (val === 'committed' && prev !== 'committed') launchConfetti(name);
@@ -2495,6 +2551,193 @@ function stopConfetti() {
   document.getElementById('confettiCanvas').style.display = 'none';
   document.getElementById('confettiOverlay').classList.remove('active');
   confettiParticles = [];
+}
+
+// ── Card Flip ─────────────────────────────────────────────────────────────────
+let cardFlipOpen = false;
+
+function openCardFlip(name) {
+  const r = getRecruits().find(x => x.name === name);
+  if (!r) return;
+  const st = store.statuses[name]||'';
+  const sc = STATUS_CONFIG[st]||STATUS_CONFIG[''];
+  const interest = parseFloat(r.interest)||0;
+  const pos = getPos(r);
+  const caller = store.callers[name]||'';
+  const isHot = r.hot || interest >= 5;
+  const isCommitted = st === 'committed';
+  const accentColor = isCommitted ? '#d0a0ff' : isHot ? '#ff4060' : interest>=3 ? '#f5c842' : '#5aabff';
+  const posColors = {OH:'#3a8aff',MB:'#ff6a3a',RS:'#3aff8a',S:'#ffd03a',L:'#c03aff',DS:'#3affdd',OPP:'#ff3a8a',UTL:'#aaaaaa'};
+  const posColor = posColors[pos]||'#5a8ab0';
+
+  // Interest pips
+  const pips = Array.from({length:5},(_,i) => `<span class="card-interest-pip" style="background:${i<interest?accentColor:'#1a2a3a'}"></span>`).join('');
+
+  // FRONT
+  const notes = store.notes[name]||'';
+  const lastOutcome = notes.split('\n').filter(l=>l.match(/^\[.*PST\]/)).pop()||'';
+  document.getElementById('cardFront').innerHTML = `
+    <div class="card-shine"></div>
+    <div class="card-stripe" style="background:linear-gradient(90deg,${posColor},${accentColor})"></div>
+    <div style="padding:24px 22px">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-top:8px">
+        <div>
+          <div style="font-size:9px;color:${posColor};font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">${pos} · 2028 CLASS</div>
+          <div style="font-family:'Oswald',sans-serif;font-size:28px;font-weight:700;color:#fff;line-height:1.1">${r.name.split(' ')[0]}</div>
+          <div style="font-family:'Oswald',sans-serif;font-size:22px;color:rgba(255,255,255,.5);line-height:1">${r.name.split(' ').slice(1).join(' ')}</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-family:'Oswald',sans-serif;font-size:42px;font-weight:700;color:${accentColor};line-height:1">${interest||'?'}</div>
+          <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px">INTEREST</div>
+          <div style="margin-top:4px">${pips}</div>
+        </div>
+      </div>
+      <div style="margin-top:20px;padding:12px;background:rgba(0,0,0,.3);border-radius:8px;border:1px solid rgba(255,255,255,.06)">
+        <div style="font-size:10px;color:#3a5a7c;margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Club</div>
+        <div style="font-size:13px;color:#c0b8b0">${r.club||'—'}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px">
+        <div style="padding:10px;background:rgba(0,0,0,.3);border-radius:8px;border:1px solid rgba(255,255,255,.06)">
+          <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px;margin-bottom:3px">STATUS</div>
+          <div style="font-size:11px;font-weight:700">${st?sc.label:'No Status'}</div>
+        </div>
+        <div style="padding:10px;background:rgba(0,0,0,.3);border-radius:8px;border:1px solid rgba(255,255,255,.06)">
+          <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px;margin-bottom:3px">CALLER</div>
+          <div style="font-size:11px;color:#ffcc60;font-weight:700">${caller||'Unassigned'}</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;padding:10px;background:rgba(0,0,0,.3);border-radius:8px;border:1px solid rgba(255,255,255,.06)">
+        <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px;margin-bottom:3px">PHONE</div>
+        <div style="font-size:12px;color:#5aabff">${r.phone||'—'}</div>
+      </div>
+      ${lastOutcome ? `<div style="margin-top:10px;padding:8px 10px;background:rgba(74,223,122,.06);border-radius:6px;border:1px solid rgba(74,223,122,.15);font-size:10px;color:#4adf7a">${lastOutcome}</div>` : ''}
+      <div style="position:absolute;bottom:16px;right:16px;font-size:9px;color:#1a2a3a;letter-spacing:1px">FLIP FOR DETAILS →</div>
+    </div>`;
+
+  // BACK — questionnaire answers + coaching note
+  const q1 = (r.q1||'').replace(/^={3,}.*\n/gm,'').trim().substring(0,300);
+  const q2text = (r.q2||'').replace(/^={3,}.*\n/gm,'').trim().substring(0,300);
+  const whisper = store.whisperNotes&&store.whisperNotes[name]||'';
+  const hudl = store.hudlLinks&&store.hudlLinks[name]||'';
+  document.getElementById('cardBack').innerHTML = `
+    <div class="card-shine"></div>
+    <div class="card-stripe" style="background:linear-gradient(90deg,${accentColor},${posColor})"></div>
+    <div style="padding:20px 20px;height:100%;display:flex;flex-direction:column;gap:0;overflow-y:auto">
+      <div style="font-family:'Oswald',sans-serif;font-size:14px;color:${accentColor};letter-spacing:1px;margin-bottom:12px;margin-top:6px">${r.name.toUpperCase()} — INSIDE FILE</div>
+      ${q1 ? `<div style="margin-bottom:10px">
+        <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px;margin-bottom:4px;text-transform:uppercase">Questionnaire</div>
+        <div style="font-size:10px;color:#8ab0c8;line-height:1.6;background:rgba(0,0,0,.3);padding:8px 10px;border-radius:6px;max-height:100px;overflow-y:auto">${q1||q2text}</div>
+      </div>` : ''}
+      <div style="margin-bottom:10px">
+        <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px;margin-bottom:4px;text-transform:uppercase">✍ Coaching Note</div>
+        <div style="font-size:11px;color:#c8d8e8;line-height:1.7;background:rgba(0,0,0,.3);padding:10px 12px;border-radius:6px;font-style:italic;min-height:60px">${whisper||notes.split('\n')[0]||'No notes yet — add them in the roster.'}</div>
+      </div>
+      ${store.callTimes[name]||store.callDates[name] ? `<div style="padding:8px 10px;background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.15);border-radius:6px;font-size:10px;color:#f5c842;margin-bottom:8px">🕐 ${store.callDates[name]?fmtDate(store.callDates[name])+' · ':''} ${store.callTimes[name]||'Time TBD'} PST</div>` : ''}
+      ${hudl ? `<a href="${hudl}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(90,171,255,.08);border:1px solid rgba(90,171,255,.2);border-radius:6px;color:#5aabff;text-decoration:none;font-size:11px;font-weight:600;margin-top:auto">🎥 View Highlight Reel</a>` : ''}
+    </div>`;
+
+  cardFlipOpen = true;
+  document.getElementById('cardFlipCard').classList.remove('flipped');
+  document.getElementById('cardFlipOverlay').style.display = 'flex';
+}
+
+function flipCard() {
+  document.getElementById('cardFlipCard').classList.toggle('flipped');
+}
+
+function closeCardFlip(e) {
+  if (e && e.target !== document.getElementById('cardFlipOverlay')) return;
+  document.getElementById('cardFlipOverlay').style.display = 'none';
+  cardFlipOpen = false;
+}
+
+// Keyboard shortcut — F to flip while card is open
+document.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() === 'f' && cardFlipOpen) flipCard();
+  if (e.key === 'Escape' && cardFlipOpen) { document.getElementById('cardFlipOverlay').style.display='none'; cardFlipOpen=false; }
+});
+
+// ── Signing Day Wall ──────────────────────────────────────────────────────────
+function renderWall() {
+  const el = document.getElementById('wallView');
+  if (!el) return;
+  const committed = getRecruits().filter(r => (store.statuses[r.name]||'')==='committed');
+
+  if (committed.length === 0) {
+    el.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:#1e3050;padding:40px">
+      <div style="font-size:60px;margin-bottom:16px;opacity:.3">🎉</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:24px;color:#243a60;margin-bottom:8px">THE WALL IS WAITING</div>
+      <div style="font-size:13px;line-height:1.7;color:#1a2a40">Mark a recruit as 🎉 Committed in their dropdown<br>and they'll appear here on your signing day wall.</div>
+    </div>`;
+    return;
+  }
+
+  const now = new Date();
+  let html = `
+  <div style="background:linear-gradient(160deg,#07111f 0%,#0c0510 100%);min-height:100%;padding-bottom:40px">
+    <div class="wall-header">
+      <div>
+        <div class="wall-title">&#127881; FRESNO STATE VOLLEYBALL</div>
+        <div class="wall-subtitle">2028 RECRUITING CLASS · ${committed.length} COMMIT${committed.length!==1?'S':''}</div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center">
+        <button class="wall-share-btn" onclick="printWall()">📸 Save as Image</button>
+      </div>
+    </div>
+    <div class="wall-grid" id="wallGrid">`;
+
+  committed.forEach((r, i) => {
+    const pos = getPos(r);
+    const caller = store.callers[r.name]||'';
+    const club = r.club||'';
+    const stateMatch = club.toUpperCase().match(/\(([A-Z]{2})\)$/);
+    const state = stateMatch ? stateMatch[1] : '';
+    const commitTime = store.commitTimes && store.commitTimes[r.name]
+      ? new Date(store.commitTimes[r.name]).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',hour12:true})
+      : 'Committed';
+    const posColors2 = {OH:'#3a8aff',MB:'#ff6a3a',RS:'#3aff8a',S:'#ffd03a',L:'#c03aff',DS:'#3affdd',OPP:'#ff3a8a',UTL:'#aaaaaa'};
+    const posColor2 = posColors2[pos]||'#5a8ab0';
+
+    html += `<div class="wall-card" onclick="openCardFlip('${q2(r.name)}')">
+      <div class="wall-number">${String(i+1).padStart(2,'0')}</div>
+      <div class="wall-pos-tag" style="color:${posColor2}">${pos} · ${state||'—'}</div>
+      <div class="wall-name">${r.name}</div>
+      <div class="wall-detail">${club}</div>
+      ${r.interest ? `<div style="display:flex;gap:3px;margin-top:8px">${Array.from({length:5},(_,j)=>`<div style="width:6px;height:6px;border-radius:50%;background:${j<parseFloat(r.interest)?'#d0a0ff':'#1a2a3a'}"></div>`).join('')}</div>` : ''}
+      <div class="wall-timestamp">🎉 ${commitTime}${caller?' · Called by '+caller:''}</div>
+    </div>`;
+  });
+
+  html += `</div></div>`;
+  el.innerHTML = html;
+}
+
+function printWall() {
+  const wall = document.getElementById('wallGrid');
+  if (!wall) return;
+  // Open in new window for screenshot
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#07111f;font-family:'Source Sans 3',sans-serif;padding:40px}
+    @import url("https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Source+Sans+3:wght@400;600&display=swap");
+    h1{font-family:'Oswald',sans-serif;color:#fff;font-size:32px;margin-bottom:4px;letter-spacing:1px}
+    .sub{color:#3a5a7c;font-size:12px;margin-bottom:28px;letter-spacing:.5px}
+    .grid{display:flex;flex-wrap:wrap;gap:14px}
+    .card{background:linear-gradient(135deg,#0c1828,#180a28);border:1px solid #2a1a4c;border-radius:12px;padding:18px 20px;width:200px;position:relative;overflow:hidden}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#b8001e,#d0a0ff)}
+    .num{position:absolute;top:10px;right:12px;font-family:'Oswald',sans-serif;font-size:32px;color:rgba(255,255,255,.05)}
+    .pos{font-size:9px;font-weight:700;color:#d0a0ff;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+    .name{font-family:'Oswald',sans-serif;font-size:20px;font-weight:700;color:#fff;line-height:1.1}
+    .club{font-size:10px;color:#5a7ab0;margin-top:3px}
+    .ts{font-size:9px;color:#2a4a60;margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05)}
+  </style></head><body>
+    <h1>🎉 FRESNO STATE VOLLEYBALL</h1>
+    <div class="sub">2028 RECRUITING CLASS</div>
+    <div class="grid">${wall.innerHTML.replace(/class="wall-card[^"]*"/g,'class="card"').replace(/class="wall-pos-tag[^"]*"/g,'class="pos"').replace(/class="wall-name"/g,'class="name"').replace(/class="wall-detail"/g,'class="club"').replace(/class="wall-number"/g,'class="num"').replace(/class="wall-timestamp"/g,'class="ts"').replace(/onclick="[^"]*"/g,'')}</div>
+  </body></html>`);
+  w.document.close();
+  setTimeout(() => w.print(), 500);
 }
 
 // ── Live Clocks ────────────────────────────────────────────────────────────────
