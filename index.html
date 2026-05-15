@@ -842,6 +842,7 @@ function getRecruits() {
   return [...base, ...custom];
 }
 function getPos(r) { return store.positions[r.name] || r.pos || '—'; }
+function getInterest(r) { return (store.interestOverrides && store.interestOverrides[r.name] !== undefined) ? store.interestOverrides[r.name] : r.interest; }
 function isGuide(r) { return CUSTOM_SET.has(r.name) || !!store.customPDFs[r.name]; }
 
 // ── Blob URLs ─────────────────────────────────────────────────────────────────
@@ -1042,7 +1043,7 @@ function renderList() {
       const ac = activeRecruit === r.name ? ' active' : '';
       const gb = guide ? ' guide-border' : '';
       const hb = r.hot ? '<span class="badge b-hot">&#128293;</span>' : '<span class="badge b-neutral">&#128528;</span>';
-      const ib = r.interest && r.interest !== '\u2014' ? `<span class="badge b-interest">&#11088; ${r.interest}</span>` : '';
+      const ib = getInterest(r) && getInterest(r) !== '\u2014' ? `<span class="badge b-interest">&#11088; ${getInterest(r)}</span>` : '';
       const gb2 = guide ? '<span class="badge b-guide">&#10022;</span>' : '';
       const stBadge = st ? `<span class="badge ${sc.cls}">${sc.label}</span>` : '';
       const commitBadge = st === 'committed' ? '<span class="r-commit-badge">&#127881;</span>' : '';
@@ -1073,6 +1074,12 @@ function renderList() {
           </div>
         </div>
         <div class="r-status-row" style="${bulkMode?'display:none':''}">
+          <div class="field-label">Edit Name</div>
+          <input type="text" class="ctrl-link" value="${r.name}" placeholder="Full name..." onblur="editName('${nm}',this.value)" style="color:#e0d8cc;font-weight:600">
+          <div class="field-label">Interest Level</div>
+          <select class="ctrl-select" onchange="editInterest('${nm}',this.value)">
+            ${['','1','2','3','3.5','4','4-5','5'].map(v=>`<option value="${v}" ${getInterest(r)===v||(!v&&!getInterest(r))?'selected':''}>${v||'— Unknown —'}</option>`).join('')}
+          </select>
           <div class="field-label">Who is Calling</div>
           <select class="caller-select" onchange="setCaller('${nm}',this.value)">${callerOpts}</select>
           <div class="field-label">Position</div>
@@ -1332,6 +1339,64 @@ function setNote(name, val){ store.notes[name] = val; saveStore(); }
 function setPos(name, val) { if(val) store.positions[name]=val; else delete store.positions[name]; saveStore(); reRender(name); }
 function setCDate(name,val){ store.callDates[name]=val; saveStore(); reRender(name); }
 function setCaller(name,val){ store.callers[name]=val; saveStore(); reRender(name); renderLeaderboard(); }
+
+function editName(oldName, newName) {
+  newName = newName.trim();
+  if (!newName || newName === oldName) return;
+  // Duplicate check — exclude the recruit being renamed (case-change is fine)
+  const duplicate = getRecruits().find(r => r.name.toLowerCase() === newName.toLowerCase() && r.name !== oldName);
+  if (duplicate) {
+    alert(`"${newName}" already exists on the roster.`);
+    const input = document.querySelector(`#item_${esc(oldName)} input[type=text]`);
+    if (input) input.value = oldName;
+    return;
+  }
+  // Update in newRecruits if custom recruit
+  if (store.newRecruits) {
+    const nr = store.newRecruits.find(r => r.name === oldName);
+    if (nr) nr.name = newName;
+  }
+  // Migrate all store keys from old name to new name
+  ['statuses','notes','callTimes','callDates','customPDFs','positions','hudlLinks','callers','whisperNotes','textMsgs','textDates','textTimes','textSent','locations','commitTimes','interestOverrides'].forEach(k => {
+    if (store[k] && store[k][oldName] !== undefined) {
+      store[k][newName] = store[k][oldName];
+      delete store[k][oldName];
+    }
+  });
+  if (store.deleted && store.deleted[oldName]) { store.deleted[newName]=true; delete store.deleted[oldName]; }
+  if (activeRecruit === oldName) activeRecruit = newName;
+  saveStore();
+  // Full re-render now that store is updated
+  renderList();
+  renderLeaderboard();
+  updateCounts();
+}
+
+function editInterest(name, val) {
+  if (!store.interestOverrides) store.interestOverrides = {};
+  store.interestOverrides[name] = val;
+  saveStore();
+  // Update badge in-place without full re-render
+  const idKey = esc(name);
+  const meta = document.querySelector(`#item_${idKey} .r-meta`);
+  if (meta) {
+    const existing = meta.querySelector('.b-interest');
+    if (val) {
+      if (existing) existing.textContent = `⭐ ${val}`;
+      else meta.insertAdjacentHTML('beforeend', `<span class="badge b-interest">⭐ ${val}</span>`);
+    } else if (existing) {
+      existing.remove();
+    }
+  }
+  // Also update guide header if open
+  if (activeRecruit === name) {
+    const guideContainer = document.getElementById('guideContainer');
+    if (guideContainer && guideContainer.style.display !== 'none') {
+      // Just update the stored value — guide header doesn't show interest
+    }
+  }
+  updateCounts();
+}
 function setHudl(name,val) {
   store.hudlLinks[name] = val.trim();
   saveStore();
@@ -2614,27 +2679,65 @@ function openCardFlip(name) {
       <div style="position:absolute;bottom:16px;right:16px;font-size:9px;color:#1a2a3a;letter-spacing:1px">FLIP FOR DETAILS →</div>
     </div>`;
 
-  // BACK — questionnaire answers + coaching note
-  const q1 = (r.q1||'').replace(/^={3,}.*\n/gm,'').trim().substring(0,300);
-  const q2text = (r.q2||'').replace(/^={3,}.*\n/gm,'').trim().substring(0,300);
-  const whisper = store.whisperNotes&&store.whisperNotes[name]||'';
+  // BACK — clean call prep view
+  const callNote = store.notes[name] ? store.notes[name].split('\n').filter(l=>l.trim()).slice(0,4).join('\n') : '';
+  const callOutcomes = store.notes[name] ? store.notes[name].split('\n').filter(l=>l.match(/^\[.*PST\]/)) : [];
   const hudl = store.hudlLinks&&store.hudlLinks[name]||'';
+  const textMsg = store.textMsgs&&store.textMsgs[name]||'';
+  const callDate = store.callDates[name]||'';
+  const callTime2 = store.callTimes[name]||'';
+  const tz2 = getRecruitTZ(r);
+  const tzConv2 = (callTime2 && tz2) ? convertPSTtoTZ(callTime2, tz2) : null;
+
   document.getElementById('cardBack').innerHTML = `
     <div class="card-shine"></div>
     <div class="card-stripe" style="background:linear-gradient(90deg,${accentColor},${posColor})"></div>
-    <div style="padding:20px 20px;height:100%;display:flex;flex-direction:column;gap:0;overflow-y:auto">
-      <div style="font-family:'Oswald',sans-serif;font-size:14px;color:${accentColor};letter-spacing:1px;margin-bottom:12px;margin-top:6px">${r.name.toUpperCase()} — INSIDE FILE</div>
-      ${q1 ? `<div style="margin-bottom:10px">
-        <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px;margin-bottom:4px;text-transform:uppercase">Questionnaire</div>
-        <div style="font-size:10px;color:#8ab0c8;line-height:1.6;background:rgba(0,0,0,.3);padding:8px 10px;border-radius:6px;max-height:100px;overflow-y:auto">${q1||q2text}</div>
-      </div>` : ''}
-      <div style="margin-bottom:10px">
-        <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px;margin-bottom:4px;text-transform:uppercase">✍ Coaching Note</div>
-        <div style="font-size:11px;color:#c8d8e8;line-height:1.7;background:rgba(0,0,0,.3);padding:10px 12px;border-radius:6px;font-style:italic;min-height:60px">${whisper||notes.split('\n')[0]||'No notes yet — add them in the roster.'}</div>
+    <div style="padding:18px 18px 14px;height:100%;display:flex;flex-direction:column;gap:10px;overflow-y:auto;-webkit-overflow-scrolling:touch">
+      <div style="font-family:'Oswald',sans-serif;font-size:13px;color:${accentColor};letter-spacing:1px;flex-shrink:0">${r.name.toUpperCase()}</div>
+
+      <!-- Call time block -->
+      <div style="background:rgba(0,0,0,.35);border-radius:8px;padding:10px 12px;border:1px solid rgba(255,255,255,.06);flex-shrink:0">
+        <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Call Scheduled</div>
+        ${callDate||callTime2 ? `
+          <div style="font-family:'Oswald',sans-serif;font-size:18px;color:#f5c842;font-weight:700">${callTime2||'TBD'} <span style="font-size:11px;color:#3a5a7c">PST</span></div>
+          <div style="font-size:10px;color:#3a5a7c;margin-top:2px">${callDate?fmtDate(callDate)+' · ':''} ${tzConv2?`<span style="color:#90d0ff">${tzConv2.time} their time</span>`:''}
+          </div>` : `<div style="font-size:11px;color:#2a4a6c;font-style:italic">Not yet scheduled</div>`}
       </div>
-      ${store.callTimes[name]||store.callDates[name] ? `<div style="padding:8px 10px;background:rgba(245,200,66,.06);border:1px solid rgba(245,200,66,.15);border-radius:6px;font-size:10px;color:#f5c842;margin-bottom:8px">🕐 ${store.callDates[name]?fmtDate(store.callDates[name])+' · ':''} ${store.callTimes[name]||'Time TBD'} PST</div>` : ''}
-      ${hudl ? `<a href="${hudl}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:rgba(90,171,255,.08);border:1px solid rgba(90,171,255,.2);border-radius:6px;color:#5aabff;text-decoration:none;font-size:11px;font-weight:600;margin-top:auto">🎥 View Highlight Reel</a>` : ''}
+
+      <!-- Contact -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-shrink:0">
+        <div style="background:rgba(0,0,0,.35);border-radius:8px;padding:8px 10px;border:1px solid rgba(255,255,255,.06)">
+          <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px;margin-bottom:3px">PHONE</div>
+          <div style="font-size:11px;color:#5aabff;font-weight:600">${r.phone||'—'}</div>
+        </div>
+        <div style="background:rgba(0,0,0,.35);border-radius:8px;padding:8px 10px;border:1px solid rgba(255,255,255,.06)">
+          <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px;margin-bottom:3px">CALLER</div>
+          <div style="font-size:11px;color:#ffcc60;font-weight:600">${caller||'—'}</div>
+        </div>
+      </div>
+
+      <!-- Call outcomes -->
+      ${callOutcomes.length ? `<div style="background:rgba(0,0,0,.35);border-radius:8px;padding:8px 10px;border:1px solid rgba(255,255,255,.06);flex-shrink:0">
+        <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Call Log</div>
+        ${callOutcomes.slice(-3).map(l => `<div style="font-size:10px;color:${l.includes('✓')?'#4adf7a':l.includes('✉')?'#f5c842':'#c080ff'};line-height:1.5">${l}</div>`).join('')}
+      </div>` : ''}
+
+      <!-- Notes -->
+      <div style="background:rgba(0,0,0,.35);border-radius:8px;padding:8px 10px;border:1px solid rgba(255,255,255,.06);flex:1;min-height:0">
+        <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Notes</div>
+        <div style="font-size:10px;color:#8ab0c8;line-height:1.6;overflow-y:auto;max-height:80px">${store.notes[name]||'<span style="color:#2a4a5c;font-style:italic">No notes yet</span>'}</div>
+      </div>
+
+      <!-- Text & Hudl -->
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        ${textMsg ? `<div style="flex:1;background:rgba(90,171,255,.06);border:1px solid rgba(90,171,255,.15);border-radius:6px;padding:7px 9px">
+          <div style="font-size:9px;color:#3a5a7c;letter-spacing:1px;margin-bottom:2px">DRAFT TEXT</div>
+          <div style="font-size:10px;color:#7ab8d8;font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${textMsg}</div>
+        </div>` : ''}
+        ${hudl ? `<a href="${hudl}" target="_blank" onclick="event.stopPropagation()" style="flex-shrink:0;display:flex;align-items:center;gap:4px;padding:7px 10px;background:rgba(90,171,255,.08);border:1px solid rgba(90,171,255,.2);border-radius:6px;color:#5aabff;text-decoration:none;font-size:10px;font-weight:700">🎥 Film</a>` : ''}
+      </div>
     </div>`;
+
 
   cardFlipOpen = true;
   document.getElementById('cardFlipCard').classList.remove('flipped');
