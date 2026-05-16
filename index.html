@@ -3301,67 +3301,89 @@ function renderRosterPlan() {
 
   html += `</div>
 
-  <!-- Scholarship Timeline -->
-  <div style="background:#0a1628;border:1px solid #0f1e38;border-radius:7px;padding:12px 16px;margin-bottom:12px;overflow-x:auto">
-    <div style="font-family:'Oswald',sans-serif;font-size:12px;color:#5a7ab8;letter-spacing:.8px;margin-bottom:10px">SCHOLARSHIP TIMELINE</div>`;
+  <!-- Scholarship Timeline (collapsible) -->
+  <div style="background:#0a1628;border:1px solid #0f1e38;border-radius:7px;margin-bottom:12px">
+    <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.tl-arrow').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'"
+      style="padding:9px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none">
+      <span style="font-family:'Oswald',sans-serif;font-size:12px;color:#5a7ab8;letter-spacing:.8px">SCHOLARSHIP TIMELINE</span>
+      <span class="tl-arrow" style="font-size:10px;color:#3a5a7c">▶</span>
+    </div>
+    <div style="display:none;padding:0 14px 12px;overflow-x:auto">`;
 
   const tlYears = rpGetYears();
-  html += `<div style="display:flex;margin-bottom:5px;margin-left:110px">`;
+  const posColors3 = {OH:'#6aabff',MB:'#ff8a5a',RS:'#5affaa',S:'#ffe05a',L:'#e060ff',DS:'#5affee',OPP:'#ff5aaa'};
+
+  // Year header row
+  html += `<div style="display:flex;margin-bottom:5px;margin-left:100px">`;
   tlYears.forEach(yr => {
-    const budgetUsed2 = rpGetTotalScholarships(yr);
-    const budget2 = (rp.budgets[yr]||500000);
-    const pct2 = Math.min(100,(budgetUsed2/budget2)*100);
-    const col2 = pct2>90?'#ff6060':pct2>70?'#f5c842':'#4adf7a';
-    html += `<div style="flex:1;text-align:center;font-size:9px;color:${yr===y?'#e0d8cc':'#3a5a7c'};font-weight:${yr===y?'700':'400'};cursor:pointer;line-height:1.4" onclick="rpSelectYear(${yr})">${yr}<br><span style="color:${col2};font-size:8px">$${(budgetUsed2/1000).toFixed(0)}k</span></div>`;
+    const bu2 = rpGetTotalScholarships(yr);
+    const bd2 = rp.budgets[yr]||500000;
+    const p2 = Math.min(100,(bu2/bd2)*100);
+    const c2 = p2>90?'#ff6060':p2>70?'#f5c842':'#4adf7a';
+    html += `<div style="flex:1;text-align:center;font-size:9px;color:${yr===y?'#e0d8cc':'#3a5a7c'};font-weight:${yr===y?700:400};cursor:pointer;line-height:1.5" onclick="rpSelectYear(${yr})">${yr}<br><span style="color:${c2};font-size:8px">$${(bu2/1000).toFixed(0)}k</span></div>`;
   });
   html += `</div>`;
 
-  const posColors3 = {OH:'#6aabff',MB:'#ff8a5a',RS:'#5affaa',S:'#ffe05a',L:'#e060ff',DS:'#5affee',OPP:'#ff5aaa'};
+  // Build player list — only include players who are eligible in at least one timeline year
   const allPlayers = [];
   RP_POSITIONS.forEach(pos => {
-    for (let ey = 2020; ey <= tlYears[tlYears.length-1]; ey++) {
+    for (let ey = 2015; ey <= tlYears[tlYears.length-1]; ey++) {
       if (!rp.players[ey] || !rp.players[ey][pos]) continue;
       rp.players[ey][pos].filter(p => !p.isCommit).forEach(p => {
-        const endY = ey + 4;
-        const startIdx = Math.max(0, tlYears.indexOf(ey) === -1 ? 0 : tlYears.indexOf(ey));
-        const rawEnd = tlYears.indexOf(endY);
-        const visEnd = rawEnd === -1 ? tlYears.length-1 : rawEnd;
-        if (!allPlayers.find(x => x.name===p.name && x.pos===pos)) {
-          allPlayers.push({name:p.name, pos, entryYear:ey, visStart:startIdx, visEnd, schol:rpGetScholarship(y,pos,p.name)});
-        }
+        const ey2 = p.entryYear !== undefined ? p.entryYear : ey;
+        const lastYear = ey2 + 4; // Y5 = entryYear + 4
+        // Only show if they have any eligibility within tlYears range
+        if (lastYear < tlYears[0] || ey2 > tlYears[tlYears.length-1]) return;
+        if (allPlayers.find(x => x.name===p.name && x.pos===pos)) return;
+        const startIdx = tlYears.findIndex(y2 => y2 >= ey2);
+        const endIdx = tlYears.findIndex(y2 => y2 > lastYear) - 1;
+        const visStart = startIdx === -1 ? 0 : startIdx;
+        const visEnd = endIdx < 0 ? tlYears.length-1 : endIdx;
+        allPlayers.push({name:p.name, pos, entryYear:ey2, lastYear, visStart, visEnd, schol:rpGetScholarship(y,pos,p.name)});
       });
     }
   });
+
+  // 2028 commits — Y1 in 2028, Y5 in 2032
   getRecruits().filter(r=>(store.statuses[r.name]||'')==='committed').forEach(r => {
-    const p2 = getPos(r);
-    const si = Math.max(0, tlYears.indexOf(2028));
-    const ei = tlYears.indexOf(2032)===-1?tlYears.length-1:tlYears.indexOf(2032);
-    allPlayers.push({name:r.name, pos:p2, entryYear:2028, visStart:si, visEnd:ei, schol:rpGetScholarship(y,p2,r.name), isCommit:true});
+    const pos2 = getPos(r);
+    const ey2 = 2028, lastYear2 = 2032;
+    const si = tlYears.findIndex(y2 => y2 >= ey2);
+    const ei2 = tlYears.findIndex(y2 => y2 > lastYear2) - 1;
+    allPlayers.push({name:r.name, pos:pos2, entryYear:ey2, lastYear:lastYear2,
+      visStart: si<0?0:si, visEnd: ei2<0?tlYears.length-1:ei2,
+      schol:rpGetScholarship(y,pos2,r.name), isCommit:true});
   });
 
-  // Current year indicator index
   const curYIdx = tlYears.indexOf(y);
 
   if (allPlayers.length === 0) {
-    html += `<div style="font-size:11px;color:#1e3050;padding:8px 0;font-style:italic">Add players to see their scholarship timeline here</div>`;
+    html += `<div style="font-size:11px;color:#1e3050;padding:8px 0 4px;font-style:italic">Add players above to see their timeline</div>`;
   }
+
   allPlayers.forEach(p => {
     const color = p.isCommit ? '#4adf7a' : (posColors3[p.pos]||'#5a8ab0');
-    const leftPct = (p.visStart / tlYears.length) * 100;
+    const leftPct  = (p.visStart / tlYears.length) * 100;
     const widthPct = ((p.visEnd - p.visStart + 1) / tlYears.length) * 100;
     const scholTxt = p.schol > 0 ? ` $${(p.schol/1000).toFixed(0)}k` : '';
-    const inCurYear = curYIdx >= p.visStart && curYIdx <= p.visEnd;
+    const inCur = curYIdx >= p.visStart && curYIdx <= p.visEnd;
+    // Y-labels: Y1 at entryYear, Y5 at lastYear
+    const yAtStart = Math.max(1, tlYears[p.visStart] - p.entryYear + 1);
+    const yAtEnd   = Math.min(5, tlYears[p.visEnd]   - p.entryYear + 1);
     html += `<div style="display:flex;align-items:center;margin-bottom:3px">
-      <div style="width:110px;flex-shrink:0;font-size:10px;color:${inCurYear?'#c0b8b0':'#3a5a7c'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px">${p.name.split(' ')[0]} ${(p.name.split(' ')[1]||'')[0]||''}. <span style="color:${color};font-size:8px">${p.pos}</span></div>
-      <div style="flex:1;position:relative;height:18px">
-        ${curYIdx>=0?`<div style="position:absolute;left:${((curYIdx+0.5)/tlYears.length*100).toFixed(1)}%;top:0;width:1px;height:18px;background:#ffffff15;pointer-events:none"></div>`:''}
-        <div style="position:absolute;left:${leftPct.toFixed(1)}%;width:${widthPct.toFixed(1)}%;height:13px;top:2px;background:${color}${inCurYear?'33':'18'};border:1px solid ${color}${inCurYear?'88':'33'};border-radius:3px;display:flex;align-items:center;padding:0 5px;overflow:hidden;transition:all .2s">
-          <span style="font-size:8px;color:${color};white-space:nowrap">${p.isCommit?'RC ':''}Y${p.visStart+1}→Y${Math.min(5,p.visEnd-p.visStart+1+p.visStart-p.visStart)}${scholTxt}</span>
+      <div style="width:100px;flex-shrink:0;font-size:10px;color:${inCur?'#c0b8b0':'#3a5a7c'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:6px">
+        ${p.name.split(' ')[0]} ${(p.name.split(' ')[1]||'')[0]||''}. <span style="color:${color};font-size:8px">${p.pos}</span>
+      </div>
+      <div style="flex:1;position:relative;height:18px;min-width:0">
+        ${curYIdx>=0?`<div style="position:absolute;left:${((curYIdx+0.5)/tlYears.length*100).toFixed(1)}%;top:0;width:1px;height:18px;background:#ffffff12;pointer-events:none"></div>`:''}
+        <div style="position:absolute;left:${leftPct.toFixed(1)}%;width:${widthPct.toFixed(1)}%;height:13px;top:2px;background:${color}${inCur?'30':'15'};border:1px solid ${color}${inCur?'80':'30'};border-radius:3px;display:flex;align-items:center;padding:0 5px;overflow:hidden">
+          <span style="font-size:8px;color:${color};white-space:nowrap">${p.isCommit?'RC ':''}Y${yAtStart}→Y${yAtEnd}${scholTxt}</span>
         </div>
       </div>
     </div>`;
   });
-  html += `</div>
+
+  html += `</div></div>
 
   <!-- Budget tracker -->
   <div class="rp-budget">
