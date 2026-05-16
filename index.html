@@ -3302,88 +3302,135 @@ function renderRosterPlan() {
   html += `</div>
 
   <!-- Scholarship Timeline (collapsible) -->
-  <div style="background:#0a1628;border:1px solid #0f1e38;border-radius:7px;margin-bottom:12px">
-    <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none';this.querySelector('.tl-arrow').textContent=this.nextElementSibling.style.display==='none'?'▶':'▼'"
-      style="padding:9px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none">
-      <span style="font-family:'Oswald',sans-serif;font-size:12px;color:#5a7ab8;letter-spacing:.8px">SCHOLARSHIP TIMELINE</span>
-      <span class="tl-arrow" style="font-size:10px;color:#3a5a7c">▶</span>
-    </div>
-    <div style="display:none;padding:0 14px 12px;overflow-x:auto">`;
+  <div style="background:#070f1e;border:1px solid #0f1e38;border-radius:8px;margin-bottom:10px;overflow:hidden">
+    <div onclick="const b=this.nextElementSibling;b.style.display=b.style.display==='none'?'block':'none';this.querySelector('.tl-arr').style.transform=b.style.display==='none'?'rotate(0deg)':'rotate(90deg)'"
+      style="padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;border-bottom:1px solid transparent;transition:border-color .2s" onmouseover="this.style.borderBottomColor='#0f1e38'" onmouseout="this.style.borderBottomColor='transparent'">
+      <span style="font-size:9px;color:#3a5a7c;letter-spacing:1.5px;font-weight:700;text-transform:uppercase">Scholarship Timeline</span>
+      <span style="flex:1;height:1px;background:linear-gradient(90deg,#0f1e38,transparent)"></span>`;
 
+  // Quick per-year budget pills in header
   const tlYears = rpGetYears();
-  const posColors3 = {OH:'#6aabff',MB:'#ff8a5a',RS:'#5affaa',S:'#ffe05a',L:'#e060ff',DS:'#5affee',OPP:'#ff5aaa'};
-
-  // Year header row
-  html += `<div style="display:flex;margin-bottom:5px;margin-left:100px">`;
   tlYears.forEach(yr => {
     const bu2 = rpGetTotalScholarships(yr);
     const bd2 = rp.budgets[yr]||500000;
     const p2 = Math.min(100,(bu2/bd2)*100);
-    const c2 = p2>90?'#ff6060':p2>70?'#f5c842':'#4adf7a';
-    html += `<div style="flex:1;text-align:center;font-size:9px;color:${yr===y?'#e0d8cc':'#3a5a7c'};font-weight:${yr===y?700:400};cursor:pointer;line-height:1.5" onclick="rpSelectYear(${yr})">${yr}<br><span style="color:${c2};font-size:8px">$${(bu2/1000).toFixed(0)}k</span></div>`;
+    const c2 = p2>85?'#ff6060':p2>60?'#f5c842':'#3a5a7c';
+    html += `<span onclick="event.stopPropagation();rpSelectYear(${yr})" style="font-size:8px;color:${yr===y?'#e0d8cc':c2};cursor:pointer;padding:1px 5px;border-radius:3px;background:${yr===y?'#172848':'transparent'};transition:background .15s" title="${yr}: $${bu2.toLocaleString()}">${yr}</span>`;
   });
-  html += `</div>`;
+  html += `<span class="tl-arr" style="font-size:8px;color:#2a4a6c;transition:transform .2s;flex-shrink:0">▶</span>
+    </div>
+    <div style="display:none">`;
 
-  // Build player list — only include players who are eligible in at least one timeline year
+  const posColors3 = {OH:'#6aabff',MB:'#ff8a5a',RS:'#5affaa',S:'#ffe05a',L:'#c080ff',DS:'#5affee',OPP:'#ff5aaa'};
+
+  // Build sorted player list
   const allPlayers = [];
   RP_POSITIONS.forEach(pos => {
     for (let ey = 2015; ey <= tlYears[tlYears.length-1]; ey++) {
       if (!rp.players[ey] || !rp.players[ey][pos]) continue;
       rp.players[ey][pos].filter(p => !p.isCommit).forEach(p => {
         const ey2 = p.entryYear !== undefined ? p.entryYear : ey;
-        const lastYear = ey2 + 4; // Y5 = entryYear + 4
-        // Only show if they have any eligibility within tlYears range
+        const lastYear = ey2 + 4;
         if (lastYear < tlYears[0] || ey2 > tlYears[tlYears.length-1]) return;
         if (allPlayers.find(x => x.name===p.name && x.pos===pos)) return;
-        const startIdx = tlYears.findIndex(y2 => y2 >= ey2);
-        const endIdx = tlYears.findIndex(y2 => y2 > lastYear) - 1;
-        const visStart = startIdx === -1 ? 0 : startIdx;
-        const visEnd = endIdx < 0 ? tlYears.length-1 : endIdx;
-        allPlayers.push({name:p.name, pos, entryYear:ey2, lastYear, visStart, visEnd, schol:rpGetScholarship(y,pos,p.name)});
+        const si = tlYears.findIndex(y2 => y2 >= ey2);
+        const rawEi = tlYears.findIndex(y2 => y2 > lastYear) - 1;
+        allPlayers.push({name:p.name, pos, entryYear:ey2, lastYear,
+          visStart: si<0?0:si, visEnd: rawEi<0?tlYears.length-1:rawEi,
+          schol: rpGetScholarship(y,pos,p.name)});
       });
     }
   });
-
-  // 2028 commits — Y1 in 2028, Y5 in 2032
   getRecruits().filter(r=>(store.statuses[r.name]||'')==='committed').forEach(r => {
-    const pos2 = getPos(r);
-    const ey2 = 2028, lastYear2 = 2032;
-    const si = tlYears.findIndex(y2 => y2 >= ey2);
-    const ei2 = tlYears.findIndex(y2 => y2 > lastYear2) - 1;
-    allPlayers.push({name:r.name, pos:pos2, entryYear:ey2, lastYear:lastYear2,
-      visStart: si<0?0:si, visEnd: ei2<0?tlYears.length-1:ei2,
+    const pos2=getPos(r), ey2=2028, ly2=2032;
+    const si=tlYears.findIndex(y2=>y2>=ey2);
+    const ei2=tlYears.findIndex(y2=>y2>ly2)-1;
+    allPlayers.push({name:r.name, pos:pos2, entryYear:ey2, lastYear:ly2,
+      visStart:si<0?0:si, visEnd:ei2<0?tlYears.length-1:ei2,
       schol:rpGetScholarship(y,pos2,r.name), isCommit:true});
   });
 
   const curYIdx = tlYears.indexOf(y);
+  const nYears = tlYears.length;
 
   if (allPlayers.length === 0) {
-    html += `<div style="font-size:11px;color:#1e3050;padding:8px 0 4px;font-style:italic">Add players above to see their timeline</div>`;
+    html += `<div style="padding:16px 14px;font-size:11px;color:#1e3050;font-style:italic">Add players to see their timeline</div>`;
+  } else {
+    // Year header columns
+    html += `<div style="display:flex;padding:6px 14px 4px;border-bottom:1px solid #0a1828">
+      <div style="width:94px;flex-shrink:0"></div>
+      <div style="flex:1;display:flex;position:relative">`;
+    tlYears.forEach((yr,i) => {
+      const isCur = yr===y;
+      html += `<div style="flex:1;text-align:center;font-size:8px;font-weight:${isCur?700:400};color:${isCur?'#c0d8f8':'#2a4a6c'};cursor:pointer;padding:0 1px" onclick="rpSelectYear(${yr})">${yr}</div>`;
+    });
+    html += `</div></div>`;
+
+    // Group by position — position label row then players
+    const byPos = {};
+    allPlayers.forEach(p => {
+      if (!byPos[p.pos]) byPos[p.pos] = [];
+      byPos[p.pos].push(p);
+    });
+
+    RP_POSITIONS.filter(pos => byPos[pos]?.length).forEach(pos => {
+      const color = posColors3[pos]||'#5a8ab0';
+      // Thin position divider
+      html += `<div style="display:flex;align-items:center;padding:3px 14px 1px;background:#05090f">
+        <div style="width:94px;flex-shrink:0;font-size:8px;color:${color};letter-spacing:1px;font-weight:700;opacity:.8">${pos}</div>
+        <div style="flex:1;height:1px;background:${color}18"></div>
+      </div>`;
+
+      byPos[pos].forEach(p => {
+        const inCur = curYIdx >= p.visStart && curYIdx <= p.visEnd;
+        const leftPct  = (p.visStart / nYears) * 100;
+        const widthPct = ((p.visEnd - p.visStart + 1) / nYears) * 100;
+        const yAtStart = Math.max(1, tlYears[p.visStart] - p.entryYear + 1);
+        const yAtEnd   = Math.min(5, tlYears[p.visEnd]   - p.entryYear + 1);
+        const isExpiring = !p.isCommit && yAtEnd >= 4; // Y4 or Y5 in last visible year
+        const scholTxt = p.schol > 0 ? ` · $${(p.schol/1000).toFixed(0)}k` : '';
+        const barBg = p.isCommit ? '#4adf7a20' : inCur ? `${color}22` : `${color}0e`;
+        const barBorder = p.isCommit ? '#4adf7a50' : inCur ? `${color}70` : `${color}28`;
+        const barColor2 = p.isCommit ? '#4adf7a' : color;
+
+        html += `<div style="display:flex;align-items:center;padding:1px 14px;min-height:20px">
+          <div style="width:94px;flex-shrink:0;font-size:10px;color:${inCur?'#c0b8b0':'#3a5a78'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px;display:flex;align-items:center;gap:3px">
+            ${p.name.split(' ')[0]} ${(p.name.split(' ')[1]||'')[0]||''}.
+            ${isExpiring?`<span style="font-size:8px;color:#f5c842" title="Expiring soon">⚠</span>`:''}
+          </div>
+          <div style="flex:1;position:relative;height:14px">
+            ${curYIdx>=0?`<div style="position:absolute;left:${((curYIdx+0.5)/nYears*100).toFixed(1)}%;top:0;width:1px;height:14px;background:#ffffff08;pointer-events:none"></div>`:''}
+            <div style="position:absolute;left:${leftPct.toFixed(1)}%;width:${widthPct.toFixed(1)}%;height:10px;top:2px;background:${barBg};border-left:2px solid ${barBorder};border-right:1px solid ${barBorder}40;border-radius:0 2px 2px 0;display:flex;align-items:center;padding:0 5px;overflow:hidden" title="${p.name} · Y${yAtStart}–Y${yAtEnd}${scholTxt}">
+              <span style="font-size:7.5px;color:${barColor2};white-space:nowrap;opacity:.9">${p.isCommit?'▸ ':''} Y${yAtStart}–Y${yAtEnd}${scholTxt}</span>
+            </div>
+          </div>
+        </div>`;
+      });
+    });
+
+    // Budget bar row at bottom
+    html += `<div style="display:flex;align-items:flex-end;padding:5px 14px 8px;border-top:1px solid #0a1828;margin-top:2px">
+      <div style="width:94px;flex-shrink:0;font-size:8px;color:#2a4a6c;text-transform:uppercase;letter-spacing:.8px">Budget</div>
+      <div style="flex:1;display:flex;gap:1px;align-items:flex-end;height:24px">`;
+    tlYears.forEach(yr => {
+      const bu3 = rpGetTotalScholarships(yr);
+      const bd3 = rp.budgets[yr]||500000;
+      const pct3 = Math.min(100,(bu3/bd3)*100);
+      const bc3 = pct3>90?'#ff6060':pct3>70?'#f5c842':'#4adf7a';
+      const isCur = yr===y;
+      html += `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer" onclick="rpSelectYear(${yr})" title="${yr}: $${bu3.toLocaleString()} of $${bd3.toLocaleString()}">
+        <div style="font-size:7px;color:${isCur?bc3:'#2a4a6c'}">${pct3>0?Math.round(pct3)+'%':''}</div>
+        <div style="width:calc(100% - 2px);height:${Math.max(2,pct3/100*16).toFixed(0)}px;background:${bc3};border-radius:1px;opacity:${isCur?1:0.4};transition:all .2s"></div>
+      </div>`;
+    });
+    html += `</div></div>`;
   }
 
-  allPlayers.forEach(p => {
-    const color = p.isCommit ? '#4adf7a' : (posColors3[p.pos]||'#5a8ab0');
-    const leftPct  = (p.visStart / tlYears.length) * 100;
-    const widthPct = ((p.visEnd - p.visStart + 1) / tlYears.length) * 100;
-    const scholTxt = p.schol > 0 ? ` $${(p.schol/1000).toFixed(0)}k` : '';
-    const inCur = curYIdx >= p.visStart && curYIdx <= p.visEnd;
-    // Y-labels: Y1 at entryYear, Y5 at lastYear
-    const yAtStart = Math.max(1, tlYears[p.visStart] - p.entryYear + 1);
-    const yAtEnd   = Math.min(5, tlYears[p.visEnd]   - p.entryYear + 1);
-    html += `<div style="display:flex;align-items:center;margin-bottom:3px">
-      <div style="width:100px;flex-shrink:0;font-size:10px;color:${inCur?'#c0b8b0':'#3a5a7c'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:6px">
-        ${p.name.split(' ')[0]} ${(p.name.split(' ')[1]||'')[0]||''}. <span style="color:${color};font-size:8px">${p.pos}</span>
-      </div>
-      <div style="flex:1;position:relative;height:18px;min-width:0">
-        ${curYIdx>=0?`<div style="position:absolute;left:${((curYIdx+0.5)/tlYears.length*100).toFixed(1)}%;top:0;width:1px;height:18px;background:#ffffff12;pointer-events:none"></div>`:''}
-        <div style="position:absolute;left:${leftPct.toFixed(1)}%;width:${widthPct.toFixed(1)}%;height:13px;top:2px;background:${color}${inCur?'30':'15'};border:1px solid ${color}${inCur?'80':'30'};border-radius:3px;display:flex;align-items:center;padding:0 5px;overflow:hidden">
-          <span style="font-size:8px;color:${color};white-space:nowrap">${p.isCommit?'RC ':''}Y${yAtStart}→Y${yAtEnd}${scholTxt}</span>
-        </div>
-      </div>
-    </div>`;
-  });
-
   html += `</div></div>
+
+  <!-- Budget tracker -->
+  <div class="rp-budget">
+    <div class="rp-budget-label">&#128181; ${y} SCHOLARSHIP BUDGET</div>
 
   <!-- Budget tracker -->
   <div class="rp-budget">
