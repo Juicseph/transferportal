@@ -3043,9 +3043,40 @@ document.addEventListener('keydown', e => {
 
 // ── Signing Day Wall ──────────────────────────────────────────────────────────
 // ── Roster Plan ────────────────────────────────────────────────────────────────
-const RP_YEARS = [2026,2027,2028,2029,2030,2031,2032];
+const RP_BASE_START_MARKER = true; // marker
 const RP_POSITIONS = ['OH','MB','RS','S','L','DS','OPP'];
 const RP_YR_LABELS = ['Y1','Y2','Y3','Y4','Y5'];
+const RP_BASE_YEARS = [2026,2027,2028,2029,2030,2031,2032];
+
+function rpGetYears() {
+  if (!store.rosterPlan) return [...RP_BASE_YEARS];
+  const extra = store.rosterPlan.extraYears || [];
+  const all = [...new Set([...RP_BASE_YEARS, ...extra])].sort();
+  return all;
+}
+
+function rpAddYear() {
+  const years = rpGetYears();
+  const next = years[years.length-1] + 1;
+  if (!store.rosterPlan) store.rosterPlan = {};
+  if (!store.rosterPlan.extraYears) store.rosterPlan.extraYears = [];
+  store.rosterPlan.extraYears.push(next);
+  // Init new year in store
+  rpGetStore();
+  saveStore();
+  rpActiveYear = next;
+  renderRosterPlan();
+}
+
+function rpRemoveYear(year) {
+  if (RP_BASE_YEARS.includes(year)) return; // can't remove base years
+  if (!confirm(`Remove ${year} from the roster plan?`)) return;
+  if (!store.rosterPlan) return;
+  store.rosterPlan.extraYears = (store.rosterPlan.extraYears||[]).filter(y => y !== year);
+  if (rpActiveYear === year) rpActiveYear = rpGetYears().slice(-1)[0];
+  saveStore();
+  renderRosterPlan();
+}
 
 function rpEntryFromCurrentYr(currentYear, currentYrNum) {
   return currentYear - (currentYrNum - 1);
@@ -3064,16 +3095,18 @@ function rpYCls(label) {
 let rpActiveYear = 2026;
 let rpEditMode = null;
 
+const RP_BASE_START = 2026; // kept for reference
+
 function rpGetStore() {
-  if (!store.rosterPlan) store.rosterPlan = {players:{},targets:{},scholarships:{},budgets:{},positions:{}};
+  if (!store.rosterPlan) store.rosterPlan = {players:{},targets:{},scholarships:{},budgets:{},positions:{},extraYears:[]};
   if (!store.rosterPlan.scholarships) store.rosterPlan.scholarships = {};
   if (!store.rosterPlan.budgets) store.rosterPlan.budgets = {};
   if (!store.rosterPlan.positions) store.rosterPlan.positions = {};
-  RP_YEARS.forEach(y => {
+  if (!store.rosterPlan.extraYears) store.rosterPlan.extraYears = [];
+  rpGetYears().forEach(y => {
     if (!store.rosterPlan.players[y]) store.rosterPlan.players[y] = {};
     if (!store.rosterPlan.targets[y]) store.rosterPlan.targets[y] = {};
     if (!store.rosterPlan.budgets[y]) store.rosterPlan.budgets[y] = 500000;
-    // Default positions for this year = all 7
     if (!store.rosterPlan.positions[y]) store.rosterPlan.positions[y] = [...RP_POSITIONS];
     RP_POSITIONS.forEach(p => {
       if (!store.rosterPlan.players[y][p]) store.rosterPlan.players[y][p] = [];
@@ -3258,11 +3291,76 @@ function renderRosterPlan() {
   </div>
   <div class="rp-year-tabs">`;
 
-  RP_YEARS.forEach(yr => {
+  const years = rpGetYears();
+  years.forEach(yr => {
     const n=rpGetNeeds(yr); const active=yr===y?' active':'';
-    html+=`<div class="rp-yt${active}" onclick="rpSelectYear(${yr})">${yr}${n>0?`<span class="rp-needs-badge">${n}</span>`:''}</div>`;
+    const isExtra = !RP_BASE_YEARS.includes(yr);
+    html+=`<div class="rp-yt${active}" onclick="rpSelectYear(${yr})" style="display:flex;align-items:center;gap:4px">${yr}${n>0?`<span class="rp-needs-badge">${n}</span>`:''}${isExtra?`<span onclick="event.stopPropagation();rpRemoveYear(${yr})" style="font-size:9px;color:#3a5a7c;cursor:pointer;margin-left:2px" title="Remove year">✕</span>`:''}</div>`;
+  });
+  html += `<div class="rp-yt" onclick="rpAddYear()" style="border-style:dashed;color:#3a5a7c;cursor:pointer" title="Add next year">+ ${years[years.length-1]+1}</div>`;
+
+  html += `</div>
+
+  <!-- Scholarship Timeline -->
+  <div style="background:#0a1628;border:1px solid #0f1e38;border-radius:7px;padding:12px 16px;margin-bottom:12px;overflow-x:auto">
+    <div style="font-family:'Oswald',sans-serif;font-size:12px;color:#5a7ab8;letter-spacing:.8px;margin-bottom:10px">SCHOLARSHIP TIMELINE</div>`;
+
+  const tlYears = rpGetYears();
+  html += `<div style="display:flex;margin-bottom:5px;margin-left:110px">`;
+  tlYears.forEach(yr => {
+    const budgetUsed2 = rpGetTotalScholarships(yr);
+    const budget2 = (rp.budgets[yr]||500000);
+    const pct2 = Math.min(100,(budgetUsed2/budget2)*100);
+    const col2 = pct2>90?'#ff6060':pct2>70?'#f5c842':'#4adf7a';
+    html += `<div style="flex:1;text-align:center;font-size:9px;color:${yr===y?'#e0d8cc':'#3a5a7c'};font-weight:${yr===y?'700':'400'};cursor:pointer;line-height:1.4" onclick="rpSelectYear(${yr})">${yr}<br><span style="color:${col2};font-size:8px">$${(budgetUsed2/1000).toFixed(0)}k</span></div>`;
+  });
+  html += `</div>`;
+
+  const posColors3 = {OH:'#6aabff',MB:'#ff8a5a',RS:'#5affaa',S:'#ffe05a',L:'#e060ff',DS:'#5affee',OPP:'#ff5aaa'};
+  const allPlayers = [];
+  RP_POSITIONS.forEach(pos => {
+    for (let ey = 2020; ey <= tlYears[tlYears.length-1]; ey++) {
+      if (!rp.players[ey] || !rp.players[ey][pos]) continue;
+      rp.players[ey][pos].filter(p => !p.isCommit).forEach(p => {
+        const endY = ey + 4;
+        const startIdx = Math.max(0, tlYears.indexOf(ey) === -1 ? 0 : tlYears.indexOf(ey));
+        const rawEnd = tlYears.indexOf(endY);
+        const visEnd = rawEnd === -1 ? tlYears.length-1 : rawEnd;
+        if (!allPlayers.find(x => x.name===p.name && x.pos===pos)) {
+          allPlayers.push({name:p.name, pos, entryYear:ey, visStart:startIdx, visEnd, schol:rpGetScholarship(y,pos,p.name)});
+        }
+      });
+    }
+  });
+  getRecruits().filter(r=>(store.statuses[r.name]||'')==='committed').forEach(r => {
+    const p2 = getPos(r);
+    const si = Math.max(0, tlYears.indexOf(2028));
+    const ei = tlYears.indexOf(2032)===-1?tlYears.length-1:tlYears.indexOf(2032);
+    allPlayers.push({name:r.name, pos:p2, entryYear:2028, visStart:si, visEnd:ei, schol:rpGetScholarship(y,p2,r.name), isCommit:true});
   });
 
+  // Current year indicator index
+  const curYIdx = tlYears.indexOf(y);
+
+  if (allPlayers.length === 0) {
+    html += `<div style="font-size:11px;color:#1e3050;padding:8px 0;font-style:italic">Add players to see their scholarship timeline here</div>`;
+  }
+  allPlayers.forEach(p => {
+    const color = p.isCommit ? '#4adf7a' : (posColors3[p.pos]||'#5a8ab0');
+    const leftPct = (p.visStart / tlYears.length) * 100;
+    const widthPct = ((p.visEnd - p.visStart + 1) / tlYears.length) * 100;
+    const scholTxt = p.schol > 0 ? ` $${(p.schol/1000).toFixed(0)}k` : '';
+    const inCurYear = curYIdx >= p.visStart && curYIdx <= p.visEnd;
+    html += `<div style="display:flex;align-items:center;margin-bottom:3px">
+      <div style="width:110px;flex-shrink:0;font-size:10px;color:${inCurYear?'#c0b8b0':'#3a5a7c'};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:8px">${p.name.split(' ')[0]} ${(p.name.split(' ')[1]||'')[0]||''}. <span style="color:${color};font-size:8px">${p.pos}</span></div>
+      <div style="flex:1;position:relative;height:18px">
+        ${curYIdx>=0?`<div style="position:absolute;left:${((curYIdx+0.5)/tlYears.length*100).toFixed(1)}%;top:0;width:1px;height:18px;background:#ffffff15;pointer-events:none"></div>`:''}
+        <div style="position:absolute;left:${leftPct.toFixed(1)}%;width:${widthPct.toFixed(1)}%;height:13px;top:2px;background:${color}${inCurYear?'33':'18'};border:1px solid ${color}${inCurYear?'88':'33'};border-radius:3px;display:flex;align-items:center;padding:0 5px;overflow:hidden;transition:all .2s">
+          <span style="font-size:8px;color:${color};white-space:nowrap">${p.isCommit?'RC ':''}Y${p.visStart+1}→Y${Math.min(5,p.visEnd-p.visStart+1+p.visStart-p.visStart)}${scholTxt}</span>
+        </div>
+      </div>
+    </div>`;
+  });
   html += `</div>
 
   <!-- Budget tracker -->
