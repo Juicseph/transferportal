@@ -281,7 +281,7 @@ header{
 .rp-target-btn:hover{color:#7a9acc}
 .rp-target-n{font-size:11px;color:#e0d8cc;min-width:14px;text-align:center}
 .rp-list{padding:5px 8px;min-height:28px}
-.rp-player{display:flex;align-items:center;gap:5px;padding:3px 4px;border-radius:4px;cursor:default;transition:background .1s}
+.rp-player{display:flex;align-items:center;gap:4px;padding:4px 5px;border-radius:4px;cursor:default;transition:background .1s}
 .rp-player:hover{background:#0f1e38}
 .rp-cls{font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;min-width:20px;text-align:center;flex-shrink:0}
 .cls-fr{background:#071428;color:#5aabff;border:1px solid #1a3a5c}
@@ -291,8 +291,19 @@ header{
 .cls-gr{background:#1a0a30;color:#c080ff;border:1px solid #4a1a7c}
 .cls-rc{background:#0a1e0a;color:#3adf6a;border:1px solid #1a5a28}
 .rp-pname{font-size:11px;color:#c0b8b0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rp-pdel{font-size:10px;color:#3a1a1a;cursor:pointer;opacity:0;transition:opacity .1s;flex-shrink:0}
-.rp-player:hover .rp-pdel{opacity:1;color:#ff6060}
+.rp-schol-val{font-size:9px;color:#2a6a3a;flex-shrink:0;cursor:pointer;padding:1px 4px;border-radius:2px;white-space:nowrap}
+.rp-schol-val:hover{background:#0a2010;color:#4adf7a}
+.rp-schol-input{background:#060e1c;border:1px solid #1a5a38;color:#4adf7a;padding:1px 5px;border-radius:3px;font-size:9px;width:75px;font-family:"Source Sans 3",sans-serif}
+.rp-schol-input:focus{outline:none;border-color:#3a9a6c}
+.rp-pdel{font-size:11px;color:#ff6060;cursor:pointer;flex-shrink:0;padding:1px 4px;border-radius:3px;opacity:.5;transition:opacity .15s}
+.rp-pdel:hover{opacity:1;background:#200a0a}
+.rp-pedit{font-size:11px;color:#5a9acc;cursor:pointer;flex-shrink:0;padding:1px 4px;border-radius:3px;opacity:.5;transition:opacity .15s}
+.rp-pedit:hover{opacity:1;background:#0a1628}
+.rp-budget{background:#0a1628;border:1px solid #0f2838;border-radius:7px;padding:10px 14px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.rp-budget-label{font-family:"Oswald",sans-serif;font-size:12px;color:#5a7ab8;flex-shrink:0;letter-spacing:.5px}
+.rp-budget-amt{font-family:"Oswald",sans-serif;font-size:16px;font-weight:700}
+.rp-budget-bar{flex:1;min-width:100px;height:5px;background:#0f1e38;border-radius:3px;overflow:hidden}
+.rp-budget-fill{height:100%;border-radius:3px;transition:width .4s}
 .rp-add{display:flex;gap:4px;padding:5px 7px;border-top:1px solid #0a1828}
 .rp-add input{flex:1;background:#060e1c;border:1px solid #1e3560;color:#e0d8cc;padding:4px 7px;border-radius:4px;font-size:11px;font-family:"Source Sans 3",sans-serif;min-width:0}
 .rp-add input:focus{outline:none;border-color:#3a5a9c}
@@ -1581,12 +1592,26 @@ function deleteRecruit(name) {
 // ── Call Timer ────────────────────────────────────────────────────────────────
 function toggleTimer(name) {
   if (timerInterval && timerName === name) {
-    // Stop
+    // Stop — log call duration
     clearInterval(timerInterval);
+    const elapsed = timerStart ? Math.floor((Date.now() - timerStart) / 1000) : 0;
     timerInterval = null;
     const el = document.getElementById('timerDisplay');
     if (el) el.classList.replace('running','stopped');
     stopHeartbeat();
+    // Log the call duration to notes
+    if (elapsed > 5) {
+      const m = Math.floor(elapsed/60), s = elapsed%60;
+      const durStr = `${m}:${s.toString().padStart(2,'0')}`;
+      const now = new Date();
+      const pst = now.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true,timeZone:'America/Los_Angeles'});
+      const entry = `[${pst} PST] ⏱ Call duration: ${durStr}`;
+      if (!store.notes) store.notes={};
+      store.notes[name] = (store.notes[name]||'') + (store.notes[name]?'\n':'') + entry;
+      saveStore();
+      // Show duration on timer display briefly
+      if (el) el.title = `Last call: ${durStr}`;
+    }
   } else {
     // Start fresh or switch recruit
     if (timerInterval) clearInterval(timerInterval);
@@ -1594,7 +1619,7 @@ function toggleTimer(name) {
     timerName = name;
     timerInterval = setInterval(updateTimerDisplay, 1000);
     const el = document.getElementById('timerDisplay');
-    if (el) { el.classList.remove('stopped'); el.classList.add('running'); }
+    if (el) { el.classList.remove('stopped'); el.classList.add('running'); el.title = 'Click to stop timer'; }
     startHeartbeat();
   }
 }
@@ -3020,18 +3045,33 @@ document.addEventListener('keydown', e => {
 // ── Roster Plan ────────────────────────────────────────────────────────────────
 const RP_YEARS = [2026,2027,2028,2029,2030,2031,2032];
 const RP_POSITIONS = ['OH','MB','RS','S','L','DS','OPP'];
-const RP_CLS_NEXT = {FR:'SO',SO:'JR',JR:'SR',SR:null,GR:null};
-const RP_CLS_LABEL = {FR:'Fr',SO:'So',JR:'Jr',SR:'Sr',GR:'Gr'};
+const RP_YR_LABELS = ['Y1','Y2','Y3','Y4','Y5'];
+
+function rpEntryFromCurrentYr(currentYear, currentYrNum) {
+  return currentYear - (currentYrNum - 1);
+}
+
+function rpYLabel(entryYear, displayYear) {
+  const y = displayYear - entryYear + 1;
+  if (y < 1 || y > 5) return null;
+  return `Y${y}`;
+}
+
+function rpYCls(label) {
+  return {Y1:'fr',Y2:'so',Y3:'jr',Y4:'sr',Y5:'gr'}[label] || 'fr';
+}
 
 let rpActiveYear = 2026;
-
-// Store structure: store.rosterPlan = { players:{year:{pos:[{name,cls,isCommit,projected}]}}, targets:{year:{pos:n}} }
+let rpEditMode = null;
 
 function rpGetStore() {
-  if (!store.rosterPlan) store.rosterPlan = {players:{},targets:{}};
+  if (!store.rosterPlan) store.rosterPlan = {players:{},targets:{},scholarships:{},budgets:{}};
+  if (!store.rosterPlan.scholarships) store.rosterPlan.scholarships = {};
+  if (!store.rosterPlan.budgets) store.rosterPlan.budgets = {};
   RP_YEARS.forEach(y => {
     if (!store.rosterPlan.players[y]) store.rosterPlan.players[y] = {};
     if (!store.rosterPlan.targets[y]) store.rosterPlan.targets[y] = {};
+    if (!store.rosterPlan.budgets[y]) store.rosterPlan.budgets[y] = 500000;
     RP_POSITIONS.forEach(p => {
       if (!store.rosterPlan.players[y][p]) store.rosterPlan.players[y][p] = [];
       if (store.rosterPlan.targets[y][p] === undefined) store.rosterPlan.targets[y][p] = 2;
@@ -3040,146 +3080,205 @@ function rpGetStore() {
   return store.rosterPlan;
 }
 
-function rpProject() {
+function rpGetVisiblePlayers(year, pos) {
   const rp = rpGetStore();
-  // Project forward year by year from manually entered data
-  for (let yi = 1; yi < RP_YEARS.length; yi++) {
-    const prevY = RP_YEARS[yi-1];
-    const curY  = RP_YEARS[yi];
-    RP_POSITIONS.forEach(pos => {
-      // Keep manually added non-projected players, rebuild projected ones
-      const manual = (rp.players[curY][pos]||[]).filter(p => !p.projected);
-      const fromPrev = (rp.players[prevY][pos]||[])
-        .filter(p => !p.isCommit) // commits handled separately below
-        .map(p => {
-          const nextCls = p.projected ? RP_CLS_NEXT[p.cls] : RP_CLS_NEXT[p.cls];
-          if (!nextCls) return null;
-          return {name:p.name, cls:nextCls, projected:true};
-        })
-        .filter(Boolean);
-      rp.players[curY][pos] = [...manual, ...fromPrev];
+  const result = [];
+  // Scan all possible entry years (a Y5 in 2026 entered in 2022)
+  for (let ey = year - 4; ey <= year; ey++) {
+    const bucket = rp.players[ey];
+    if (!bucket || !bucket[pos]) continue;
+    bucket[pos].filter(p => !p.isCommit).forEach(p => {
+      const ey2 = p.entryYear !== undefined ? p.entryYear : ey;
+      const label = rpYLabel(ey2, year);
+      if (label) result.push({...p, entryYear: ey2, yearLabel: label});
     });
   }
-  // Auto-populate 2028 commits into 2028-2032
-  const committed = getRecruits().filter(r => (store.statuses[r.name]||'')==='committed');
-  [2028,2029,2030,2031,2032].forEach(yr => {
-    const clsMap = {2028:'FR',2029:'SO',2030:'JR',2031:'SR',2032:'SR'};
-    const cls = clsMap[yr];
-    committed.forEach(r => {
-      const pos = getPos(r);
-      if (!RP_POSITIONS.includes(pos)) return;
-      if (!rp.players[yr][pos]) rp.players[yr][pos] = [];
-      if (!rp.players[yr][pos].find(p => p.name === r.name)) {
-        rp.players[yr][pos].push({name:r.name, cls, isCommit:true, projected:true});
-      }
+  // 2028 commits auto Y1 in 2028
+  if (year >= 2028) {
+    getRecruits().filter(r => (store.statuses[r.name]||'')==='committed').forEach(r => {
+      const p2 = getPos(r);
+      if (p2 !== pos && !(p2==='OH/RS' && (pos==='OH'||pos==='RS'))) return;
+      const label = rpYLabel(2028, year);
+      if (label) result.push({name:r.name, entryYear:2028, yearLabel:label, isCommit:true});
     });
-  });
+  }
+  return result;
+}
+
+function rpGetTotal(year) {
+  let n=0; RP_POSITIONS.forEach(pos => n += rpGetVisiblePlayers(year,pos).length); return n;
 }
 
 function rpGetNeeds(year) {
-  const rp = rpGetStore();
-  let n = 0;
+  const rp = rpGetStore(); let n=0;
   RP_POSITIONS.forEach(pos => {
-    const have = (rp.players[year][pos]||[]).length;
-    const need = rp.targets[year][pos]||2;
+    const have = rpGetVisiblePlayers(year,pos).length;
+    const need = rp.targets[year][pos] ?? 2;
     if (have < need) n += need - have;
   });
   return n;
 }
 
-function rpGetTotal(year) {
+function rpAddPlayer(activeYear, pos, name, currentYrNum) {
+  name = name.trim(); if (!name) return;
   const rp = rpGetStore();
-  let n = 0;
-  RP_POSITIONS.forEach(pos => n += (rp.players[year][pos]||[]).length);
-  return n;
+  const entryYear = rpEntryFromCurrentYr(activeYear, parseInt(currentYrNum));
+  if (!rp.players[entryYear]) rp.players[entryYear] = {};
+  if (!rp.players[entryYear][pos]) rp.players[entryYear][pos] = [];
+  rp.players[entryYear][pos] = rp.players[entryYear][pos].filter(p => p.name !== name);
+  rp.players[entryYear][pos].push({name, entryYear});
+  saveStore(); renderRosterPlan();
 }
 
-function rpAddPlayer(year, pos, name, cls) {
-  name = name.trim();
-  if (!name) return;
+function rpRemovePlayer(entryYear, pos, name) {
   const rp = rpGetStore();
-  if (!rp.players[year][pos]) rp.players[year][pos] = [];
-  rp.players[year][pos].push({name, cls, projected:false});
-  rpProject();
-  saveStore();
-  renderRosterPlan();
-}
-
-function rpRemovePlayer(year, pos, idx) {
-  const rp = rpGetStore();
-  const player = rp.players[year][pos][idx];
-  if (!player) return;
-  // Remove from this year and all future projected copies
-  rp.players[year][pos].splice(idx, 1);
-  // Remove projected copies from future years
-  for (let yi = RP_YEARS.indexOf(year)+1; yi < RP_YEARS.length; yi++) {
-    const fy = RP_YEARS[yi];
-    rp.players[fy][pos] = (rp.players[fy][pos]||[]).filter(p => !(p.name===player.name && p.projected));
-  }
-  rpProject();
-  saveStore();
-  renderRosterPlan();
+  if (!rp.players[entryYear]||!rp.players[entryYear][pos]) return;
+  rp.players[entryYear][pos] = rp.players[entryYear][pos].filter(p => p.name !== name);
+  saveStore(); renderRosterPlan();
 }
 
 function rpSetTarget(year, pos, delta) {
   const rp = rpGetStore();
-  rp.targets[year][pos] = Math.max(0, Math.min(10, (rp.targets[year][pos]||2)+delta));
+  rp.targets[year][pos] = Math.max(0, Math.min(10, (rp.targets[year][pos]??2)+delta));
+  saveStore(); renderRosterPlan();
+}
+
+function rpSetScholarship(year, pos, name, val) {
+  const rp = rpGetStore();
+  const key = `${year}|${pos}|${name}`;
+  rp.scholarships[key] = parseFloat(val.replace(/[^0-9.]/g,''))||0;
   saveStore();
   renderRosterPlan();
 }
 
-function rpSelectYear(y) { rpActiveYear = y; renderRosterPlan(); }
+function rpScholKey(year, pos, name) {
+  return `${year}|${pos}|${name}`;
+}
 
-function rpAddFromInput(year, pos) {
-  const inp = document.getElementById(`rpinp_${year}_${pos}`);
-  const sel = document.getElementById(`rpcls_${year}_${pos}`);
-  if (!inp || !inp.value.trim()) return;
-  rpAddPlayer(year, pos, inp.value, sel ? sel.value : 'FR');
-  inp.value = '';
+function rpGetScholarship(year, pos, name) {
+  const rp = rpGetStore();
+  return rp.scholarships[rpScholKey(year, pos, name)]||0;
+}
+
+function rpGetTotalScholarships(year) {
+  const rp = rpGetStore();
+  let total = 0;
+  RP_POSITIONS.forEach(pos => {
+    rpGetVisiblePlayers(year, pos).forEach(p => {
+      total += rpGetScholarship(year, pos, p.name);
+    });
+  });
+  return total;
+}
+
+function rpSetBudget(year, val) {
+  const rp = rpGetStore();
+  rp.budgets[year] = parseFloat(val.replace(/[^0-9.]/g,''))||500000;
+  saveStore();
+  renderRosterPlan();
+}
+
+function rpStartScholEdit(year, pos, name) {
+  const key = `scholinput_${year}_${pos}_${name}`.replace(/[^a-zA-Z0-9_]/g,'_');
+  const valEl = document.getElementById(key+'_val');
+  const inpEl = document.getElementById(key+'_inp');
+  if (valEl) valEl.style.display='none';
+  if (inpEl) { inpEl.style.display='inline-block'; inpEl.focus(); inpEl.select(); }
+}
+
+function rpEndScholEdit(year, pos, name) {
+  const key = `scholinput_${year}_${pos}_${name}`.replace(/[^a-zA-Z0-9_]/g,'_');
+  const inpEl = document.getElementById(key+'_inp');
+  if (inpEl) rpSetScholarship(year, pos, name, inpEl.value);
+}
+
+function fmtDollar(n) {
+  return n > 0 ? '$'+n.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}) : '+ $';
+}
+
+function rpSelectYear(y) { rpActiveYear=y; rpEditMode=null; renderRosterPlan(); }
+
+function rpAddFromInput(activeYear, pos) {
+  const inp = document.getElementById(`rpinp_${activeYear}_${pos}`);
+  const yrSel = document.getElementById(`rpyr_${activeYear}_${pos}`);
+  if (!inp||!inp.value.trim()) return;
+  rpAddPlayer(activeYear, pos, inp.value, yrSel?parseInt(yrSel.value):1);
+  inp.value='';
+}
+
+function rpStartEdit(entryYear, pos, name) {
+  rpEditMode={entryYear,pos,name}; renderRosterPlan();
+  setTimeout(()=>{const e=document.getElementById('rpEditInput');if(e){e.focus();e.select();}},30);
+}
+
+function rpSaveEdit(entryYear, pos, oldName) {
+  const inp = document.getElementById('rpEditInput'); if(!inp) return;
+  const newName = inp.value.trim();
+  if (newName && newName!==oldName) {
+    const rp=rpGetStore();
+    const arr=rp.players[entryYear]&&rp.players[entryYear][pos];
+    if(arr){const p=arr.find(x=>x.name===oldName);if(p)p.name=newName;}
+    saveStore();
+  }
+  rpEditMode=null; renderRosterPlan();
 }
 
 function renderRosterPlan() {
-  const el = document.getElementById('tabRosterPlan');
-  if (!el) return;
-  rpProject();
-  const rp = rpGetStore();
-  const y = rpActiveYear;
+  const el = document.getElementById('tabRosterPlan'); if (!el) return;
+  const rp = rpGetStore(); const y = rpActiveYear;
+  const total=rpGetTotal(y), needs=rpGetNeeds(y);
+  const committed=getRecruits().filter(r=>(store.statuses[r.name]||'')==='committed').length;
+  const budget = rp.budgets[y]||500000;
+  const used = rpGetTotalScholarships(y);
+  const remaining = budget - used;
+  const pct = Math.min(100, (used/budget)*100);
+  const barColor = pct>90?'#ff6060':pct>70?'#f5c842':'#4adf7a';
 
   let html = `<div class="rp-wrap">
-  <div style="font-family:'Oswald',sans-serif;font-size:18px;color:#fff;margin-bottom:12px;letter-spacing:.5px">
+  <div style="font-family:'Oswald',sans-serif;font-size:18px;color:#fff;margin-bottom:10px;letter-spacing:.5px">
     &#128202; ROSTER PLAN
-    <span style="font-size:11px;color:#2a4a6c;font-family:'Source Sans 3',sans-serif;margin-left:8px;font-weight:400">2028 commits auto-populate · players project forward each year</span>
+    <span style="font-size:11px;color:#2a4a6c;font-family:'Source Sans 3',sans-serif;margin-left:8px;font-weight:400">Y1–Y5 · pick current year level when adding · 2028 commits auto-populate</span>
   </div>
-
   <div class="rp-year-tabs">`;
 
   RP_YEARS.forEach(yr => {
-    const needs = rpGetNeeds(yr);
-    const active = yr === y ? ' active' : '';
-    html += `<div class="rp-yt${active}" onclick="rpSelectYear(${yr})">${yr}${needs>0?`<span class="rp-needs-badge">${needs}</span>`:''}</div>`;
+    const n=rpGetNeeds(yr); const active=yr===y?' active':'';
+    html+=`<div class="rp-yt${active}" onclick="rpSelectYear(${yr})">${yr}${n>0?`<span class="rp-needs-badge">${n}</span>`:''}</div>`;
   });
 
   html += `</div>
 
-  <div class="rp-summary">
-    <div class="rp-sum"><div class="rp-sum-n">${rpGetTotal(y)}</div><div class="rp-sum-l">On Roster</div></div>
-    <div class="rp-sum"><div class="rp-sum-n" style="color:${rpGetNeeds(y)>0?'#ff6060':'#4adf7a'}">${rpGetNeeds(y)}</div><div class="rp-sum-l">Needs</div></div>
-    <div class="rp-sum"><div class="rp-sum-n" style="color:#4adf7a">${getRecruits().filter(r=>(store.statuses[r.name]||'')==='committed').length}</div><div class="rp-sum-l">2028 Commits</div></div>
-    <div class="rp-sum"><div class="rp-sum-n" style="color:#5aabff">${y===2026?'Now':(y-2026)+' yr out'}</div><div class="rp-sum-l">Season</div></div>
+  <!-- Budget tracker -->
+  <div class="rp-budget">
+    <div class="rp-budget-label">&#128181; ${y} SCHOLARSHIP BUDGET</div>
+    <div>
+      <span class="rp-budget-amt" style="color:${barColor}">$${used.toLocaleString()}</span>
+      <span style="font-size:10px;color:#3a5a7c"> used of </span>
+      <input class="rp-budget-input" value="$${budget.toLocaleString()}" onblur="rpSetBudget(${y},this.value)" onkeydown="if(event.key==='Enter')this.blur()" style="width:100px" title="Edit total budget">
+    </div>
+    <div class="rp-budget-bar" style="flex:1;min-width:80px">
+      <div class="rp-budget-fill" style="width:${pct.toFixed(1)}%;background:${barColor}"></div>
+    </div>
+    <div style="font-size:11px;color:${remaining>=0?'#4adf7a':'#ff6060'};font-weight:700;white-space:nowrap">${remaining>=0?'$'+remaining.toLocaleString()+' left':'$'+Math.abs(remaining).toLocaleString()+' OVER'}</div>
   </div>
 
+  <div class="rp-summary">
+    <div class="rp-sum"><div class="rp-sum-n">${total}</div><div class="rp-sum-l">On Roster</div></div>
+    <div class="rp-sum"><div class="rp-sum-n" style="color:${needs>0?'#ff6060':'#4adf7a'}">${needs}</div><div class="rp-sum-l">Needs</div></div>
+    <div class="rp-sum"><div class="rp-sum-n" style="color:#4adf7a">${committed}</div><div class="rp-sum-l">Commits</div></div>
+    <div class="rp-sum"><div class="rp-sum-n" style="color:#5aabff">${y===2026?'Now':(y-2026)+' yr'}</div><div class="rp-sum-l">Season</div></div>
+  </div>
   <div class="rp-grid">`;
 
   RP_POSITIONS.forEach(pos => {
-    const players = rp.players[y][pos] || [];
-    const target = rp.targets[y][pos] ?? 2;
-    const have = players.length;
-    const needCls = have >= target ? 'rp-need-ok' : have >= target-1 ? 'rp-need-warn' : 'rp-need-crit';
-    const needTxt = have >= target ? `${have}/${target} ✓` : `${have}/${target} · need ${target-have}`;
+    const players=rpGetVisiblePlayers(y,pos);
+    const target=rp.targets[y][pos]??2, have=players.length;
+    const needCls=have>=target?'rp-need-ok':have>=target-1?'rp-need-warn':'rp-need-crit';
+    const needTxt=have>=target?`${have}/${target} ✓`:`${have}/${target} · −${target-have}`;
 
-    html += `<div class="rp-pos-card">
+    html+=`<div class="rp-pos-card">
       <div class="rp-pos-hdr">
-        <div style="display:flex;align-items:center;gap:6px">
+        <div style="display:flex;align-items:center;gap:5px">
           <span class="rp-pos-name">${pos}</span>
           <div class="rp-target-ctrl">
             <button class="rp-target-btn" onclick="rpSetTarget(${y},'${pos}',-1)">−</button>
@@ -3191,45 +3290,58 @@ function renderRosterPlan() {
       </div>
       <div class="rp-list">`;
 
-    players.forEach((p, i) => {
-      const clsKey = (p.cls||'FR').toLowerCase();
+    players.forEach(p => {
+      const yCls=rpYCls(p.yearLabel);
+      const isEditing=rpEditMode&&rpEditMode.entryYear===p.entryYear&&rpEditMode.pos===pos&&rpEditMode.name===p.name;
+      const sn=p.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       if (p.isCommit) {
-        html += `<div class="rp-commit-row" title="${p.name} — 2028 Recruit Commit">
+        html+=`<div class="rp-commit-row">
           <span class="rp-cls cls-rc">RC</span>
           <span class="rp-commit-name">${p.name.split(' ')[0]} ${(p.name.split(' ')[1]||'')[0]||''}.</span>
-          <span class="rp-cls cls-${clsKey}" style="opacity:.8">${RP_CLS_LABEL[p.cls]||p.cls}</span>
+          <span class="rp-cls cls-${yCls}">${p.yearLabel}</span>
+        </div>`;
+      } else if (isEditing) {
+        html+=`<div class="rp-player" style="background:#0f1e38">
+          <span class="rp-cls cls-${yCls}">${p.yearLabel}</span>
+          <input id="rpEditInput" value="${p.name}" style="flex:1;background:#060e1c;border:1px solid #3a5a9c;color:#e0d8cc;padding:2px 6px;border-radius:3px;font-size:11px;min-width:0"
+            onkeydown="if(event.key==='Enter')rpSaveEdit(${p.entryYear},'${pos}','${sn}');if(event.key==='Escape'){rpEditMode=null;renderRosterPlan()}">
+          <button onclick="rpSaveEdit(${p.entryYear},'${pos}','${sn}')" style="font-size:10px;padding:2px 6px;background:#172848;border:1px solid #3a5a9c;color:#7a9acc;border-radius:3px;cursor:pointer">✓</button>
         </div>`;
       } else {
-        html += `<div class="rp-player">
-          <span class="rp-cls cls-${clsKey}">${RP_CLS_LABEL[p.cls]||p.cls}</span>
-          <span class="rp-pname">${p.name}${p.projected?`<span class="rp-proj"> proj</span>`:''}</span>
-          ${!p.projected?`<span class="rp-pdel" onclick="rpRemovePlayer(${y},'${pos}',${i})">✕</span>`:''}
+        const schol = rpGetScholarship(y, pos, p.name);
+        const scholKey = `scholinput_${y}_${pos}_${p.name}`.replace(/[^a-zA-Z0-9_]/g,'_');
+        html+=`<div class="rp-player">
+          <span class="rp-cls cls-${yCls}">${p.yearLabel}</span>
+          <span class="rp-pname">${p.name}</span>
+          <span id="${scholKey}_val" class="rp-schol-val" onclick="rpStartScholEdit(${y},'${pos}','${sn}')" title="Click to set scholarship">${schol>0?fmtDollar(schol):'$—'}</span>
+          <input id="${scholKey}_inp" class="rp-schol-input" style="display:none" value="${schol||''}" placeholder="26428" onblur="rpEndScholEdit(${y},'${pos}','${sn}')" onkeydown="if(event.key==='Enter')rpEndScholEdit(${y},'${pos}','${sn}')">
+          <span class="rp-pedit" onclick="rpStartEdit(${p.entryYear},'${pos}','${sn}')">✎</span>
+          <span class="rp-pdel" onclick="rpRemovePlayer(${p.entryYear},'${pos}','${sn}')">✕</span>
         </div>`;
       }
     });
 
-    if (players.length === 0) {
-      html += `<div style="font-size:10px;color:#1e3050;padding:4px 2px;font-style:italic">No players added</div>`;
-    }
+    if (!players.length) html+=`<div style="font-size:10px;color:#1e3050;padding:4px 2px;font-style:italic">No players yet</div>`;
 
-    html += `</div>
+    const yrOpts=RP_YR_LABELS.map((lbl,i)=>`<option value="${i+1}">${lbl} – ${lbl==='Y1'?'1st yr':lbl==='Y2'?'2nd yr':lbl==='Y3'?'3rd yr':lbl==='Y4'?'4th yr':'5th yr'}</option>`).join('');
+    html+=`</div>
       <div class="rp-add">
-        <input id="rpinp_${y}_${pos}" placeholder="Name..." onkeydown="if(event.key==='Enter')rpAddFromInput(${y},'${pos}')">
-        <select id="rpcls_${y}_${pos}">
-          <option value="FR">Fr</option>
-          <option value="SO">So</option>
-          <option value="JR">Jr</option>
-          <option value="SR">Sr</option>
-          <option value="GR">Gr</option>
-        </select>
+        <input id="rpinp_${y}_${pos}" placeholder="Player name..." onkeydown="if(event.key==='Enter')rpAddFromInput(${y},'${pos}')">
+        <select id="rpyr_${y}_${pos}" title="Their year level THIS season">${yrOpts}</select>
         <button onclick="rpAddFromInput(${y},'${pos}')">+</button>
       </div>
     </div>`;
   });
 
-  html += `</div></div>`;
+  html+=`</div>
+  <div style="margin-top:10px;padding:10px 14px;background:#0a1628;border:1px solid #0f1e38;border-radius:6px;font-size:11px;color:#3a5a7c;line-height:1.8">
+    <strong style="color:#5a7ab8">How to add your current roster:</strong> Stay on 2026. For each player, pick their current year level (Y1 = freshman, Y4 = senior, Y5 = 5th year).
+    They auto-project forward into future seasons and age off after Y5. Hover a player to edit or delete.
+  </div></div>`;
+
   el.innerHTML = html;
 }
+
 let galaxyRAF = null;
 let galaxyStars = [];
 let galaxyCommitStars = [];
