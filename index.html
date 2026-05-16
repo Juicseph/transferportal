@@ -1470,15 +1470,20 @@ function uploadPDF(name, input) {
 }
 
 function deleteRecruit(name) {
-  if (!confirm(`Remove "${name}" from the roster?\n\nThis only hides them in this session. They can be restored by clearing your browser data.`)) return;
+  if (!confirm(`Remove "${name}" from the roster?\n\nYou can restore them by using Add New Recruit with the same name.`)) return;
   store.deleted[name] = true;
   saveStore();
   if (activeRecruit === name) {
     activeRecruit = null;
     document.getElementById('welcomeMsg').style.display = 'flex';
     document.getElementById('guideContainer').style.display = 'none';
+    const wt = document.getElementById('whisperToggle');
+    if (wt) wt.style.display = 'none';
+    stopHeartbeat();
   }
   renderList();
+  renderLeaderboard();
+  updateCounts();
 }
 
 // ── Call Timer ────────────────────────────────────────────────────────────────
@@ -2114,7 +2119,25 @@ function saveNewRecruit() {
     document.getElementById('arError').textContent = 'Please enter a full name (first and last).';
     return;
   }
-  // Check for duplicate
+  // Check if this name was previously deleted — if so, restore instead of block
+  if (store.deleted && store.deleted[name]) {
+    if (confirm(`"${name}" was previously removed. Restore them to the roster?`)) {
+      delete store.deleted[name];
+      // Also remove from newRecruits deleted state if custom
+      if (store.newRecruits) {
+        const idx = store.newRecruits.findIndex(r => r.name === name);
+        if (idx >= 0) store.newRecruits[idx] = {...store.newRecruits[idx]};
+      }
+      saveStore();
+      renderList();
+      renderLeaderboard();
+      updateCounts();
+      closeAddRecruit();
+      setTimeout(() => selectRecruit(name), 150);
+      return;
+    } else return;
+  }
+  // Check for true duplicate (not deleted)
   if (getRecruits().find(r => r.name.toLowerCase() === name.toLowerCase())) {
     document.getElementById('arError').classList.add('show');
     document.getElementById('arError').textContent = `"${name}" is already on the roster.`;
@@ -3051,7 +3074,7 @@ function renderWall() {
     stopGalaxy();
     el.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:#2a2050;padding:40px">
       <div style="font-size:64px;margin-bottom:16px;opacity:.25">✦</div>
-      <div style="font-family:'Oswald',sans-serif;font-size:24px;color:#2a1a50;letter-spacing:2px;margin-bottom:8px">THE CONSTELLATION AWAITS</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:24px;color:#2a1a50;letter-spacing:2px;margin-bottom:8px">CLASS OF 2028</div>
       <div style="font-size:13px;line-height:1.8;color:#1a1040">Mark a recruit as 🎉 Committed<br>and her star joins the galaxy.</div>
     </div>`;
     return;
