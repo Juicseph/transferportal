@@ -839,10 +839,18 @@ function saveStore() {
 // ── Active recruits (excluding deleted) ───────────────────────────────────────
 function getRecruits() {
   const nameOverrides = store.nameOverrides || {};
+  const clubOverrides = store.clubOverrides || {};
   const base = RECRUITS_BASE
     .filter(r => !store.deleted[r.name] && !store.deleted[nameOverrides[r.name]])
-    .map(r => nameOverrides[r.name] ? {...r, name: nameOverrides[r.name]} : r);
-  const custom = (store.newRecruits || []).filter(r => !store.deleted[r.name]);
+    .map(r => {
+      const newName = nameOverrides[r.name] ? nameOverrides[r.name] : r.name;
+      const newClub = clubOverrides[newName] || clubOverrides[r.name] || r.club;
+      return (nameOverrides[r.name] || clubOverrides[r.name]) ? {...r, name: newName, club: newClub} : r;
+    });
+  const custom = (store.newRecruits || []).filter(r => !store.deleted[r.name]).map(r => ({
+    ...r,
+    club: (store.clubOverrides && store.clubOverrides[r.name]) || r.club
+  }));
   return [...base, ...custom];
 }
 function getPos(r) { return store.positions[r.name] || r.pos || '—'; }
@@ -1083,6 +1091,11 @@ function renderList() {
           <div style="display:flex;gap:5px" id="namewrap_${idKey}">
             <input type="text" class="ctrl-link ctrl-name-edit" value="${r.name}" placeholder="Full name..." onkeydown="if(event.key==='Enter'){event.preventDefault();saveNameEdit('${nm}',this.value)}" style="color:#e0d8cc;font-weight:600;flex:1">
             <button onclick="saveNameEdit('${nm}',this.closest('div').querySelector('input').value)" style="padding:5px 10px;background:#172848;border:1px solid #2a4a8c;color:#7a9acc;border-radius:4px;cursor:pointer;font-size:11px;white-space:nowrap;flex-shrink:0">Save</button>
+          </div>
+          <div class="field-label">Edit Club / Program</div>
+          <div style="display:flex;gap:5px">
+            <input type="text" class="ctrl-link" value="${(store.clubOverrides&&store.clubOverrides[r.name])||r.club||''}" placeholder="Club Name (ST)" onkeydown="if(event.key==='Enter'){event.preventDefault();saveClubEdit('${nm}',this.value)}" style="color:#c0b8b0;flex:1">
+            <button onclick="saveClubEdit('${nm}',this.closest('div').querySelector('input').value)" style="padding:5px 10px;background:#172848;border:1px solid #2a4a8c;color:#7a9acc;border-radius:4px;cursor:pointer;font-size:11px;white-space:nowrap;flex-shrink:0">Save</button>
           </div>
           <div class="field-label">Interest Level</div>
           <select class="ctrl-select" onchange="editInterest('${nm}',this.value)">
@@ -1354,6 +1367,19 @@ function saveNameEdit(oldName, newName) {
   if (!newName) { alert('Name cannot be empty.'); return; }
   if (newName === oldName) return;
   editName(oldName, newName);
+}
+
+function saveClubEdit(name, newClub) {
+  newClub = (newClub||'').trim();
+  if (!store.clubOverrides) store.clubOverrides = {};
+  store.clubOverrides[name] = newClub;
+  saveStore();
+  // Update club display in sidebar card without full re-render
+  const idKey = esc(name);
+  const clubEl = document.querySelector(`#item_${idKey} .r-club`);
+  if (clubEl) clubEl.textContent = newClub;
+  // Refresh map and timezone if open
+  if (activeTab === 'map') renderMap();
 }
 
 function editName(oldName, newName) {
@@ -3074,7 +3100,7 @@ function renderWall() {
     stopGalaxy();
     el.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;color:#2a2050;padding:40px">
       <div style="font-size:64px;margin-bottom:16px;opacity:.25">✦</div>
-      <div style="font-family:'Oswald',sans-serif;font-size:24px;color:#2a1a50;letter-spacing:2px;margin-bottom:8px">CLASS OF 2028</div>
+      <div style="font-family:'Oswald',sans-serif;font-size:24px;color:#2a1a50;letter-spacing:2px;margin-bottom:8px">THE CONSTELLATION AWAITS</div>
       <div style="font-size:13px;line-height:1.8;color:#1a1040">Mark a recruit as 🎉 Committed<br>and her star joins the galaxy.</div>
     </div>`;
     return;
