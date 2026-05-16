@@ -830,13 +830,19 @@ function loadStore() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) { const d = JSON.parse(raw); Object.assign(store, d); }
-    // Deduplicate newRecruits on every load to fix any existing duplicates
-    if (store.newRecruits) {
+    // Strip any base recruit names from newRecruits (they belong in RECRUITS_BASE only)
+    // and deduplicate remaining custom recruits
+    if (store.newRecruits && store.newRecruits.length > 0) {
+      const baseNames = new Set(RECRUITS_BASE.map(r => r.name.toLowerCase()));
       const seen = new Set();
       store.newRecruits = store.newRecruits.filter(r => {
-        if (seen.has(r.name)) return false;
-        seen.add(r.name); return true;
+        if (!r || !r.name) return false;
+        if (baseNames.has(r.name.toLowerCase())) return false; // base recruit — don't duplicate
+        if (seen.has(r.name.toLowerCase())) return false; // duplicate custom recruit
+        seen.add(r.name.toLowerCase());
+        return true;
       });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
     }
   } catch(e) {}
 }
@@ -2154,29 +2160,45 @@ function saveNewRecruit() {
     document.getElementById('arError').textContent = 'Please enter a full name (first and last).';
     return;
   }
-  // Check if this name was previously deleted — if so, restore instead of block
+  // Check if this name matches a BASE recruit (deleted or not)
+  const baseMatch = RECRUITS_BASE.find(r => r.name.toLowerCase() === name.toLowerCase());
+  if (baseMatch) {
+    if (store.deleted && store.deleted[baseMatch.name]) {
+      // Restore deleted base recruit
+      if (confirm(`"${baseMatch.name}" was previously removed. Restore them to the roster?`)) {
+        delete store.deleted[baseMatch.name];
+        saveStore();
+        closeAddRecruit();
+        renderList(); renderLeaderboard(); updateCounts();
+        setTimeout(() => selectRecruit(baseMatch.name), 150);
+      }
+    } else {
+      document.getElementById('arError').classList.add('show');
+      document.getElementById('arError').textContent = `"${baseMatch.name}" is already on the roster.`;
+    }
+    return;
+  }
+
+  // Check if this name was a previously deleted CUSTOM recruit
   if (store.deleted && store.deleted[name]) {
     if (confirm(`"${name}" was previously removed. Restore them to the roster?`)) {
       delete store.deleted[name];
-      // Clean up any duplicate newRecruits entries with this name
       if (store.newRecruits) {
         const seen = new Set();
         store.newRecruits = store.newRecruits.filter(r => {
           if (seen.has(r.name)) return false;
-          seen.add(r.name);
-          return true;
+          seen.add(r.name); return true;
         });
       }
       saveStore();
       closeAddRecruit();
-      renderList();
-      renderLeaderboard();
-      updateCounts();
+      renderList(); renderLeaderboard(); updateCounts();
       setTimeout(() => selectRecruit(name), 150);
       return;
     } else return;
   }
-  // Check for true duplicate (active, not deleted)
+
+  // Check for true duplicate active recruit
   if (getRecruits().find(r => r.name.toLowerCase() === name.toLowerCase())) {
     document.getElementById('arError').classList.add('show');
     document.getElementById('arError').textContent = `"${name}" is already on the roster.`;
