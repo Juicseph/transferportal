@@ -259,6 +259,51 @@ header{
 .card-interest-pip{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 2px}
 
 /* ── SIGNING WALL ── */
+/* ── ROSTER PLAN ── */
+.rp-wrap{padding:16px 20px;min-width:0;width:100%}
+.rp-year-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
+.rp-yt{padding:5px 14px;border:1px solid #1e3560;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;background:#0a1628;color:#5a7ab8;transition:all .15s;white-space:nowrap}
+.rp-yt.active{background:#172848;color:#e0d8cc;border-color:#3a5a9c}
+.rp-needs-badge{display:inline-block;background:#b8001e;color:#fff;border-radius:10px;padding:0 5px;font-size:9px;margin-left:4px;font-weight:700;vertical-align:1px}
+.rp-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.rp-sum{background:#0a1628;border:1px solid #0f1e38;border-radius:6px;padding:8px 10px;text-align:center}
+.rp-sum-n{font-family:"Oswald",sans-serif;font-size:18px;font-weight:700;color:#e0d8cc}
+.rp-sum-l{font-size:9px;color:#2a4a6c;text-transform:uppercase;letter-spacing:.8px;margin-top:1px}
+.rp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:8px}
+.rp-pos-card{background:#0a1628;border:1px solid #0f1e38;border-radius:7px;overflow:hidden}
+.rp-pos-hdr{padding:7px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #0f1e38}
+.rp-pos-name{font-family:"Oswald",sans-serif;font-size:12px;color:#7a9acc;letter-spacing:.8px}
+.rp-need-ok{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;background:#041008;color:#4adf7a;border:1px solid #1a5a28}
+.rp-need-warn{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;background:#1e1600;color:#f5c842;border:1px solid #3a3000}
+.rp-need-crit{font-size:9px;font-weight:700;padding:2px 6px;border-radius:10px;background:#180a0a;color:#ff6060;border:1px solid #5a1a1a}
+.rp-target-ctrl{display:flex;align-items:center;gap:3px}
+.rp-target-btn{width:16px;height:16px;background:none;border:none;color:#3a5a7c;cursor:pointer;font-size:13px;line-height:1;padding:0}
+.rp-target-btn:hover{color:#7a9acc}
+.rp-target-n{font-size:11px;color:#e0d8cc;min-width:14px;text-align:center}
+.rp-list{padding:5px 8px;min-height:28px}
+.rp-player{display:flex;align-items:center;gap:5px;padding:3px 4px;border-radius:4px;cursor:default;transition:background .1s}
+.rp-player:hover{background:#0f1e38}
+.rp-cls{font-size:9px;font-weight:700;padding:1px 4px;border-radius:3px;min-width:20px;text-align:center;flex-shrink:0}
+.cls-fr{background:#071428;color:#5aabff;border:1px solid #1a3a5c}
+.cls-so{background:#041008;color:#4adf7a;border:1px solid #1a5a28}
+.cls-jr{background:#1e1600;color:#f5c842;border:1px solid #3a3000}
+.cls-sr{background:#180a0a;color:#ff6060;border:1px solid #5a1a1a}
+.cls-gr{background:#1a0a30;color:#c080ff;border:1px solid #4a1a7c}
+.cls-rc{background:#0a1e0a;color:#3adf6a;border:1px solid #1a5a28}
+.rp-pname{font-size:11px;color:#c0b8b0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp-pdel{font-size:10px;color:#3a1a1a;cursor:pointer;opacity:0;transition:opacity .1s;flex-shrink:0}
+.rp-player:hover .rp-pdel{opacity:1;color:#ff6060}
+.rp-add{display:flex;gap:4px;padding:5px 7px;border-top:1px solid #0a1828}
+.rp-add input{flex:1;background:#060e1c;border:1px solid #1e3560;color:#e0d8cc;padding:4px 7px;border-radius:4px;font-size:11px;font-family:"Source Sans 3",sans-serif;min-width:0}
+.rp-add input:focus{outline:none;border-color:#3a5a9c}
+.rp-add input::placeholder{color:#1e3050}
+.rp-add select{background:#060e1c;border:1px solid #1e3560;color:#c0b8b0;padding:4px 4px;border-radius:4px;font-size:10px;cursor:pointer;flex-shrink:0}
+.rp-add button{background:#0a1628;border:1px solid #1e3560;color:#5a7ab8;padding:4px 7px;border-radius:4px;cursor:pointer;font-size:12px;flex-shrink:0}
+.rp-add button:hover{background:#172848;color:#e0d8cc}
+.rp-commit-row{display:flex;align-items:center;gap:5px;padding:3px 4px;border-radius:4px;background:#041008;margin-bottom:2px}
+.rp-commit-name{font-size:11px;color:#4adf7a;flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── SIGNING WALL ── */
 .wall-header{padding:28px 32px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:flex-end;justify-content:space-between}
 .wall-title{font-family:"Oswald",sans-serif;font-size:28px;font-weight:700;color:#fff;letter-spacing:1px}
 .wall-subtitle{font-size:12px;color:#3a5a7c;margin-top:4px;letter-spacing:.5px}
@@ -476,6 +521,7 @@ canvas#confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-even
   <button class="tab-btn" onclick="switchTab('depth',this)">&#127951; DEPTH</button>
   <button class="tab-btn" onclick="switchTab('command',this)">&#128187; COMMAND</button>
   <button class="tab-btn" onclick="switchTab('wall',this)">&#127881; WALL</button>
+  <button class="tab-btn" onclick="switchTab('rosterplan',this)">&#128202; ROSTER PLAN</button>
   <div style="margin-left:auto;display:flex;align-items:center;padding-right:8px;gap:16px">
     <div class="clock-bar" style="background:transparent;border:none;padding:0">
       <div class="clock-item" id="clk-PST"><span class="clock-zone">PST</span><span class="clock-time same-zone" id="ct-PST">--:--</span></div>
@@ -622,6 +668,9 @@ canvas#confettiCanvas{position:fixed;inset:0;width:100%;height:100%;pointer-even
     <canvas id="galaxyCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:0"></canvas>
     <div id="wallView" style="position:relative;z-index:1;width:100%;height:100%;overflow-y:auto"></div>
   </div>
+
+  <!-- ROSTER PLAN TAB -->
+  <div class="content-area" id="tabRosterPlan" style="display:none;overflow-y:auto"></div>
 </div>
 
 <!-- Card Flip Modal -->
@@ -890,20 +939,22 @@ function switchTab(tab, btn) {
   activeTab = tab;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('tabRoster').style.display   = tab==='roster'  ?'flex':'none';
-  document.getElementById('tabSchedule').style.display = tab==='schedule'?'flex':'none';
-  document.getElementById('tabTexts').style.display    = tab==='texts'   ?'flex':'none';
-  document.getElementById('tabMap').style.display      = tab==='map'     ?'flex':'none';
-  document.getElementById('tabDepth').style.display    = tab==='depth'   ?'flex':'none';
-  document.getElementById('tabCommand').style.display  = tab==='command' ?'flex':'none';
-  document.getElementById('tabWall').style.display     = tab==='wall'    ?'flex':'none';
-  if (tab==='schedule') renderSchedule();
-  if (tab==='texts')    renderTextSchedule();
-  if (tab==='map')      renderMap();
-  if (tab==='depth')    renderDepth();
-  if (tab==='command')  renderCommand();
-  if (tab==='wall')     renderWall();
-  if (tab!=='wall')     stopGalaxy();
+  document.getElementById('tabRoster').style.display      = tab==='roster'      ?'flex':'none';
+  document.getElementById('tabSchedule').style.display    = tab==='schedule'    ?'flex':'none';
+  document.getElementById('tabTexts').style.display       = tab==='texts'       ?'flex':'none';
+  document.getElementById('tabMap').style.display         = tab==='map'         ?'flex':'none';
+  document.getElementById('tabDepth').style.display       = tab==='depth'       ?'flex':'none';
+  document.getElementById('tabCommand').style.display     = tab==='command'     ?'flex':'none';
+  document.getElementById('tabWall').style.display        = tab==='wall'        ?'flex':'none';
+  document.getElementById('tabRosterPlan').style.display  = tab==='rosterplan'  ?'flex':'none';
+  if (tab==='schedule')    renderSchedule();
+  if (tab==='texts')       renderTextSchedule();
+  if (tab==='map')         renderMap();
+  if (tab==='depth')       renderDepth();
+  if (tab==='command')     renderCommand();
+  if (tab==='wall')        renderWall();
+  if (tab==='rosterplan')  renderRosterPlan();
+  if (tab!=='wall')        stopGalaxy();
 }
 
 // ── Text Schedule View ────────────────────────────────────────────────────────
@@ -2966,7 +3017,219 @@ document.addEventListener('keydown', e => {
 });
 
 // ── Signing Day Wall ──────────────────────────────────────────────────────────
-// ── Galaxy Signing Wall ───────────────────────────────────────────────────────
+// ── Roster Plan ────────────────────────────────────────────────────────────────
+const RP_YEARS = [2026,2027,2028,2029,2030,2031,2032];
+const RP_POSITIONS = ['OH','MB','RS','S','L','DS','OPP'];
+const RP_CLS_NEXT = {FR:'SO',SO:'JR',JR:'SR',SR:null,GR:null};
+const RP_CLS_LABEL = {FR:'Fr',SO:'So',JR:'Jr',SR:'Sr',GR:'Gr'};
+
+let rpActiveYear = 2026;
+
+// Store structure: store.rosterPlan = { players:{year:{pos:[{name,cls,isCommit,projected}]}}, targets:{year:{pos:n}} }
+
+function rpGetStore() {
+  if (!store.rosterPlan) store.rosterPlan = {players:{},targets:{}};
+  RP_YEARS.forEach(y => {
+    if (!store.rosterPlan.players[y]) store.rosterPlan.players[y] = {};
+    if (!store.rosterPlan.targets[y]) store.rosterPlan.targets[y] = {};
+    RP_POSITIONS.forEach(p => {
+      if (!store.rosterPlan.players[y][p]) store.rosterPlan.players[y][p] = [];
+      if (store.rosterPlan.targets[y][p] === undefined) store.rosterPlan.targets[y][p] = 2;
+    });
+  });
+  return store.rosterPlan;
+}
+
+function rpProject() {
+  const rp = rpGetStore();
+  // Project forward year by year from manually entered data
+  for (let yi = 1; yi < RP_YEARS.length; yi++) {
+    const prevY = RP_YEARS[yi-1];
+    const curY  = RP_YEARS[yi];
+    RP_POSITIONS.forEach(pos => {
+      // Keep manually added non-projected players, rebuild projected ones
+      const manual = (rp.players[curY][pos]||[]).filter(p => !p.projected);
+      const fromPrev = (rp.players[prevY][pos]||[])
+        .filter(p => !p.isCommit) // commits handled separately below
+        .map(p => {
+          const nextCls = p.projected ? RP_CLS_NEXT[p.cls] : RP_CLS_NEXT[p.cls];
+          if (!nextCls) return null;
+          return {name:p.name, cls:nextCls, projected:true};
+        })
+        .filter(Boolean);
+      rp.players[curY][pos] = [...manual, ...fromPrev];
+    });
+  }
+  // Auto-populate 2028 commits into 2028-2032
+  const committed = getRecruits().filter(r => (store.statuses[r.name]||'')==='committed');
+  [2028,2029,2030,2031,2032].forEach(yr => {
+    const clsMap = {2028:'FR',2029:'SO',2030:'JR',2031:'SR',2032:'SR'};
+    const cls = clsMap[yr];
+    committed.forEach(r => {
+      const pos = getPos(r);
+      if (!RP_POSITIONS.includes(pos)) return;
+      if (!rp.players[yr][pos]) rp.players[yr][pos] = [];
+      if (!rp.players[yr][pos].find(p => p.name === r.name)) {
+        rp.players[yr][pos].push({name:r.name, cls, isCommit:true, projected:true});
+      }
+    });
+  });
+}
+
+function rpGetNeeds(year) {
+  const rp = rpGetStore();
+  let n = 0;
+  RP_POSITIONS.forEach(pos => {
+    const have = (rp.players[year][pos]||[]).length;
+    const need = rp.targets[year][pos]||2;
+    if (have < need) n += need - have;
+  });
+  return n;
+}
+
+function rpGetTotal(year) {
+  const rp = rpGetStore();
+  let n = 0;
+  RP_POSITIONS.forEach(pos => n += (rp.players[year][pos]||[]).length);
+  return n;
+}
+
+function rpAddPlayer(year, pos, name, cls) {
+  name = name.trim();
+  if (!name) return;
+  const rp = rpGetStore();
+  if (!rp.players[year][pos]) rp.players[year][pos] = [];
+  rp.players[year][pos].push({name, cls, projected:false});
+  rpProject();
+  saveStore();
+  renderRosterPlan();
+}
+
+function rpRemovePlayer(year, pos, idx) {
+  const rp = rpGetStore();
+  const player = rp.players[year][pos][idx];
+  if (!player) return;
+  // Remove from this year and all future projected copies
+  rp.players[year][pos].splice(idx, 1);
+  // Remove projected copies from future years
+  for (let yi = RP_YEARS.indexOf(year)+1; yi < RP_YEARS.length; yi++) {
+    const fy = RP_YEARS[yi];
+    rp.players[fy][pos] = (rp.players[fy][pos]||[]).filter(p => !(p.name===player.name && p.projected));
+  }
+  rpProject();
+  saveStore();
+  renderRosterPlan();
+}
+
+function rpSetTarget(year, pos, delta) {
+  const rp = rpGetStore();
+  rp.targets[year][pos] = Math.max(0, Math.min(10, (rp.targets[year][pos]||2)+delta));
+  saveStore();
+  renderRosterPlan();
+}
+
+function rpSelectYear(y) { rpActiveYear = y; renderRosterPlan(); }
+
+function rpAddFromInput(year, pos) {
+  const inp = document.getElementById(`rpinp_${year}_${pos}`);
+  const sel = document.getElementById(`rpcls_${year}_${pos}`);
+  if (!inp || !inp.value.trim()) return;
+  rpAddPlayer(year, pos, inp.value, sel ? sel.value : 'FR');
+  inp.value = '';
+}
+
+function renderRosterPlan() {
+  const el = document.getElementById('tabRosterPlan');
+  if (!el) return;
+  rpProject();
+  const rp = rpGetStore();
+  const y = rpActiveYear;
+
+  let html = `<div class="rp-wrap">
+  <div style="font-family:'Oswald',sans-serif;font-size:18px;color:#fff;margin-bottom:12px;letter-spacing:.5px">
+    &#128202; ROSTER PLAN
+    <span style="font-size:11px;color:#2a4a6c;font-family:'Source Sans 3',sans-serif;margin-left:8px;font-weight:400">2028 commits auto-populate · players project forward each year</span>
+  </div>
+
+  <div class="rp-year-tabs">`;
+
+  RP_YEARS.forEach(yr => {
+    const needs = rpGetNeeds(yr);
+    const active = yr === y ? ' active' : '';
+    html += `<div class="rp-yt${active}" onclick="rpSelectYear(${yr})">${yr}${needs>0?`<span class="rp-needs-badge">${needs}</span>`:''}</div>`;
+  });
+
+  html += `</div>
+
+  <div class="rp-summary">
+    <div class="rp-sum"><div class="rp-sum-n">${rpGetTotal(y)}</div><div class="rp-sum-l">On Roster</div></div>
+    <div class="rp-sum"><div class="rp-sum-n" style="color:${rpGetNeeds(y)>0?'#ff6060':'#4adf7a'}">${rpGetNeeds(y)}</div><div class="rp-sum-l">Needs</div></div>
+    <div class="rp-sum"><div class="rp-sum-n" style="color:#4adf7a">${getRecruits().filter(r=>(store.statuses[r.name]||'')==='committed').length}</div><div class="rp-sum-l">2028 Commits</div></div>
+    <div class="rp-sum"><div class="rp-sum-n" style="color:#5aabff">${y===2026?'Now':(y-2026)+' yr out'}</div><div class="rp-sum-l">Season</div></div>
+  </div>
+
+  <div class="rp-grid">`;
+
+  RP_POSITIONS.forEach(pos => {
+    const players = rp.players[y][pos] || [];
+    const target = rp.targets[y][pos] ?? 2;
+    const have = players.length;
+    const needCls = have >= target ? 'rp-need-ok' : have >= target-1 ? 'rp-need-warn' : 'rp-need-crit';
+    const needTxt = have >= target ? `${have}/${target} ✓` : `${have}/${target} · need ${target-have}`;
+
+    html += `<div class="rp-pos-card">
+      <div class="rp-pos-hdr">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="rp-pos-name">${pos}</span>
+          <div class="rp-target-ctrl">
+            <button class="rp-target-btn" onclick="rpSetTarget(${y},'${pos}',-1)">−</button>
+            <span class="rp-target-n">${target}</span>
+            <button class="rp-target-btn" onclick="rpSetTarget(${y},'${pos}',1)">+</button>
+          </div>
+        </div>
+        <span class="${needCls}">${needTxt}</span>
+      </div>
+      <div class="rp-list">`;
+
+    players.forEach((p, i) => {
+      const clsKey = (p.cls||'FR').toLowerCase();
+      if (p.isCommit) {
+        html += `<div class="rp-commit-row" title="${p.name} — 2028 Recruit Commit">
+          <span class="rp-cls cls-rc">RC</span>
+          <span class="rp-commit-name">${p.name.split(' ')[0]} ${(p.name.split(' ')[1]||'')[0]||''}.</span>
+          <span class="rp-cls cls-${clsKey}" style="opacity:.8">${RP_CLS_LABEL[p.cls]||p.cls}</span>
+        </div>`;
+      } else {
+        html += `<div class="rp-player">
+          <span class="rp-cls cls-${clsKey}">${RP_CLS_LABEL[p.cls]||p.cls}</span>
+          <span class="rp-pname">${p.name}${p.projected?`<span class="rp-proj"> proj</span>`:''}</span>
+          ${!p.projected?`<span class="rp-pdel" onclick="rpRemovePlayer(${y},'${pos}',${i})">✕</span>`:''}
+        </div>`;
+      }
+    });
+
+    if (players.length === 0) {
+      html += `<div style="font-size:10px;color:#1e3050;padding:4px 2px;font-style:italic">No players added</div>`;
+    }
+
+    html += `</div>
+      <div class="rp-add">
+        <input id="rpinp_${y}_${pos}" placeholder="Name..." onkeydown="if(event.key==='Enter')rpAddFromInput(${y},'${pos}')">
+        <select id="rpcls_${y}_${pos}">
+          <option value="FR">Fr</option>
+          <option value="SO">So</option>
+          <option value="JR">Jr</option>
+          <option value="SR">Sr</option>
+          <option value="GR">Gr</option>
+        </select>
+        <button onclick="rpAddFromInput(${y},'${pos}')">+</button>
+      </div>
+    </div>`;
+  });
+
+  html += `</div></div>`;
+  el.innerHTML = html;
+}
 let galaxyRAF = null;
 let galaxyStars = [];
 let galaxyCommitStars = [];
