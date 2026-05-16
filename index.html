@@ -48,6 +48,8 @@ header{
 
 /* ── LAYOUT ── */
 .main{display:grid;grid-template-columns:330px 1fr;flex:1;min-height:0;overflow:hidden}
+.main.rp-fullwidth{grid-template-columns:1fr}
+.main.rp-fullwidth .sidebar{display:none}
 .sidebar{background:#060e1c;border-right:1px solid #192e50;display:flex;flex-direction:column;overflow:hidden;min-height:0;position:relative;z-index:10}
 .content-area{overflow:hidden;display:flex;flex-direction:column;height:100%}
 
@@ -260,7 +262,7 @@ header{
 
 /* ── SIGNING WALL ── */
 /* ── ROSTER PLAN ── */
-.rp-wrap{padding:16px 20px;min-width:0;width:100%}
+.rp-wrap{padding:14px 24px;min-width:0;width:100%;overflow-y:auto;flex:1}
 .rp-year-tabs{display:flex;gap:4px;margin-bottom:14px;flex-wrap:wrap}
 .rp-yt{padding:5px 14px;border:1px solid #1e3560;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;background:#0a1628;color:#5a7ab8;transition:all .15s;white-space:nowrap}
 .rp-yt.active{background:#172848;color:#e0d8cc;border-color:#3a5a9c}
@@ -269,7 +271,7 @@ header{
 .rp-sum{background:#0a1628;border:1px solid #0f1e38;border-radius:6px;padding:8px 10px;text-align:center}
 .rp-sum-n{font-family:"Oswald",sans-serif;font-size:18px;font-weight:700;color:#e0d8cc}
 .rp-sum-l{font-size:9px;color:#2a4a6c;text-transform:uppercase;letter-spacing:.8px;margin-top:1px}
-.rp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.rp-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px}
 .rp-pos-card{background:#0a1628;border:1px solid #0f1e38;border-radius:7px;overflow:hidden}
 .rp-pos-hdr{padding:7px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #0f1e38}
 .rp-pos-name{font-family:"Oswald",sans-serif;font-size:12px;color:#7a9acc;letter-spacing:.8px}
@@ -960,19 +962,12 @@ function switchTab(tab, btn) {
   if (tab==='rosterplan') {
     document.getElementById('tabRosterPlan').style.display = 'flex';
     document.getElementById('tabRosterPlan').style.flexDirection = 'column';
-    // Hide sidebar for more space
-    const sb = document.querySelector('.sidebar');
-    if (sb) sb.style.display = 'none';
-    const main = document.querySelector('.main');
-    if (main) main.style.gridTemplateColumns = '1fr';
   } else {
-    // Restore sidebar
-    const sb = document.querySelector('.sidebar');
-    if (sb) sb.style.display = '';
-    const main = document.querySelector('.main');
-    if (main) main.style.gridTemplateColumns = '';
     document.getElementById('tabRosterPlan').style.display = 'none';
   }
+  // Full-width mode for roster plan
+  const mainEl = document.querySelector('.main');
+  if (mainEl) mainEl.classList.toggle('rp-fullwidth', tab==='rosterplan');
   if (tab==='schedule')    renderSchedule();
   if (tab==='texts')       renderTextSchedule();
   if (tab==='map')         renderMap();
@@ -3466,11 +3461,13 @@ function renderRosterPlan() {
     <div class="rp-sum"><div class="rp-sum-n" style="color:${needs>0?'#ff6060':'#4adf7a'}">${needs}</div><div class="rp-sum-l">Needs</div></div>
     <div class="rp-sum"><div class="rp-sum-n" style="color:#4adf7a">${committed}</div><div class="rp-sum-l">Commits</div></div>
     <div class="rp-sum"><div class="rp-sum-n" style="color:#5aabff">${y===2026?'Now':(y-2026)+' yr'}</div><div class="rp-sum-l">Season</div></div>
-  </div>
-  <div class="rp-grid">`;
+  </div>`;
 
   const activePositions = rp.positions[y] || RP_POSITIONS;
   const inactivePositions = RP_POSITIONS.filter(p => !activePositions.includes(p));
+  const nCols = activePositions.length || 7;
+
+  html += `<div class="rp-grid" style="grid-template-columns:repeat(${nCols},1fr)">`;
 
   activePositions.forEach(pos => {
     const players=rpGetVisiblePlayers(y,pos);
