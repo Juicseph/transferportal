@@ -269,7 +269,7 @@ header{
 .rp-sum{background:#0a1628;border:1px solid #0f1e38;border-radius:6px;padding:8px 10px;text-align:center}
 .rp-sum-n{font-family:"Oswald",sans-serif;font-size:18px;font-weight:700;color:#e0d8cc}
 .rp-sum-l{font-size:9px;color:#2a4a6c;text-transform:uppercase;letter-spacing:.8px;margin-top:1px}
-.rp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(172px,1fr));gap:8px}
+.rp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
 .rp-pos-card{background:#0a1628;border:1px solid #0f1e38;border-radius:7px;overflow:hidden}
 .rp-pos-hdr{padding:7px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #0f1e38}
 .rp-pos-name{font-family:"Oswald",sans-serif;font-size:12px;color:#7a9acc;letter-spacing:.8px}
@@ -3065,19 +3065,36 @@ let rpActiveYear = 2026;
 let rpEditMode = null;
 
 function rpGetStore() {
-  if (!store.rosterPlan) store.rosterPlan = {players:{},targets:{},scholarships:{},budgets:{}};
+  if (!store.rosterPlan) store.rosterPlan = {players:{},targets:{},scholarships:{},budgets:{},positions:{}};
   if (!store.rosterPlan.scholarships) store.rosterPlan.scholarships = {};
   if (!store.rosterPlan.budgets) store.rosterPlan.budgets = {};
+  if (!store.rosterPlan.positions) store.rosterPlan.positions = {};
   RP_YEARS.forEach(y => {
     if (!store.rosterPlan.players[y]) store.rosterPlan.players[y] = {};
     if (!store.rosterPlan.targets[y]) store.rosterPlan.targets[y] = {};
     if (!store.rosterPlan.budgets[y]) store.rosterPlan.budgets[y] = 500000;
+    // Default positions for this year = all 7
+    if (!store.rosterPlan.positions[y]) store.rosterPlan.positions[y] = [...RP_POSITIONS];
     RP_POSITIONS.forEach(p => {
       if (!store.rosterPlan.players[y][p]) store.rosterPlan.players[y][p] = [];
       if (store.rosterPlan.targets[y][p] === undefined) store.rosterPlan.targets[y][p] = 2;
     });
   });
   return store.rosterPlan;
+}
+
+function rpAddPosition(year, pos) {
+  const rp = rpGetStore();
+  if (!rp.positions[year].includes(pos)) {
+    rp.positions[year].push(pos);
+    saveStore(); renderRosterPlan();
+  }
+}
+
+function rpRemovePosition(year, pos) {
+  const rp = rpGetStore();
+  rp.positions[year] = rp.positions[year].filter(p => p !== pos);
+  saveStore(); renderRosterPlan();
 }
 
 function rpGetVisiblePlayers(year, pos) {
@@ -3270,7 +3287,10 @@ function renderRosterPlan() {
   </div>
   <div class="rp-grid">`;
 
-  RP_POSITIONS.forEach(pos => {
+  const activePositions = rp.positions[y] || RP_POSITIONS;
+  const inactivePositions = RP_POSITIONS.filter(p => !activePositions.includes(p));
+
+  activePositions.forEach(pos => {
     const players=rpGetVisiblePlayers(y,pos);
     const target=rp.targets[y][pos]??2, have=players.length;
     const needCls=have>=target?'rp-need-ok':have>=target-1?'rp-need-warn':'rp-need-crit';
@@ -3286,7 +3306,10 @@ function renderRosterPlan() {
             <button class="rp-target-btn" onclick="rpSetTarget(${y},'${pos}',1)">+</button>
           </div>
         </div>
-        <span class="${needCls}">${needTxt}</span>
+        <div style="display:flex;align-items:center;gap:5px">
+          <span class="${needCls}">${needTxt}</span>
+          <button onclick="rpRemovePosition(${y},'${pos}')" title="Remove this position tile" style="background:none;border:none;color:#3a1a1a;cursor:pointer;font-size:12px;padding:0 2px;line-height:1" onmouseover="this.style.color='#ff6060'" onmouseout="this.style.color='#3a1a1a'">✕</button>
+        </div>
       </div>
       <div class="rp-list">`;
 
@@ -3333,10 +3356,21 @@ function renderRosterPlan() {
     </div>`;
   });
 
-  html+=`</div>
+  html+=`</div>`;
+
+  // Add-position bar — show removed positions as buttons to re-add
+  if (inactivePositions.length > 0) {
+    html += `<div style="margin-top:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+      <span style="font-size:10px;color:#2a4a6c;text-transform:uppercase;letter-spacing:.8px">Add position:</span>`;
+    inactivePositions.forEach(pos => {
+      html += `<button onclick="rpAddPosition(${y},'${pos}')" style="padding:3px 10px;background:#0a1628;border:1px dashed #1e3560;border-radius:4px;color:#3a5a7c;font-size:11px;cursor:pointer;font-family:'Oswald',sans-serif;letter-spacing:.5px;transition:all .15s" onmouseover="this.style.color='#7a9acc';this.style.borderColor='#3a5a9c'" onmouseout="this.style.color='#3a5a7c';this.style.borderColor='#1e3560'">+ ${pos}</button>`;
+    });
+    html += `</div>`;
+  }
+
+  html+=`
   <div style="margin-top:10px;padding:10px 14px;background:#0a1628;border:1px solid #0f1e38;border-radius:6px;font-size:11px;color:#3a5a7c;line-height:1.8">
-    <strong style="color:#5a7ab8">How to add your current roster:</strong> Stay on 2026. For each player, pick their current year level (Y1 = freshman, Y4 = senior, Y5 = 5th year).
-    They auto-project forward into future seasons and age off after Y5. Hover a player to edit or delete.
+    <strong style="color:#5a7ab8">How to add:</strong> Pick Y1 (freshman) through Y5 (5th year) for each player's current level in ${y}. They project forward automatically. Click ✕ on a position tile to hide it, restore it below.
   </div></div>`;
 
   el.innerHTML = html;
