@@ -829,7 +829,16 @@ let timerName = null;
 function loadStore() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) { const d = JSON.parse(raw); Object.assign(store, d); }  } catch(e) {}
+    if (raw) { const d = JSON.parse(raw); Object.assign(store, d); }
+    // Deduplicate newRecruits on every load to fix any existing duplicates
+    if (store.newRecruits) {
+      const seen = new Set();
+      store.newRecruits = store.newRecruits.filter(r => {
+        if (seen.has(r.name)) return false;
+        seen.add(r.name); return true;
+      });
+    }
+  } catch(e) {}
 }
 function saveStore() {
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(store)); }
@@ -2149,21 +2158,25 @@ function saveNewRecruit() {
   if (store.deleted && store.deleted[name]) {
     if (confirm(`"${name}" was previously removed. Restore them to the roster?`)) {
       delete store.deleted[name];
-      // Also remove from newRecruits deleted state if custom
+      // Clean up any duplicate newRecruits entries with this name
       if (store.newRecruits) {
-        const idx = store.newRecruits.findIndex(r => r.name === name);
-        if (idx >= 0) store.newRecruits[idx] = {...store.newRecruits[idx]};
+        const seen = new Set();
+        store.newRecruits = store.newRecruits.filter(r => {
+          if (seen.has(r.name)) return false;
+          seen.add(r.name);
+          return true;
+        });
       }
       saveStore();
+      closeAddRecruit();
       renderList();
       renderLeaderboard();
       updateCounts();
-      closeAddRecruit();
       setTimeout(() => selectRecruit(name), 150);
       return;
     } else return;
   }
-  // Check for true duplicate (not deleted)
+  // Check for true duplicate (active, not deleted)
   if (getRecruits().find(r => r.name.toLowerCase() === name.toLowerCase())) {
     document.getElementById('arError').classList.add('show');
     document.getElementById('arError').textContent = `"${name}" is already on the roster.`;
